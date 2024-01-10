@@ -11,12 +11,38 @@ from . import networks
 
 class BaseModel(ABC):
     """This class is an abstract base class (ABC) for models.
-    To create a subclass, you need to implement the following five functions:
-        -- <__init__>:                      initialize the class; first call BaseModel.__init__(self, opt).
-        -- <set_input>:                     unpack data from dataset and apply preprocessing.
-        -- <forward>:                       produce intermediate results.
-        -- <optimize_parameters>:           calculate losses, gradients, and update network weights.
-        -- <modify_commandline_options>:    (optionally) add model-specific options and set default options.
+    To create a subclass, you need to:
+        - Implement the following five functions:
+            - __init__: initialize the class; first call BaseModel.__init__(self, opt).
+            - set_input: unpack data from dataset and apply preprocessing.
+            - forward: produce intermediate results.
+            - optimize_parameters: calculate losses, gradients, and update network weights.
+            - modify_commandline_options: (optionally) add model-specific options and set default options.
+        - Define the following lists:
+            - loss_names: specify the training losses that you want to plot and save.
+            - model_names: define networks used in our training.
+            - visual_names: specify the images that you want to display and save.
+            - optimizers: define and initialize optimizers.
+
+    The purpose of each function and list is as follows:
+        - __init__: Initialize the class and define required lists.
+        - set_input: Unpack input data from the dataloader and perform necessary pre-processing steps.
+        - forward: Run forward pass and produce intermediate results.
+        - optimize_parameters: Calculate losses, gradients, and update network weights.
+        - modify_commandline_options: Add new model-specific options, and rewrite default values for existing options.
+
+    Example implementation:
+        def __init__(self, opt):
+            ... [Your implementation here]
+        def set_input(self, input):
+            ... [Your implementation here]
+        def forward(self):
+            ... [Your implementation here]
+        def optimize_parameters(self):
+            ... [Your implementation here]
+        @staticmethod
+        def modify_commandline_options(parser, is_train):
+            ... [Your implementation here]
     """
 
     def __init__(self, opt):
