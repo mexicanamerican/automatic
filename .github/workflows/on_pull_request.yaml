@@ -19,7 +19,7 @@ jobs:
       - name: install-pylint
         run: |
           python -m pip install --upgrade pip
-          pip install pylint
+          pip install --use-feature=fast-deps pylint
       - name: pre-commit
         uses: pre-commit-ci/lite-action@v1.0.1
         if: always()
