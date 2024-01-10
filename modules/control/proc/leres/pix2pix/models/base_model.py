@@ -196,6 +196,12 @@ class BaseModel(ABC):
     def unload_network(self, name):
         """Unload network and gc.
         """
+    def compute_visuals(self): # noqa
+        """Calculate additional output images for visdom and HTML visualization"""
+        pass
+    def compute_visuals(self): # noqa
+        """Calculate additional output images for visdom and HTML visualization"""
+        pass
         if isinstance(name, str):
             net = getattr(self, 'net' + name)
             del net
