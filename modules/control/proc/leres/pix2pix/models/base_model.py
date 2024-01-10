@@ -3,6 +3,12 @@ import os
 import torch
 import argparse
 import itertools
+import gc
+import os
+import sys
+import gc
+import os
+import sys
 import os
 import sys
 import torch
@@ -149,7 +155,7 @@ def compute_visuals(self):
                 scheduler.step()
 
         lr = self.optimizers[0].param_groups[0]['lr']
-        print('learning rate %.7f -> %.7f' % (old_lr, lr))
+        print('Updated learning rate:', lr)
 
     def get_current_visuals(self):
         """Return visualization images. train.py will display these images with visdom, and save the images to a HTML"""
