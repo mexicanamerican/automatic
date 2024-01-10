@@ -2,6 +2,13 @@ import gc
 import os
 from abc import ABC, abstractmethod, ABCMeta
 from collections import OrderedDict
+import numpy as np
+import torch
+from torch import nn, optim, Tensor
+from typing import Union
+import torch
+from torch import device
+from collections import OrderedDict
 
 import numpy as np
 from collections import OrderedDict
@@ -20,8 +27,10 @@ import torch
 from torch import device
 from modules.control.util import torch_gc
 from . import networks
+from torch import device, device, nn, Tensor, optim
 from .config.base_options import BaseOptions 
 from . import networks
+from modules.control.config.base_options import BaseOptions
 from modules.control.config.base_options import BaseOptions
 from torch import device
 
@@ -197,6 +206,8 @@ def get_current_visuals(self) -> OrderedDict:
                     torch.save(net.module.cpu().state_dict(), save_path)
                     net.cuda(self.gpu_ids[0])
                 else:
+                    torch.save(net.cpu().state_dict(), save_path)
+                    torch.save(net.cpu().state_dict(), save_path)
                     torch.save(net.cpu().state_dict(), save_path)
 
     def unload_network(self, name):
