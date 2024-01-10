@@ -7,7 +7,14 @@ import argparse
 from typing import Union
 
 import torch
+import argparse
 from argparse import ArgumentParser
+from typing import Union
+
+import torch
+from torch import device
+from modules.control.util import torch_gc
+from . import networks
 from modules.control.config.base_options import BaseOptions
 from torch import device
 
@@ -91,7 +98,7 @@ class BaseModel(ABC, metaclass=ABCMeta):
             opt (Option class) -- stores all the experiment flags; needs to be a subclass of BaseOptions
         """
         if self.isTrain:
-            self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
+            self.schedulers = [networks.get_scheduler(optimizer, self.opt) for optimizer in self.optimizers]
         if not self.isTrain or opt.continue_train:
             load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
             self.load_networks(load_suffix)
@@ -200,6 +207,9 @@ class BaseModel(ABC, metaclass=ABCMeta):
             if isinstance(name, str):
                 load_filename = '%s_net_%s.pth' % (epoch, name)
                 load_path = os.path.join(self.save_dir, load_filename)
+                state_dict = torch.load(load_path, map_location=str(self.device))
+                if hasattr(state_dict, '_metadata'):
+                    del state_dict._metadata
                 net = getattr(self, 'net' + name)
                 if isinstance(net, torch.nn.DataParallel):
                     net = net.module
