@@ -1,8 +1,11 @@
 import gc
 import os
 import argparse
+import itertools
 import sys
 import torch
+from abc import ABC, abstractmethod
+from collections import OrderedDict
 
 from abc import ABC, abstractmethod
 from collections import OrderedDict
@@ -86,8 +89,11 @@ class BaseModel(ABC):
 
     @abstractmethod
     def optimize_parameters(self):
-        """Calculate losses, gradients, and update network weights; called in every training iteration"""
-        pass
+        """Calculate losses, gradients, and update network weights; called in every training iteration
+        """
+    pass
+    from abc import ABC, abstractmethod
+    from collections import OrderedDict
 
     def setup(self, opt):
         """Load and print networks; create schedulers
