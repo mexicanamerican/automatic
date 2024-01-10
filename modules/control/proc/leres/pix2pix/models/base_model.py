@@ -1,9 +1,10 @@
 import gc
 import os
+import torch
+
 from abc import ABC, abstractmethod
 from collections import OrderedDict
-
-import torch
+import itertools
 
 from modules.control.util import torch_gc
 from . import networks
@@ -45,7 +46,11 @@ class BaseModel(ABC):
         self.visual_names = []
         self.optimizers = []
         self.image_paths = []
-        self.metric = 0  # used for learning rate policy 'plateau'
+        self.model_names = []
+        self.visual_names = []
+        self.optimizers = []
+        self.image_paths = []
+        self.metric = 0
 
     @staticmethod
     def modify_commandline_options(parser, is_train):
