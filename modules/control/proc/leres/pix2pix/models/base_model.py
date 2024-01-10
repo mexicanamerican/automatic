@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 from collections import OrderedDict
 
 import torch
+import torch.nn as nn
+import torch.optim as optim
 
 from modules.control.util import torch_gc
 from . import networks
@@ -60,8 +62,9 @@ class BaseModel(ABC):
         """
         return parser
 
-    @abstractmethod
     def set_input(self, input):
+        self.input = input
+        # Perform necessary pre-processing steps here
         """Unpack input data from the dataloader and perform necessary pre-processing steps.
 
         Parameters:
@@ -69,14 +72,17 @@ class BaseModel(ABC):
         """
         pass
 
-    @abstractmethod
     def forward(self):
+        pass
+        # Run forward pass of the model
+        # Add your implementation here
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
         pass
 
-    @abstractmethod
+    
     def optimize_parameters(self):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
+        # Add your implementation here
         pass
 
     def setup(self, opt):
