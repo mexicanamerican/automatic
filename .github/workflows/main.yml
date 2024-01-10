@@ -27,10 +27,14 @@ jobs:
       - name: Run tests
         run: pytest
 
-      - run: make build
+      - name: Build and Test
+        run: |
+          # Add build and test commands here
         run: |
           # Add build commands here
 
-      - run: make deploy
+      - - name: Deploy
+        run: |
+          # Add deployment commands here
         run: |
           # Add deployment commands here
