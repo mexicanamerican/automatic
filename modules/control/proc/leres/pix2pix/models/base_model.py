@@ -3,7 +3,9 @@ import os
 from abc import ABC, abstractmethod, ABCMeta
 from collections import OrderedDict
 
-import numpy as np, torch
+import numpy as np
+import torch
+from torch import nn, optim, Tensor
 from typing import Union
 
 import torch
