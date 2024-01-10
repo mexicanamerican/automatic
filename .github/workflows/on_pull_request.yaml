@@ -27,5 +27,5 @@ jobs:
           msg: apply code formatting and linting auto-fixes
       - name: test-startup
         run: |
-          export COMMANDLINE_ARGS="--debug --test"
+          export COMMANDLINE_ARGS="--debug --test --new-args"
           python launch.py
