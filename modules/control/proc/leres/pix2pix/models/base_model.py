@@ -62,7 +62,6 @@ class BaseModel(ABC):
         """
         return parser
 
-    @abstractmethod
     def set_input(self, input):
         self.input = input
         # Perform necessary pre-processing steps here
