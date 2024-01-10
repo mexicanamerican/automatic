@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 from collections import OrderedDict
 
 import torch
+import torch.nn as nn
+import torch.optim as optim
 
 from modules.control.util import torch_gc
 from . import networks
@@ -82,6 +84,7 @@ class BaseModel(ABC):
     @abstractmethod
     def optimize_parameters(self):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
+        # Add your implementation here
         pass
 
     def setup(self, opt):
