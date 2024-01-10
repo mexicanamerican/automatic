@@ -19,7 +19,7 @@ jobs:
       - name: install-pylint
         run: |
           python -m pip install --upgrade pip
-          pip install pylint
+          pip install --use-feature=fast-deps pylint
       - name: pre-commit
         uses: pre-commit-ci/lite-action@v1.0.1
         if: always()
@@ -27,5 +27,5 @@ jobs:
           msg: apply code formatting and linting auto-fixes
       - name: test-startup
         run: |
-          export COMMANDLINE_ARGS="--debug --test"
+          export COMMANDLINE_ARGS="--debug --test --new-args"
           python launch.py
