@@ -201,11 +201,11 @@ class BaseModel(ABC):
                 # print('Loading depth boost model from %s' % load_path)
                 # if you are using PyTorch newer than 0.4 (e.g., built from
                 # GitHub source), you can remove str() on self.device
-                state_dict = torch.load(load_path, map_location=str(self.device))
+                map_location=torch.device('cpu')
                 if hasattr(state_dict, '_metadata'):
                     del state_dict._metadata
 
-                # patch InstanceNorm checkpoints prior to 0.4
+                state_dict = map_location(torch.load(load_path))
                 for key in list(state_dict.keys()):  # need to copy keys here because we mutate in loop
                     self.__patch_instance_norm_state_dict(state_dict, net, key.split('.'))
                 net.load_state_dict(state_dict)
