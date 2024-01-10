@@ -32,7 +32,7 @@ class LDSR:
             shared.log.info(f"Upscaler loaded: type=LDSR model={self.modelPath}")
             sd = pl_sd["state_dict"] if "state_dict" in pl_sd else pl_sd
             config = OmegaConf.load(self.yamlPath)
-            config.model.target = "ldm.models.diffusion.ddpm.LatentDiffusionV1"
+            config.model.target = "VQModelInterface"
             model: torch.nn.Module = instantiate_from_config(config.model)
             model.load_state_dict(sd, strict=False)
             model = model.to(shared.device)
