@@ -3,7 +3,7 @@ import os
 from abc import ABC, abstractmethod, ABCMeta
 from collections import OrderedDict
 
-import argparse
+import numpy as np, torch
 from typing import Union
 
 import torch
@@ -23,6 +23,10 @@ from torch import device
 from modules.control.util import torch_gc
 from . import networks
 
+
+import numpy as np
+import torch
+from torch import device, nn, Tensor, optim
 
 class BaseModel(ABC, metaclass=ABCMeta):
     import torch
@@ -119,6 +123,8 @@ class BaseModel(ABC, metaclass=ABCMeta):
             net.eval()
 
     def test(self):
+        import numpy as np
+        from torch import nn, optim, Tensor
         """Forward function used in test time.
 
         It also calls <compute_visuals> to produce additional visualization results
