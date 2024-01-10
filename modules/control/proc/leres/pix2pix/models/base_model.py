@@ -39,7 +39,7 @@ class BaseModel(ABC):
         self.device = torch.device('cuda:{}'.format(self.gpu_ids[0])) if self.gpu_ids else torch.device('cpu')  # get device name: CPU or GPU
         self.save_dir = os.path.join(opt.checkpoints_dir, opt.name)  # save all the checkpoints to save_dir
         torch.backends.cudnn.benchmark = True  # Ensuring consistent image sizes for cudnn.benchmark.
-            #torch.backends.cudnn.benchmark = True
+        torch.backends.cudnn.benchmark = True
         self.loss_names = []
         self.model_names = []
         self.visual_names = []
