@@ -19,6 +19,8 @@ import torch
 from torch import device
 from modules.control.util import torch_gc
 from . import networks
+from .config.base_options import BaseOptions 
+from . import networks
 from modules.control.config.base_options import BaseOptions
 from torch import device
 
@@ -60,7 +62,14 @@ class BaseModel(ABC, metaclass=ABCMeta):
         self.gpu_ids = gpu_ids
         self.gpu_ids = opt.gpu_ids
         self.isTrain = opt.isTrain
-        self.device = torch.device('cuda:{}'.format(self.gpu_ids[0])) if self.gpu_ids else torch.device('cpu')  # get device name: CPU or GPU
+        self.device = torch.device('cuda:{}'.format(self.gpu_ids[0])) if self.gpu_ids else torch.device('cpu')
+        self.save_dir = os.path.join(opt.checkpoints_dir, opt.name)  # save all the checkpoints to save_dir
+        if opt.preprocess != 'scale_width':  # with [scale_width], input images might have different sizes, which hurts the performance of cudnn.benchmark.
+            torch.backends.cudnn.benchmark = True
+        self.loss_names = []
+        self.model_names = []
+        self.visual_names = []
+        self.optimizers = []
         self.save_dir = os.path.join(opt.checkpoints_dir, opt.name)  # save all the checkpoints to save_dir
         if opt.preprocess != 'scale_width':  # with [scale_width], input images might have different sizes, which hurts the performance of cudnn.benchmark.
             torch.backends.cudnn.benchmark = True
