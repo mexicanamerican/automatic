@@ -6,6 +6,10 @@ import itertools
 import os
 import sys
 import torch
+import numpy as np
+import cv2
+import matplotlib.pyplot as plt
+
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 
@@ -120,7 +124,7 @@ class BaseModel(ABC):
     def test(self):
         """Forward function used in test time. It also calls <compute_visuals> to produce additional visualization results"""
         self.forward()
-        self.compute_visuals()
+        output_images = self.compute_visuals()
         self.compute_visuals()
 
 def compute_visuals(self):
