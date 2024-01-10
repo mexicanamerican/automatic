@@ -1,5 +1,7 @@
 import gc
 import os
+import argparse
+import sys
 import torch
 
 from abc import ABC, abstractmethod
@@ -54,6 +56,9 @@ class BaseModel(ABC):
 
     @staticmethod
     def modify_commandline_options(parser, is_train):
+        # Modify the command line options here
+        modified_parser = parser
+        return modified_parser
         """Add new model-specific options, and rewrite default values for existing options.
 
         Parameters:
