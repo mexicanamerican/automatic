@@ -195,7 +195,7 @@ def compute_visuals(self):
                     torch.save(net.module.cpu().state_dict(), save_path)
                     net.cuda(self.gpu_ids[0])
                 else:
-                    torch.save(net.cpu().state_dict(), save_path)
+                    torch.save(net.state_dict(), save_path)
 
     def unload_network(self, name):
         """Unload network and gc.
@@ -203,7 +203,6 @@ def compute_visuals(self):
         if isinstance(name, str):
             net = getattr(self, 'net' + name)
             del net
-            gc.collect()
             torch_gc()
             return None
 
