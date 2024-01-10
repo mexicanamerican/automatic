@@ -126,6 +126,10 @@ class BaseModel(ABC):
     def eval(self):
         """Make models eval mode during test time."""
         for name in self.model_names:
+        self.visuals = self.get_current_visuals()
+        return self.visuals
+        self.visuals = self.get_current_visuals()
+        return self.visuals
             if isinstance(name, str):
                 net = getattr(self, 'net' + name)
                 net.eval()
