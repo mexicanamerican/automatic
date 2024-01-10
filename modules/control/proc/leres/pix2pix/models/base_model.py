@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod, ABCMeta
 from collections import OrderedDict
 
 import numpy as np
+from collections import OrderedDict
 import torch
 from torch import nn, optim, Tensor
 from typing import Union
@@ -163,13 +164,14 @@ class BaseModel(ABC, metaclass=ABCMeta):
         lr = self.optimizers[0].param_groups[0]['lr']
         print('learning rate %.7f -> %.7f' % (old_lr, lr))
 
-    def get_current_visuals(self):
-        """Return visualization images. train.py will display these images with visdom, and save the images to a HTML"""
-        visual_ret = OrderedDict()
-        for name in self.visual_names:
-            if isinstance(name, str):
-                visual_ret[name] = getattr(self, name)
-        return visual_ret
+def get_current_visuals(self) -> OrderedDict:
+    from collections import OrderedDict
+    """Return visualization images. train.py will display these images with visdom, and save the images to a HTML"""
+    visual_ret = OrderedDict()
+    for name in self.visual_names:
+        if isinstance(name, str):
+            visual_ret[name] = getattr(self, name)
+    return visual_ret
 
     def get_current_losses(self):
         """Return traning losses / errors. train.py will print out these errors on console, and save them to a file"""
