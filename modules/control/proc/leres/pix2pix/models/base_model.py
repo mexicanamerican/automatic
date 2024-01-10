@@ -9,6 +9,8 @@ from modules.control.util import torch_gc
 from . import networks
 
 
+from .networks import get_scheduler
+
 class BaseModel(ABC):
     """This class is an abstract base class (ABC) for models.
     To create a subclass, you need to implement the following five functions:
@@ -210,7 +212,7 @@ class BaseModel(ABC):
                     self.__patch_instance_norm_state_dict(state_dict, net, key.split('.'))
                 net.load_state_dict(state_dict)
 
-    def print_networks(self, verbose):
+    def print_networks(self, verbose=True):
         """Print the total number of parameters in the network and (if verbose) network architecture
 
         Parameters:
