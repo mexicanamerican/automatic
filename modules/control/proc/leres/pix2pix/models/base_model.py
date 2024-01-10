@@ -62,6 +62,8 @@ class BaseModel(ABC):
 
     @abstractmethod
     def set_input(self, input):
+        self.input = input
+        # Perform necessary pre-processing steps here
         """Unpack input data from the dataloader and perform necessary pre-processing steps.
 
         Parameters:
