@@ -147,7 +147,7 @@ class BaseModel(ABC):
         """Calculate additional output images for visdom and HTML visualization"""
         pass
 
-    def get_image_paths(self):
+    def get_image_paths(self): # noqa
         """ Return image paths that are used to load current data"""
         return self.image_paths
 
