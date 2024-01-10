@@ -3,7 +3,13 @@ import os
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 
+import argparse
+from typing import Union
+
 import torch
+from argparse import ArgumentParser
+from modules.control.config.base_options import BaseOptions
+from torch import device
 
 from modules.control.util import torch_gc
 from . import networks
@@ -49,7 +55,7 @@ class BaseModel(ABC):
         self.metric = 0  # used for learning rate policy 'plateau'
 
     @staticmethod
-    def modify_commandline_options(parser, is_train):
+    def modify_commandline_options(parser: ArgumentParser, is_train: bool) -> Union[ArgumentParser, None]:
         """Add new model-specific options, and rewrite default values for existing options.
 
         Parameters:
