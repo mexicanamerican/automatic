@@ -27,13 +27,19 @@ jobs:
       - name: Run tests
         run: pytest
 
-      - name: Build and Test
+            env:
+        SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        API_KEY: ${{ secrets.API_KEY }}
+      run: |
         run: |
           # Add build and test commands here
         run: |
           # Add build commands here
 
-      - - name: Deploy
+              env:
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          API_KEY: ${{ secrets.API_KEY }}
+        run: |
         run: |
           # Add deployment commands here
         run: |
