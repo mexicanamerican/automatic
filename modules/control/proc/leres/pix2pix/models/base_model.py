@@ -72,7 +72,6 @@ class BaseModel(ABC):
         """
         pass
 
-    @abstractmethod
     def forward(self):
         pass
         # Run forward pass of the model
