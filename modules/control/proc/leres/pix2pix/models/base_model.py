@@ -174,7 +174,7 @@ class BaseModel(ABC):
                     torch.save(net.module.cpu().state_dict(), save_path)
                     net.cuda(self.gpu_ids[0])
                 else:
-                    torch.save(net.cpu().state_dict(), save_path)
+                    net.save(save_path)
 
     def unload_network(self, name):
         """Unload network and gc.
