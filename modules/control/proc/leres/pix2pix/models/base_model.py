@@ -8,7 +8,9 @@ from collections import OrderedDict
 
 import torch
 
-from modules.control.util import torch_backend_cudnn_on, torch_gc, torch
+import itertools
+import functools
+from modules.control.util import torch_backend_cudnn_on, torch_gc
 import functools
 from . import networks, visualize_images
 
