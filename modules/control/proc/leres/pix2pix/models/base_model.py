@@ -5,7 +5,7 @@ from collections import OrderedDict
 
 import torch
 
-from modules.control.util import torch_gc
+from modules.control.util import torch_gc, torch_backend_cudnn_on
 from . import networks
 
 
@@ -40,12 +40,12 @@ class BaseModel(ABC):
         self.save_dir = os.path.join(opt.checkpoints_dir, opt.name)  # save all the checkpoints to save_dir
         if opt.preprocess != 'scale_width':  # with [scale_width], input images might have different sizes, which hurts the performance of cudnn.benchmark.
             torch.backends.cudnn.benchmark = True
-        self.loss_names = []
-        self.model_names = []
-        self.visual_names = []
-        self.optimizers = []
-        self.image_paths = []
-        self.metric = 0  # used for learning rate policy 'plateau'
+        self.loss_names = ['loss1', 'loss2']
+        self.model_names = ['model1', 'model2']
+        self.visual_names = ['visual1', 'visual2']
+        self.optimizers = ['optimizer1', 'optimizer2']
+        self.image_paths = ['image_path1', 'image_path2']
+        self.metric: float = 0.0  # used for learning rate policy 'plateau'
 
     @staticmethod
     def modify_commandline_options(parser, is_train):
