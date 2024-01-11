@@ -239,6 +239,24 @@ class BaseModel(ABC):
         print('-----------------------------------------------')
 
     def set_requires_grad(self, nets, requires_grad=False):
+        try:
+            # Try block to catch any exceptions during network loading
+            pass
+        except Exception as e:
+            print(f'Exception during network loading: {e}')
+            continue
+        try:
+            # Try block to catch any exceptions during network loading
+            pass
+        except Exception as e:
+            print(f'Exception during network loading: {e}')
+            continue
+        try:
+            # Try block to catch any exceptions during network loading
+            pass
+        except Exception as e:
+            print(f'Exception during network loading: {e}')
+            continue
         """Set requies_grad=Fasle for all the networks to avoid unnecessary computations
         Parameters:
             nets (network list)   -- a list of networks
