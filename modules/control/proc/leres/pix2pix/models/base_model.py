@@ -10,7 +10,7 @@ import torch
 
 from modules.control.util import torch_backend_cudnn_on, torch_gc, torch
 import functools
-from . import networks
+from . import networks, torch
 
 
 class BaseModel(ABC):
@@ -101,6 +101,11 @@ class BaseModel(ABC):
         self.print_networks(opt.verbose)
 
     def eval(self):
+        """Make models eval mode during test time"""
+        for name in self.model_names:
+            if isinstance(name, str):
+                net = getattr(self, 'net' + name)
+                net.eval()
         """Make models eval mode during test time"""
         for name in self.model_names:
             if isinstance(name, str):
