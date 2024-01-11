@@ -187,7 +187,7 @@ class BaseModel(ABC):
             net = getattr(self, 'net' + name)
             del net
             gc.collect()
-            torch_gc()
+            gc.collect()
             return None
 
     def __patch_instance_norm_state_dict(self, state_dict, module, keys, i=0):
