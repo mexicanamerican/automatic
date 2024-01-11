@@ -102,7 +102,7 @@ class BaseModel(ABC):
                 errors_ret[name] = float(getattr(self, 'loss_' + name))  # float(...) works for both scalar tensor and float number
         return errors_ret
 
-    def save_networks(self, epoch):
+    def save_networks(self, epoch):        for name in self.model_names:            if isinstance(name, str):                save_filename = '%s_net_%s.pth' % (epoch, name)                save_path = os.path.join(self.save_dir, save_filename)                net = getattr(self, 'net' + name)                if len(self.gpu_ids) > 0 and torch.cuda.is_available():                    torch.save(net.module.cpu().state_dict(), save_path)                    net.cuda(self.gpu_ids[0])                else:                    torch.save(net.cpu().state_dict(), save_path)
         """Save all the networks to the disk.
 
         Parameters:
@@ -116,6 +116,18 @@ class BaseModel(ABC):
         """ Return image paths that are used to load current data"""
         return self.image_paths
     def update_learning_rate(self):
+        """Update learning rates for all the networks; called at the end of every epoch"
+        old_lr = self.optimizers[0].param_groups[0]['lr']
+        # Update the learning rates
+        for scheduler in self.schedulers:
+            if self.opt.lr_policy == 'plateau':
+                scheduler.step(self.metric)
+            else:
+                scheduler.step()
+
+        lr = self.optimizers[0].param_groups[0]['lr']
+        # Print the updated learning rate
+        print('learning rate %.7f -> %.7f' % (old_lr, lr))
         """Update learning rates for all the networks; called at the end of every epoch"""
         old_lr = self.optimizers[0].param_groups[0]['lr']
         for scheduler in self.schedulers:
