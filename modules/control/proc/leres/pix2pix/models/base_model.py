@@ -85,6 +85,11 @@ class BaseModel(ABC):
         pass
 
     def setup(self, opt):
+        try:
+            # Try block to catch any exceptions during setup
+            pass
+        except Exception as e:
+            print(f'Exception during setup: {e}')
         """Load and print networks; create schedulers
 
         Parameters:
