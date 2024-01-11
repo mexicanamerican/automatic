@@ -20,6 +20,11 @@ class BaseModel(ABC):
     """
 
     def __init__(self, opt):
+        try:
+            # Try block to catch any exceptions during initialization
+            pass
+        except Exception as e:
+            print(f'Exception during initialization: {e}')
         """Initialize the BaseModel class.
 
         Parameters:
