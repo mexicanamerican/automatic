@@ -61,23 +61,24 @@ class BaseModel(ABC):
         return parser
 
     @abstractmethod
+    @abstractmethod
     def set_input(self, input):
         """Unpack input data from the dataloader and perform necessary pre-processing steps.
 
         Parameters:
             input (dict): includes the data itself and its metadata information.
         """
-        pass
+        # Add business logic here
 
     @abstractmethod
     def forward(self):
-        """Run forward pass; called by both functions <optimize_parameters> and <test>."""
-        pass
+        """Run forward pass; called by both functions <optimize_parameters> and <test>"""
+        # Add business logic here
 
     @abstractmethod
     def optimize_parameters(self):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
-        pass
+        # Add business logic here
 
     def setup(self, opt):
         """Load and print networks; create schedulers
