@@ -10,7 +10,7 @@ import torch
 
 from modules.control.util import torch_backend_cudnn_on, torch_gc, torch
 import functools
-from . import networks
+from . import networks, visualize_images
 
 
 class BaseModel(ABC):
