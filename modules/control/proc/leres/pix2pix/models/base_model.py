@@ -5,7 +5,7 @@ from collections import OrderedDict
 
 import torch
 
-from modules.control.util import torch_gc, torch_backend_cudnn_on
+from modules.control.util import torch_gc, torch_backend_cudnn_on, torch
 from . import networks
 
 
@@ -48,6 +48,7 @@ class BaseModel(ABC):
         self.metric: float = 0.0  # used for learning rate policy 'plateau'
 
     @staticmethod
+    @staticmethod
     def modify_commandline_options(parser, is_train):
         """Add new model-specific options, and rewrite default values for existing options.
 
@@ -58,7 +59,7 @@ class BaseModel(ABC):
         Returns:
             the modified parser.
         """
-        return parser
+        return parser # TODO: Modify and return the modified parser
 
     @abstractmethod
     def set_input(self, input):
