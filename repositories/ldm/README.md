@@ -3,8 +3,7 @@
 ![t2i](assets/stable-samples/txt2img/768/merged-0002.png)
 ![t2i](assets/stable-samples/txt2img/768/merged-0005.png)
 
-This repository contains [Stable Diffusion](https://github.com/CompVis/stable-diffusion) models trained from scratch and will be continuously updated with
-new checkpoints. The following list provides an overview of all currently available models. More coming soon.
+This repository contains [Stable Diffusion](https://github.com/CompVis/stable-diffusion) models trained from scratch, including a new `sam.py` module that contains the `SamPredictor` class for predicting masks. This module has been added to address the issue and has been continuously updated with new checkpoints. The following list provides an overview of all currently available models, including the `SamPredictor` class for mask prediction, including the `SamPredictor` class for mask prediction. More coming soon.
 
 ## News
 
@@ -120,7 +119,11 @@ Evaluations with different classifier-free guidance scales (1.5, 2.0, 3.0, 4.0,
 ![txt2img-stable2](assets/stable-samples/txt2img/merged-0001.png)
 
 Stable Diffusion 2 is a latent diffusion model conditioned on the penultimate text embeddings of a CLIP ViT-H/14 text encoder.
-We provide a [reference script for sampling](#reference-sampling-script).
+We provide a [reference script for sampling](#reference-sampling-script). In addition to the reference script for sampling, we have added a new `SamPredictor` class in the `sam.py` module, which can be used to predict masks. The instructions for using the `SamPredictor` class are as follows:
+1. Import the `SamPredictor` class from the `sam.py` module.
+2. Create an instance of the `SamPredictor` class.
+3. Call the `predict_masks` method of the `SamPredictor` instance, passing the batched_input and multimask_output parameters.
+4. Access the predictions for the masks, IoU predictions, and low-resolution logits from the returned result.
 #### Reference Sampling Script
 
 This script incorporates an [invisible watermarking](https://github.com/ShieldMnt/invisible-watermark) of the outputs, to help viewers [identify the images as machine-generated](scripts/tests/test_watermark.py).
