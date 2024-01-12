@@ -7,11 +7,11 @@ from huggingface_hub import hf_hub_download
 from PIL import Image
 
 from modules.control.util import HWC3, resize_image
-from .leres.depthmap import estimateboost, estimateleres
-from .leres.multi_depth_model_woauxi import RelDepthModel
-from .leres.net_tools import strip_prefix_if_present
-from .pix2pix.models.pix2pix4depth_model import Pix2Pix4DepthModel
-from .pix2pix.options.test_options import TestOptions
+from .depthmap import estimateboost, estimateleres
+from .multi_depth_model_woauxi import RelDepthModel
+from .net_tools import strip_prefix_if_present
+from .models.pix2pix4depth_model import Pix2Pix4DepthModel
+from .options.test_options import TestOptions
 
 
 class LeresDetector:
