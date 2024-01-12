@@ -3,6 +3,8 @@ import os
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 
+from options.base_options import BaseOptions
+from options.base_options import BaseOptions
 import torch
 
 from modules.control.util import torch_gc
@@ -19,7 +21,7 @@ class BaseModel(ABC):
         -- <modify_commandline_options>:    (optionally) add model-specific options and set default options.
     """
 
-    def __init__(self, opt):
+    def __init__(self, opt, **kwargs):
         """Initialize the BaseModel class.
 
         Parameters:
