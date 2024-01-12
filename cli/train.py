@@ -21,7 +21,7 @@ import tempfile
 import argparse
 
 # local imports
-import util
+from . import util
 import sdapi
 import options
 
@@ -129,11 +129,11 @@ def prepare_server():
         server_ok = True
     except Exception:
         log.warning(f'sdnext server error: {server_status}')
-        server_ok = False
+        server_status = None
     if server_ok and server_state['job_count'] > 0:
         log.error(f'sdnext server not idle: {server_state}')
         exit(1)
-    if server_ok:
+    if server_status is not None and server_status['job_count'] > 0:
         server_options = util.Map(sdapi.options())
         server_options.options.save_training_settings_to_txt = False
         server_options.options.training_enable_tensorboard = False
