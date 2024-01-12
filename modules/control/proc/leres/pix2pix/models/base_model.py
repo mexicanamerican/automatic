@@ -105,8 +105,9 @@ class BaseModel(ABC):
 
         It also calls <compute_visuals> to produce additional visualization results
         """
-        self.forward()
-        self.compute_visuals()
+        if not self.isTrain:
+            self.forward()
+            self.compute_visuals()
 
     def compute_visuals(self): # noqa
         """Calculate additional output images for visdom and HTML visualization"""
