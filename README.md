@@ -2,6 +2,64 @@
 
 # SD.Next
 
+## Running Locally
+
+To run the code or tests locally, follow these steps:
+
+### Environment Setup
+
+First, set up the environment by installing the necessary dependencies. Make sure you have Python 3.x installed.
+
+```bash
+pip install -r requirements.txt
+```
+
+This will install all the required dependencies as listed in the `requirements.txt` file.
+
+### Executing Commands
+
+To execute the necessary commands, use the following steps:
+
+```bash
+./webui.sh  # for Linux or MacOS
+webui.ps1    # for Windows
+```
+
+This will start the server locally and make it accessible through the provided URL.
+
+### Additional Information and Troubleshooting Tips
+
+- If you encounter any issues, check the `sdnext.log` file for the full startup sequence and error messages.
+
+## Running Locally
+
+To run the code or tests locally, follow these steps:
+
+### Environment Setup
+
+First, set up the environment by installing the necessary dependencies. Make sure you have Python 3.x installed.
+
+```bash
+pip install -r requirements.txt
+```
+
+This will install all the required dependencies as listed in the `requirements.txt` file.
+
+### Executing Commands
+
+To execute the necessary commands, use the following steps:
+
+```bash
+./webui.sh  # for Linux or MacOS
+webui.ps1    # for Windows
+```
+
+This will start the server locally and make it accessible through the provided URL.
+
+### Additional Information and Troubleshooting Tips
+
+- If you encounter any issues, check the `sdnext.log` file for the full startup sequence and error messages.
+
 **Stable Diffusion implementation with advanced features**
 
 [![Sponsors](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86)](https://github.com/sponsors/vladmandic)
@@ -47,6 +105,24 @@ All individual features are not listed here, instead check [ChangeLog](CHANGELOG
 ## Backend support
 
 **SD.Next** supports two main backends: *Original* and *Diffusers*:
+
+- **Original**: Based on [LDM](https://github.com/Stability-AI/stablediffusion) reference implementation and significantly expanded on by [A1111](https://github.com/AUTOMATIC1111/stable-diffusion-webui)
+  This is the default backend and it is fully compatible with all existing functionality and extensions
+  Supports **SD 1.x** and **SD 2.x** models
+  All other model types such as *SD-XL, LCM, PixArt, Segmind, Kandinsky, etc.* require backend **Diffusers**
+- **Diffusers**: Based on new [Huggingface Diffusers](https://huggingface.co/docs/diffusers/index) implementation
+  Supports *original* SD models as well as *all* models listed below
+  See [wiki article](https://github.com/vladmandic/automatic/wiki/Diffusers) for more information
+
+## Environment Setup
+
+Before running the code, set up the environment by installing the necessary dependencies. Make sure you have Python 3.x installed.
+
+```bash
+pip install -r requirements.txt
+```
+
+This will install all the required dependencies as listed in the `requirements.txt` file.:
 
 - **Original**: Based on [LDM](https://github.com/Stability-AI/stablediffusion) reference implementation and significantly expanded on by [A1111](https://github.com/AUTOMATIC1111/stable-diffusion-webui)  
   This is the default backend and it is fully compatible with all existing functionality and extensions  
@@ -104,6 +180,64 @@ Also supported are modifiers such as:
 - *ONNX/Olive* (experimental)  
 
 ## Install
+
+## Running Locally
+
+To run the code or tests locally, follow these steps:
+
+### Environment Setup
+
+First, set up the environment by installing the necessary dependencies. Make sure you have Python 3.x installed.
+
+```bash
+pip install -r requirements.txt
+```
+
+This will install all the required dependencies as listed in the `requirements.txt` file.
+
+### Executing Commands
+
+To execute the necessary commands, use the following steps:
+
+```bash
+./webui.sh  # for Linux or MacOS
+webui.ps1    # for Windows
+```
+
+This will start the server locally and make it accessible through the provided URL.
+
+### Additional Information and Troubleshooting Tips
+
+- If you encounter any issues, check the `sdnext.log` file for the full startup sequence and error messages.
+
+## Running Locally
+
+To run the code or tests locally, follow these steps:
+
+### Environment Setup
+
+First, set up the environment by installing the necessary dependencies. Make sure you have Python 3.x installed.
+
+```bash
+pip install -r requirements.txt
+```
+
+This will install all the required dependencies as listed in the `requirements.txt` file.
+
+### Executing Commands
+
+To execute the necessary commands, use the following steps:
+
+```bash
+./webui.sh  # for Linux or MacOS
+webui.ps1    # for Windows
+```
+
+This will start the server locally and make it accessible through the provided URL.
+
+### Additional Information and Troubleshooting Tips
+
+- If you encounter any issues, check the `sdnext.log` file for the full startup sequence and error messages.
 
 - [Step-by-step install guide](https://github.com/vladmandic/automatic/wiki/Installation)
 - [Advanced install notes](https://github.com/vladmandic/automatic/wiki/Advanced-Install)
@@ -185,6 +319,20 @@ SD.Next comes with several extensions pre-installed:
 This should be fully cross-platform, but we'd really love to have additional contributors and/or maintainers to join and help lead the efforts on different platforms.
 
 ### **Goals**
+
+## Running Locally
+
+To run the code or tests locally, follow these steps:
+
+### Environment Setup
+
+Before running the code, set up the environment by installing the necessary dependencies. Make sure you have Python 3.x installed.
+
+```bash
+pip install -r requirements.txt
+```
+
+This will install all the required dependencies as listed in the `requirements.txt` file.
 
 This project started as a fork from [Automatic1111 WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui/) and it grew significantly since then,  
 but although it diverged considerably, any substantial features to original work is ported to this repository as well.
