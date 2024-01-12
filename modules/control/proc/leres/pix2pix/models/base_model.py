@@ -1,9 +1,9 @@
 import gc
 import os
+import torch
+
 from abc import ABC, abstractmethod
 from collections import OrderedDict
-
-import torch
 
 from modules.control.util import torch_gc
 from . import networks
