@@ -5,8 +5,8 @@ from collections import OrderedDict
 
 import torch
 
-from control.util import torch_gc
-from control.proc.leres.pix2pix.models import networks
+import control.util as torch_gc
+from .leres.pix2pix import networks
 
 
 class BaseModel(ABC):
