@@ -66,8 +66,8 @@ class BaseModel(ABC):
         self.image_paths = []
         self.metric = 0  # used for learning rate policy 'plateau'
 
-    @staticmethod
-    def modify_commandline_options(parser, is_train):
+    @classmethod
+    def modify_commandline_options(cls, parser, is_train):
         """Add new model-specific options, and rewrite default values for existing options.
 
         Parameters:
@@ -77,6 +77,7 @@ class BaseModel(ABC):
         Returns:
             the modified parser.
         """
+        # Add model-specific options and default values here.
         return parser
 
     @abstractmethod
