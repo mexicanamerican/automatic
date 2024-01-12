@@ -41,9 +41,11 @@ class Sam(nn.Module):
           pixel_std (list(float)): Std values for normalizing pixels in the input image.
         """
         if pixel_std is None:
-            pixel_std = [58.395, 57.12, 57.375]
+            if pixel_std is None:
+                pixel_std = [58.395, 57.12, 57.375]
         if pixel_mean is None:
-            pixel_mean = [123.675, 116.28, 103.53]
+            if pixel_mean is None:
+                pixel_mean = [123.675, 116.28, 103.53]
         super().__init__()
         self.image_encoder = image_encoder
         self.prompt_encoder = prompt_encoder
@@ -112,7 +114,10 @@ class Sam(nn.Module):
                 boxes=image_record.get("boxes", None),
                 masks=image_record.get("mask_inputs", None),
             )
-            low_res_masks, iou_predictions = self.mask_decoder(
+            try:
+                low_res_masks, iou_predictions = self.mask_decoder
+            except Exception as e:
+                print(f'An error occurred: {str(e)}')(
                 image_embeddings=curr_embedding.unsqueeze(0),
                 image_pe=self.prompt_encoder.get_dense_pe(),
                 sparse_prompt_embeddings=sparse_embeddings,
