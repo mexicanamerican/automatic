@@ -1,5 +1,7 @@
 import gc
 import os
+import torch
+import os
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 
@@ -20,6 +22,9 @@ class BaseModel(ABC):
     """
 
     def __init__(self, opt):
+        # Check if the opt parameter is None
+        if opt is None:
+            raise ValueError('The opt parameter cannot be None.')
         """Initialize the BaseModel class.
 
         Parameters:
@@ -36,14 +41,24 @@ class BaseModel(ABC):
         self.opt = opt
         self.gpu_ids = opt.gpu_ids
         self.isTrain = opt.isTrain
-        self.device = torch.device('cuda:{}'.format(self.gpu_ids[0])) if self.gpu_ids else torch.device('cpu')  # get device name: CPU or GPU
-        self.save_dir = os.path.join(opt.checkpoints_dir, opt.name)  # save all the checkpoints to save_dir
-        if opt.preprocess != 'scale_width':  # with [scale_width], input images might have different sizes, which hurts the performance of cudnn.benchmark.
+        # Update the device assignment to handle the case when gpu_ids is empty
+        self.device = torch.device('cuda:{}'.format(self.gpu_ids[0])) if self.gpu_ids else torch.device('cpu') if self.gpu_ids else torch.device('cpu')
+        # Update the save_dir assignment to use os.path.join
+        self.save_dir = os.path.join(opt.checkpoints_dir, opt.name)
+        if hasattr(opt, 'preprocess') and opt.preprocess != 'scale_width':
             torch.backends.cudnn.benchmark = True
+            torch.backends.cudnn.benchmark = True
+        # Initialize the loss_names, model_names, visual_names, optimizers, and image_paths attributes
         self.loss_names = []
         self.model_names = []
         self.visual_names = []
         self.optimizers = []
+        self.image_paths = []
+        self.model_names = []
+        self.visual_names = []
+        self.optimizers = []
+        # Set the metric attribute to 0
+        self.metric = 0
         self.image_paths = []
         self.metric = 0  # used for learning rate policy 'plateau'
 
