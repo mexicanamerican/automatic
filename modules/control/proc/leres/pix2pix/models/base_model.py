@@ -1,6 +1,11 @@
 import gc
+from modules.control.util import torch_gc
+from . import networks
+
 import os
 import torch
+
+from abc import ABC, abstractmethod
 import os
 from abc import ABC, abstractmethod
 from collections import OrderedDict
@@ -50,17 +55,13 @@ class BaseModel(ABC):
         self.metric = 0
 
     @staticmethod
-    def modify_commandline_options(parser, is_train):
+    def modify_commandline_options(parser):
         """Add new model-specific options, and rewrite default values for existing options.
 
         Parameters:
             parser          -- original option parser
-            is_train (bool) -- whether training phase or test phase. You can use this flag to add training-specific or test-specific options.
-
-        Returns:
-            the modified parser.
         """
-        return parser
+        
 
     @abstractmethod
     def set_input(self, input):
