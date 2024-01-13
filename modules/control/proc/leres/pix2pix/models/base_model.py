@@ -1,5 +1,7 @@
 import gc
 import os
+import torch
+import os
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 
@@ -45,7 +47,7 @@ class BaseModel(ABC):
         self.visual_names = []
         self.optimizers = []
         self.image_paths = []
-        self.metric = 0  # used for learning rate policy 'plateau'
+        self.metric = 0
 
     @staticmethod
     def modify_commandline_options(parser, is_train):
