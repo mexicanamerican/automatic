@@ -3,6 +3,8 @@ from modules.control.util import torch_gc
 from modules.control.proc.leres.pix2pix.models import networks
 
 import os
+from typing import List
+import torch
 import torch
 
 from abc import ABC, abstractmethod, abstractmethod, abstractmethod
