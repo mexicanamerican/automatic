@@ -63,7 +63,7 @@ class BaseModel(ABC):
         self.metric = 0  # used for learning rate policy 'plateau'
 
     @staticmethod
-    def modify_commandline_options(parser, is_train):
+    def modify_commandline_options(parser):
         """Add new model-specific options, and rewrite default values for existing options.
 
         Parameters:
