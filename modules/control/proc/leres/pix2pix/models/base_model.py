@@ -25,6 +25,45 @@ class BaseModel(ABC):
         # Check if the opt parameter is None
         if opt is None:
             raise ValueError('The opt parameter cannot be None.')
+        # Check if the opt parameter is None
+        if opt is None:
+            raise ValueError('The opt parameter cannot be None.')
+        """Initialize the BaseModel class.
+    
+        Parameters:
+            opt (Option class)-- stores all the experiment flags; needs to be a subclass of BaseOptions
+    
+        When creating your custom class, you need to implement your own initialization.
+        In this function, you should first call <BaseModel.__init__(self, opt)>
+        Then, you need to define four lists:
+            -- self.loss_names (str list):          specify the training losses that you want to plot and save.
+            -- self.model_names (str list):         define networks used in our training.
+            -- self.visual_names (str list):        specify the images that you want to display and save.
+            -- self.optimizers (optimizer list):    define and initialize optimizers. You can define one optimizer for each network. If two networks are updated at the same time, you can use itertools.chain to group them. See cycle_gan_model.py for an example.
+        """
+        self.opt = opt
+        self.gpu_ids = opt.gpu_ids
+        self.isTrain = opt.isTrain
+        # Update the device assignment to handle the case when gpu_ids is empty
+        self.device = torch.device('cuda:{}'.format(self.gpu_ids[0])) if self.gpu_ids else torch.device('cpu') if self.gpu_ids else torch.device('cpu')
+        # Update the save_dir assignment to use os.path.join
+        self.save_dir = os.path.join(opt.checkpoints_dir, opt.name)
+        if hasattr(opt, 'preprocess') and opt.preprocess != 'scale_width':
+            torch.backends.cudnn.benchmark = True
+            torch.backends.cudnn.benchmark = True
+        # Initialize the loss_names, model_names, visual_names, optimizers, and image_paths attributes
+        self.loss_names = []
+        self.model_names = []
+        self.visual_names = []
+        self.optimizers = []
+        self.image_paths = []
+        self.model_names = []
+        self.visual_names = []
+        self.optimizers = []
+        # Set the metric attribute to 0
+        # Check if the opt parameter is None
+        if opt is None:
+            raise ValueError('The opt parameter cannot be None.')
         """Initialize the BaseModel class.
 
         Parameters:
