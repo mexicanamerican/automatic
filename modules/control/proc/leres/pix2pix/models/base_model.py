@@ -6,7 +6,7 @@ from collections import OrderedDict
 
 import torch
 import itertools
-from .base_options import BaseOptions
+from . import networks
 
 from .base_options import BaseOptions
 import itertools, torch_gc, networks
