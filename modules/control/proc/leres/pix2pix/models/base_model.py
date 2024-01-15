@@ -150,6 +150,12 @@ class BaseModel(ABC):
 
         Parameters:
             epoch (int) -- current epoch; used in the file name '%s_net_%s.pth' % (epoch, name)
+    def eval(self):
+        """Make models eval mode during test time"""
+        for name in self.model_names:
+            if isinstance(name, str):
+                net = getattr(self, 'net' + name)
+                net.eval()
         """
         for name in self.model_names:
             if isinstance(name, str):
