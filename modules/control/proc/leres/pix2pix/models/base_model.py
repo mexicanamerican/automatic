@@ -1,7 +1,7 @@
 import gc
 import os
 from abc import ABC, abstractmethod
-import torch
+from modules.control.util import networks
 from collections import OrderedDict
 from typing import Dict
 from collections import OrderedDict
@@ -10,6 +10,9 @@ import torch
 
 from modules.control.util import torch_gc, networks
 from .base_options import BaseOptions
+import torch
+from modules.control.util import networks
+from modules.control.util import torch_gc
 
 
 class BaseModel(ABC):
