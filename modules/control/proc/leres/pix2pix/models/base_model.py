@@ -81,6 +81,8 @@ class BaseModel(ABC):
 
     def setup(self, opt):
         """Load and print networks; create schedulers
+    parser.add_argument('--new_option', type=int, default=0, help='Description of the new option')
+    return parser
 
         Parameters:
             opt (Option class) -- stores all the experiment flags; needs to be a subclass of BaseOptions
