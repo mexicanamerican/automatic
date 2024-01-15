@@ -14,7 +14,42 @@
 </div>
 </br>
 
-## Notable features
+## Common GitHub Actions Workflow Issues and Resolutions
+
+### GitHub Actions Workflow Not Triggering
+
+#### Resolution:
+- Check if the workflow file is in the correct location and has the correct name
+- Make sure that the triggering event (e.g., push to main branch) matches the workflow configuration
+- Verify the repository permissions and branch settings
+
+### Python Version Error
+
+#### Resolution:
+- Ensure that the correct Python version is specified in the workflow file
+- Check for any conflicting Python versions in the workflow or dependencies
+- Use the `setup-python` action to specify the required Python version
+
+### Dependency Installation Error
+
+#### Resolution:
+- Check for the presence of the `requirements.txt` file
+- Use the `setup-python` action to install the required Python version
+- Verify the permissions for installing dependencies
+
+### Test Failures
+
+#### Resolution:
+- Review the test configurations and make sure the test suites are correctly specified
+- Check for any environmental dependencies required for the tests
+
+### Interpreting Error Logs
+
+When encountering errors in the GitHub Actions workflow, follow these steps to interpret the error logs and resolve common issues:
+1. Examine the error logs for specific error messages and stack traces.
+2. Look for common error patterns and understand their implications.
+3. Search the documentation, discussions, or issue tracker for solutions to common errors.
+4. Check for specific requirements or dependencies that need to be installed or configured for the workflow to run successfully.
 
 All individual features are not listed here, instead check [ChangeLog](CHANGELOG.md) for full list of changes
 - Multiple backends!  
@@ -105,6 +140,18 @@ Also supported are modifiers such as:
 
 ## Install
 
+## GitHub Actions Workflow and Dependencies
+
+In order to run the GitHub Actions workflow, make sure the following dependencies are installed and configured correctly:
+- **GitHub Actions runner**: Ensure that the GitHub Actions runner is properly set up and configured
+- **Python**: The workflow uses Python, so make sure the correct Python version is installed and available
+- **pip dependencies**: The workflow may have specific dependencies listed in the `requirements.txt` file. Make sure these dependencies are installed  
+For any other use case such as **DirectML**, **GitHub Actions workflow**, **ONNX/Olive**, **OpenVINO**, **GitHub Actions workflow** specify required parameter explicitly, **ONNX/Olive**, **OpenVINO** specify required parameter explicitly
+or wrong packages may be installed as installer will assume CPU-only environment
+
+In order to run the GitHub Actions workflow, make sure the following dependencies are installed and configured correctly:
+- **GitHub Actions runner**: Ensure that the GitHub Actions runner is properly set up and configured
+
 - [Step-by-step install guide](https://github.com/vladmandic/automatic/wiki/Installation)
 - [Advanced install notes](https://github.com/vladmandic/automatic/wiki/Advanced-Install)
 - [Common installation errors](https://github.com/vladmandic/automatic/discussions/1627)  
@@ -114,8 +161,13 @@ Also supported are modifiers such as:
 > [!TIP]
 > - Server can run without virtual environment,  
   Recommended to use `VENV` to avoid library version conflicts with other applications  
-> - **nVidia/CUDA** / **AMD/ROCm** / **Intel/OneAPI** are auto-detected if present and available,  
-  For any other use case such as **DirectML**, **ONNX/Olive**, **OpenVINO** specify required parameter explicitly  
+> ## GitHub Actions Workflow Dependencies 
+
+In order to run the GitHub Actions workflow, make sure the following dependencies are installed and configured correctly:
+- **GitHub Actions runner**: Ensure that the GitHub Actions runner is properly set up and configured
+- **Python**: The workflow uses Python, so make sure the correct Python version is installed and available
+- **pip dependencies**: The workflow may have specific dependencies listed in the `requirements.txt` file. Make sure these dependencies are installed  
+  For any other use case such as **DirectML**, **ONNX/Olive**, **OpenVINO**, specify the required parameter explicitly to avoid wrong package installations  
   or wrong packages may be installed as installer will assume CPU-only environment  
 > - Full startup sequence is logged in `sdnext.log`,  
   so if you encounter any issues, please check it first  
@@ -184,7 +236,13 @@ SD.Next comes with several extensions pre-installed:
 - In addition to general cross-platform code, desire is to have a lead for each of the main platforms.
 This should be fully cross-platform, but we'd really love to have additional contributors and/or maintainers to join and help lead the efforts on different platforms.
 
-### **Goals**
+## Troubleshooting Common Errors
+
+When encountering errors in the GitHub Actions workflow, follow these steps to interpret the error logs and resolve common issues:
+1. Examine the error logs for specific error messages and stack traces.
+2. Look for common error patterns and understand their implications.
+3. Search the documentation, discussions, or issue tracker for solutions to common errors.
+4. Check for specific requirements or dependencies that need to be installed or configured for the workflow to run successfully.
 
 This project started as a fork from [Automatic1111 WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui/) and it grew significantly since then,  
 but although it diverged considerably, any substantial features to original work is ported to this repository as well.
@@ -224,9 +282,96 @@ check [ChangeLog](CHANGELOG.md) for when feature was first introduced as it will
 - [ReadMe](README.md)
 - [ToDo](TODO.md)  
 - [ChangeLog](CHANGELOG.md)
-- [CLI Tools](cli/README.md)
+## Common GitHub Actions Workflow Issues and Resolutions
+
+### Issue: Workflow Not Triggering
+
+#### Resolution:
+- Check if the workflow file is in the correct location and has the correct name
+- Make sure that the triggering event (e.g., push to main branch) matches the workflow configuration
+- Verify the repository permissions and branch settings
+
+### Issue: Python Version Error
+
+#### Resolution:
+- Ensure that the correct Python version is specified in the workflow file
+- Check for any conflicting Python versions in the workflow or dependencies
+- Use the `setup-python` action to specify the required Python version
+
+### Issue: Dependency Installation Error
+
+#### Resolution:
+- Check for the presence of the `requirements.txt` file
+- Use the `setup-python` action to install the required Python version
+- Verify the permissions for installing dependencies
+
+### Issue: Test Failures
+
+#### Resolution:
+- Review the test configurations and make sure the test suites are correctly specified
+- Check for any environmental dependencies required for the tests
 
 ### **Sponsors**
+
+### Interpreting Error Logs
+
+When encountering errors in the GitHub Actions workflow, follow these steps to interpret the error logs and resolve common issues:
+1. Examine the error logs for specific error messages and stack traces.
+2. Look for common error patterns and understand their implications.
+3. Search the documentation, discussions, or issue tracker for solutions to common errors.
+4. Check for specific requirements or dependencies that need to be installed or configured for the workflow to run successfully.
+
+When encountering errors in the GitHub Actions workflow, follow these steps to interpret the error logs and resolve common issues:
+1. Examine the error logs for specific error messages and stack traces.
+2. Look for common error patterns and understand their implications.
+3. Search the documentation, discussions, or issue tracker for solutions to common errors.
+4. Check for specific requirements or dependencies that need to be installed or configured for the workflow to run successfully.
+
+To interpret the error logs and troubleshoot common issues, follow the guidelines below:
+## Common GitHub Actions Workflow Issues and Resolutions
+
+### Issue: Workflow Not Triggering
+
+#### Resolution:
+- Check if the workflow file is in the correct location and has the correct name
+- Make sure that the triggering event (e.g., push to main branch) matches the workflow configuration
+- Verify the repository permissions and branch settings
+
+### Python Version Error
+
+#### Resolution:
+- Ensure that the correct Python version is specified in the workflow file
+- Check for any conflicting Python versions in the workflow or dependencies
+- Use the `setup-python` action to specify the required Python version
+
+### Dependency Installation Error
+
+#### Resolution:
+- Check for the presence of the `requirements.txt` file
+- Use the `setup-python` action to install the required Python version
+- Verify the permissions for installing dependencies
+
+### Test Failures
+
+#### Resolution:
+- Review the test configurations and make sure the test suites are correctly specified
+- Check for any environmental dependencies required for the tests
+2. Look for common error patterns and understand their implications.
+3. Search the documentation, discussions, or issue tracker for solutions to common errors.
+## Common GitHub Actions Workflow Issues and Resolutions
+
+### Issue: Workflow Not Triggering
+
+#### Resolution:
+- Check if the workflow file is in the correct location and has the correct name
+- Make sure that the triggering event (e.g., push to main branch) matches the workflow configuration
+- Verify the repository permissions and branch settings
+
+### Python Version Error
+
+#### Resolution:
+- Ensure that the correct Python version is specified in the workflow file
+- Check for any conflicting Python versions in the workflow or dependencies
 
 <div align="center">
 <!-- sponsors --><a href="https://github.com/allangrant"><img src="https://github.com/allangrant.png" width="60px" alt="Allan Grant" /></a><a href="https://github.com/BrentOzar"><img src="https://github.com/BrentOzar.png" width="60px" alt="Brent Ozar" /></a><a href="https://github.com/inktomi"><img src="https://github.com/inktomi.png" width="60px" alt="Matthew Runo" /></a><a href="https://github.com/HELLO-WORLD-SAS"><img src="https://github.com/HELLO-WORLD-SAS.png" width="60px" alt="HELLO WORLD SAS" /></a><a href="https://github.com/4joeknight4"><img src="https://github.com/4joeknight4.png" width="60px" alt="" /></a><a href="https://github.com/SaladTechnologies"><img src="https://github.com/SaladTechnologies.png" width="60px" alt="Salad Technologies" /></a><a href="https://github.com/mantzaris"><img src="https://github.com/mantzaris.png" width="60px" alt="a.v.mantzaris" /></a><a href="https://github.com/FieldMarshallVague"><img src="https://github.com/FieldMarshallVague.png" width="60px" alt="Toby Worth" /></a><!-- sponsors -->
