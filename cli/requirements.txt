@@ -2,3 +2,6 @@ mediapipe
 colormap
 filetype
 albumentations
+torch
+dash
+json
