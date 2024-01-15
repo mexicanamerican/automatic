@@ -19,7 +19,10 @@ class BaseModel(ABC):
         -- <modify_commandline_options>:    (optionally) add model-specific options and set default options.
     """
 
-    def __init__(self, opt):
+    def __init__(self, opt, logger, dependencies=None, configurations=None):
+        if dependencies is None or configurations is None:
+            logger.error('Missing dependencies or configuration issues')
+            raise Exception('Missing dependencies or configuration issues')
         """Initialize the BaseModel class.
 
         Parameters:
