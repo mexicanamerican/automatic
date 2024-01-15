@@ -204,9 +204,31 @@ def process_face(res: Result):
         face_model = mp.solutions.face_detection.FaceDetection(min_detection_confidence=options.process.face_score, model_selection=options.process.face_model)
     results = face_model.process(np.array(res.image))
     if results.detections is None:
-        res.message = 'no face detected'
+    res.message = 'no face detected'
+    res.image = None
+    return res
+    
+    
+    def process_body(res: Result):
+    res.ops.append('body')
+    global body_model
+    if body_model is None:
+        body_model = mp.solutions.pose.Pose(static_image_mode=True, min_detection_confidence=options.process.body_score, model_complexity=options.process.body_model)
+    results = body_model.process(np.array(res.image))
+    if results.pose_landmarks is None:
+        res.message = 'no body detected'
         res.image = None
         return res
+    x0 = [res.image.width * (i.x - options.process.body_pad / 2) for i in results.pose_landmarks.landmark if i.visibility > options.process.body_visibility]
+    y0 = [res.image.height * (i.y - options.process.body_pad / 2) for i in results.pose_landmarks.landmark if i.visibility > options.process.body_visibility]
+    x1 = [res.image.width * (i.x + options.process.body_pad / 2) for i in results.pose_landmarks.landmark if i.visibility > options.process.body_visibility]
+    y1 = [res.image.height * (i.y + options.process.body_pad / 2) for i in results.pose_landmarks.landmark if i.visibility > options.process.body_visibility]
+    if len(x0) < options.process.body_parts:
+        res.message = f'insufficient body parts detected: {len(x0)}'
+        res.image = None
+        return res
+    res.image = res.image.crop((max(0, min(x0)), max(0, min(y0)), min(res.image.width, max(x1)), min(res.image.height, max(y1))))
+    return res
     box = results.detections[0].location_data.relative_bounding_box
     if box.xmin < 0 or box.ymin < 0 or (box.width - box.xmin) > 1 or (box.height - box.ymin) > 1:
         res.message = 'face out of frame'
@@ -277,6 +299,26 @@ def file(filename: str, folder: str, tag = None, requested = []): # noqa: B006
         return res
     # primary steps
     if 'face' in requested:
+def process_body(res: Result):
+    res.ops.append('body')
+    global body_model
+    if body_model is None:
+        body_model = mp.solutions.pose.Pose(static_image_mode=True, min_detection_confidence=options.process.body_score, model_complexity=options.process.body_model)
+    results = body_model.process(np.array(res.image))
+    if results.pose_landmarks is None:
+        res.message = 'no body detected'
+        res.image = None
+        return res
+    x0 = [res.image.width * (i.x - options.process.body_pad / 2) for i in results.pose_landmarks.landmark if i.visibility > options.process.body_visibility]
+    y0 = [res.image.height * (i.y - options.process.body_pad / 2) for i in results.pose_landmarks.landmark if i.visibility > options.process.body_visibility]
+    x1 = [res.image.width * (i.x + options.process.body_pad / 2) for i in results.pose_landmarks.landmark if i.visibility > options.process.body_visibility]
+    y1 = [res.image.height * (i.y + options.process.body_pad / 2) for i in results.pose_landmarks.landmark if i.visibility > options.process.body_visibility]
+    if len(x0) < options.process.body_parts:
+        res.message = f'insufficient body parts detected: {len(x0)}'
+        res.image = None
+        return res
+    res.image = res.image.crop((max(0, min(x0)), max(0, min(y0)), min(res.image.width, max(x1)), min(res.image.height, max(y1))))
+    return res
         res.type = 'face'
         res = process_face(res)
     elif 'body' in requested:
@@ -295,6 +337,37 @@ def file(filename: str, folder: str, tag = None, requested = []): # noqa: B006
             res.message = f'blur check failed: {val}'
             res.image = None
     if 'range' in requested:
+        res.ops.append('range')
+        val = detect_dynamicrange(res.image)
+        if val < options.process.range_score:
+            res.message = f'dynamic range check failed: {val}'
+            res.image = None
+    if 'similarity' in requested:
+        res.ops.append('similarity')
+        val = detect_simmilar(res.image)
+        if val > options.process.similarity_score:
+            res.message = f'dynamic range check failed: {val}'
+            res.image = None
+    if res.image is None:
+        return res
+    # post processing steps
+    res = upscale_restore_image(res, 'upscale' in requested, 'restore' in requested)
+    if res.image.width < options.process.target_size or res.image.height < options.process.target_size:
+        res.message = f'low resolution: [{res.image.width}, {res.image.height}]'
+        res.image = None
+        return res
+    if 'interrogate' in requested:
+        res = interrogate_image(res, tag)
+    if 'resize' in requested:
+        res = resize_image(res)
+    if 'square' in requested:
+        res = square_image(res)
+    if 'segment' in requested:
+        res = segmentation(res)
+    # finally save image
+    res = save_image(res, folder)
+    return res
+    return res
         res.ops.append('range')
         val = detect_dynamicrange(res.image)
         if val < options.process.range_score:
