@@ -9,7 +9,7 @@ import itertools
 from .base_options import BaseOptions
 
 from .base_options import BaseOptions
-from modules.control.util import networks, torch_gc
+import itertools, torch_gc, networks
 
 
 class BaseModel(ABC):
