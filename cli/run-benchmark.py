@@ -9,7 +9,8 @@ import json
 import time
 from PIL import Image
 import sdapi
-from util import Map, log
+from cli.util import Map
+from cli import log
 
 
 options = Map({
