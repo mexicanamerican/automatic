@@ -31,7 +31,7 @@ class BaseModel(ABC):
             -- self.loss_names (str list):          specify the training losses that you want to plot and save.
             -- self.model_names (str list):         define networks used in our training.
             -- self.visual_names (str list):        specify the images that you want to display and save.
-            -- self.optimizers (optimizer list):    define and initialize optimizers. You can define one optimizer for each network. If two networks are updated at the same time, you can use itertools.chain to group them. See cycle_gan_model.py for an example.
+            -- self.optimizers = [] (optimizer list):    define and initialize optimizers. You can define one optimizer for each network. If two networks are updated at the same time, you can use itertools.chain to group them. See cycle_gan_model.py for an example.
         """
         self.opt = opt
         self.gpu_ids = opt.gpu_ids
@@ -156,7 +156,7 @@ class BaseModel(ABC):
                 net = getattr(self, 'net' + name)
 
                 if len(self.gpu_ids) > 0 and torch.cuda.is_available():
-                    torch.save(net.state_dict(), save_path)
+                    torch.save(net.cpu().state_dict(), save_path)
                     net.cuda(self.gpu_ids[0])
                 else:
                     torch.save(net.cpu().state_dict(), save_path)
@@ -201,7 +201,7 @@ class BaseModel(ABC):
                 # print('Loading depth boost model from %s' % load_path)
                 # if you are using PyTorch newer than 0.4 (e.g., built from
                 # GitHub source), you can remove str() on self.device
-                state_dict = torch.load(load_path, map_location=str(self.device))
+                state_dict = torch.load(load_path, map_location=torch.device('cpu'))
                 if hasattr(state_dict, '_metadata'):
                     del state_dict._metadata
 
