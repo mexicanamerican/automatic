@@ -5,7 +5,7 @@ embedding = Map({
     "embedding_name": "",
     "learn_rate": -1,
     "batch_size": 1,
-    "steps": 500,
+    "steps": 1000,
     "data_root": "",
     "log_directory": "train/log",
     "template_filename": "subject_filewords.txt",
@@ -132,7 +132,7 @@ process = Map({
     # similarity detection settings
     # interrogate settings
     'interrogate': False, # interrogate images
-    'interrogate_model': ['clip', 'deepdanbooru'], # interrogate models
+    'interrogate_model': ['deepdanbooru', 'clip'], # interrogate models
     'tag_limit': 5, # number of tags to extract
     # validations
     # tbd
