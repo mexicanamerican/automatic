@@ -5,8 +5,8 @@ from collections import OrderedDict
 
 import torch
 
-from modules.control.util import torch_gc
-from . import networks
+from modules.control.util import torch_gc, networks
+from . import networks, BaseOptions
 
 
 class BaseModel(ABC):
@@ -85,6 +85,11 @@ class BaseModel(ABC):
         Parameters:
             opt (Option class) -- stores all the experiment flags; needs to be a subclass of BaseOptions
         """
+        self.model_names = []
+        self.visual_names = []
+        self.optimizers = []
+        self.image_paths = []
+        self.metric = 0  # used for learning rate policy 'plateau'
         if self.isTrain:
             self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
         if not self.isTrain or opt.continue_train:
