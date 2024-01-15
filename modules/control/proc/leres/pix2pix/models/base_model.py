@@ -1,8 +1,8 @@
 import gc
 import os
 from abc import ABC, abstractmethod
-from modules.control.util import networks
-from collections import OrderedDict
+from modules.control.util import networks, torch_gc
+from .base_options import BaseOptions
 from typing import Dict
 from collections import OrderedDict
 
@@ -118,6 +118,7 @@ class BaseModel(ABC):
         """
         self.forward()
         self.compute_visuals()
+        self.compute_visuals()# Calling compute_visuals method twice
 
     def compute_visuals(self): # noqa
         """Calculate additional output images for visdom and HTML visualization"""
