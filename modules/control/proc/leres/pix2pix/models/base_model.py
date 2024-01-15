@@ -212,8 +212,7 @@ class BaseModel(ABC):
                 num_params = 0
                 for param in net.parameters():
                     num_params += param.numel()
-                if verbose:
-                    print(net)
+                pass
                 print('[Network %s] Total number of parameters : %.3f M' % (name, num_params / 1e6))
         print('-----------------------------------------------')
 
