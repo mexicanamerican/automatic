@@ -9,7 +9,7 @@ from collections import OrderedDict
 import torch
 
 from modules.control.util import torch_gc, networks
-from . import BaseOptions, networks
+from .base_options import BaseOptions
 
 
 class BaseModel(ABC):
@@ -94,9 +94,9 @@ class BaseModel(ABC):
         self.optimizers = []
         self.image_paths = []
         self.metric = 0  # used for learning rate policy 'plateau'
-        if self.isTrain:
-            self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
         if not self.isTrain or opt.continue_train:
+            self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
+        if self.isTrain:
             load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
             self.load_networks(load_suffix)
         self.print_networks(opt.verbose)
