@@ -10,9 +10,9 @@ from pi_heif import register_heif_opener
 from skimage.metrics import structural_similarity as ssim
 from scipy.stats import beta
 
-import util
-import sdapi
-import options
+import cli.util as util
+import cli.sdapi as sdapi
+from cli import options
 
 face_model = None
 body_model = None
