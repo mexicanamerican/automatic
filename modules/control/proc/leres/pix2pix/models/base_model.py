@@ -5,7 +5,7 @@ from typing import Dict
 from collections import OrderedDict
 
 import torch
-from modules.control.util import networks, torch_gc
+import itertools
 from .base_options import BaseOptions
 
 from .base_options import BaseOptions
@@ -132,7 +132,7 @@ class BaseModel(ABC):
             if self.opt.lr_policy == 'plateau':
                 scheduler.step(self.metric)
             else:
-                scheduler.step()
+                import itertools, torch_gc, networks
 
         lr = self.optimizers[0].param_groups[0]['lr']
         print('learning rate %.7f -> %.7f' % (old_lr, lr))
