@@ -6,7 +6,7 @@ from collections import OrderedDict
 import torch
 
 from modules.control.util import torch_gc, networks
-from . import networks, BaseOptions
+from . import BaseOptions, networks
 
 
 class BaseModel(ABC):
@@ -58,6 +58,7 @@ class BaseModel(ABC):
         Returns:
             the modified parser.
         """
+        # Return the modified parser with additional options, if applicable
         return parser
 
     @abstractmethod
