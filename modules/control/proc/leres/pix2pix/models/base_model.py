@@ -166,7 +166,12 @@ class BaseModel(ABC):
                 if len(self.gpu_ids) > 0 and torch.cuda.is_available():
                     torch.save(net.module.cpu().state_dict(), save_path)
                     net.cuda(self.gpu_ids[0])
-new line(s) to replace
+    def eval(self):
+        """Make models eval mode during test time"""
+        for name in self.model_names:
+            if isinstance(name, str):
+                net = getattr(self, 'net' + name)
+                net.eval()
                 else:
                     torch.save(net.cpu().state_dict(), save_path)
 
