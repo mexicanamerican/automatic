@@ -30,11 +30,13 @@ status = None
 def progress():
     auth = requests.auth.HTTPBasicAuth(opts.user, opts.password) if opts.user is not None and len(opts.user) > 0 and opts.password is not None and len(opts.password) > 0 else None
     req = requests.get(f'{opts.url}/sdapi/v1/progress?skip_current_image=true', verify=False, auth=auth, timeout=60)
-    if req.status_code != 200:
+    if req.status_code not in [200, 404]:
         log.error({ 'url': req.url, 'request': req.status_code, 'reason': req.reason })
-        return status
+        log.error({ 'url': req.url, 'request': req.status_code, 'reason': req.reason })
+        return None
     else:
         res = Dot(req.json())
+        log.debug({ 'url': req.url, 'request': req.status_code, 'result': res })
         log.debug({ 'url': req.url, 'request': req.status_code, 'result': res })
         return res
 
