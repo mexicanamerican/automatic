@@ -93,7 +93,12 @@ class BaseModel(ABC):
         self.print_networks(opt.verbose)
         self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
 
-    def eval(self):
+        def eval(self):
+        """Make models eval mode during test time"""
+        for name in self.model_names:
+            if isinstance(name, str):
+                net = getattr(self, 'net' + name)
+                net.eval()
         """Make models eval mode during test time"""
         for name in self.model_names:
             if isinstance(name, str):
@@ -119,7 +124,10 @@ class BaseModel(ABC):
     def update_learning_rate(self):
         """Update learning rates for all the networks; called at the end of every epoch"""
         old_lr = self.optimizers[0].param_groups[0]['lr']
-        for scheduler in self.schedulers:
+                for name in self.model_names:
+            if isinstance(name, str):
+                net = getattr(self, 'net' + name)
+                net.eval()
             if self.opt.lr_policy == 'plateau':
                 scheduler.step(self.metric)
             else:
