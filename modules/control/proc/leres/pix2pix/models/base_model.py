@@ -113,11 +113,18 @@ class BaseModel(ABC):
         except Exception as e:
             print('Test method error:', e)
             # Log the error message and any relevant information to help identify the cause of the failure.
+            print('Compute visuals error:', e)
+            # Log the error message and any relevant information to help identify the cause of the failure.
         self.compute_visuals()
 
     def compute_visuals(self): # noqa
         """Calculate additional output images for visdom and HTML visualization"""
-        pass
+        try:
+            # Add visualization computation code here
+            pass
+        except Exception as e:
+            print('Compute visuals error:', e)
+            # Log the error message and any relevant information to help identify the cause of the failure.
 
     def get_image_paths(self):
         """ Return image paths that are used to load current data"""
@@ -131,6 +138,11 @@ class BaseModel(ABC):
                 scheduler.step(self.metric)
             else:
                 scheduler.step()
+
+        lr = self.optimizers[0].param_groups[0]['lr']
+        print('learning rate %.7f -> %.7f' % (old_lr, lr))
+
+    def get_current_visuals(self):
 
         lr = self.optimizers[0].param_groups[0]['lr']
         print('learning rate %.7f -> %.7f' % (old_lr, lr))
