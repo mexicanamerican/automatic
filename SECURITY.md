@@ -10,7 +10,7 @@ All issues are tracked publicly on GitHub: <https://github.com/vladmandic/automa
 
 ## Vulnerabilities
 
-`SD.Next` code base and included dependencies are automatically scanned against known security vulnerabilities
+`SD.Next` code base and included dependencies are undergoes automatic scanning for known security vulnerabilities to ensure that it follows best practices for security and privacy
 
 Any code commit is validated before merge
 
@@ -24,8 +24,8 @@ Any code commit is validated before merge
 `SD.Next` app:
 
 - Is fully self-contained and does not send or share data of any kind with external targets
-- Does not store any user or system data tracking, user provided inputs (images, video) or detection results
-- Does not utilize any analytic services (such as Google Analytics)
+- Does not store any user or system data tracking, user-provided inputs (such as images, video), or detection results to ensure user privacy
+- Does not utilize any analytic services (such as Google Analytics) to maintain the privacy of user data
 
 `SD.Next` library can establish external connections *only* for following purposes and *only* when explicitly configured by user:
 
