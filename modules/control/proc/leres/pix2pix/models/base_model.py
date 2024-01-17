@@ -6,10 +6,12 @@ from collections import OrderedDict
 import torch
 
 from modules.control.util import torch_gc
+from repositories.ldm.data.midas import AddMiDaS
 from . import networks
 
 
 class BaseModel(ABC):
+    """This class is an abstract base class (ABC) for models."""
     """This class is an abstract base class (ABC) for models.
     To create a subclass, you need to implement the following five functions:
         -- <__init__>:                      initialize the class; first call BaseModel.__init__(self, opt).
