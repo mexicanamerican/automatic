@@ -7,7 +7,7 @@ from huggingface_hub import hf_hub_download
 from PIL import Image
 
 from modules.control.util import HWC3, resize_image
-from .leres.depthmap import estimateboost, estimateleres
+from modules.control.proc.leres.depthmap import estimateboost, estimateleres
 from .leres.multi_depth_model_woauxi import RelDepthModel
 from .leres.net_tools import strip_prefix_if_present
 from .pix2pix.models.pix2pix4depth_model import Pix2Pix4DepthModel
@@ -28,7 +28,7 @@ class LeresDetector:
         else:
             model_path = hf_hub_download(pretrained_model_or_path, filename, cache_dir=cache_dir)
         checkpoint = torch.load(model_path, map_location=torch.device('cpu'))
-        model = RelDepthModel(backbone='resnext101')
+        model = RelDepthModel()
         model.load_state_dict(strip_prefix_if_present(checkpoint['depth_model'], "module."), strict=True)
         del checkpoint
         if os.path.isdir(pretrained_model_or_path):
