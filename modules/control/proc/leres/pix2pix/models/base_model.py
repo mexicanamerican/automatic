@@ -178,6 +178,12 @@ class BaseModel(ABC):
                 else:
                     torch.save(net.cpu().state_dict(), save_path)
 
+        try:
+            save_path = os.path.join(self.save_dir, save_filename)
+        except Exception as e:
+            print('An error occurred during saving of networks:', str(e))
+            return
+
     def unload_network(self, name):
         """Unload network and gc.
         """
