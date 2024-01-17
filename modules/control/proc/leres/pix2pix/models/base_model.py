@@ -1,12 +1,14 @@
 import gc
 import os
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, ABCMeta
 from collections import OrderedDict
+import itertools
 
 import torch
 
 from modules.control.util import torch_gc
 from . import networks
+import torch.backends.cudnn
 
 
 class BaseModel(ABC):
