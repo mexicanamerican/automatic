@@ -92,7 +92,15 @@ class BaseModel(ABC):
             self.load_networks(load_suffix)
         self.print_networks(opt.verbose)
 
-    def eval(self):
+    def eval(self): 
+        try:
+            # Make models eval mode during test time
+            for name in self.model_names:
+                if isinstance(name, str):
+                    net = getattr(self, 'net' + name)
+                    net.eval()
+        except Exception as e:
+            print('An error occurred during evaluation:', str(e))
         """Make models eval mode during test time"""
         for name in self.model_names:
             if isinstance(name, str):
@@ -104,10 +112,19 @@ class BaseModel(ABC):
 
         It also calls <compute_visuals> to produce additional visualization results
         """
-        self.forward()
+        try:
+            self.forward()
+        except Exception as e:
+            print('An error occurred during testing:', str(e))
         self.compute_visuals()
 
     def compute_visuals(self): # noqa
+        """Calculate additional output images for visdom and HTML visualization"""
+        try:
+            # Add try-except block to catch any exceptions during visual computation
+            pass  # Replace pass with actual visual computation code
+        except Exception as e:
+            print('An error occurred during visual computation:', str(e))
         """Calculate additional output images for visdom and HTML visualization"""
         pass
 
@@ -161,6 +178,12 @@ class BaseModel(ABC):
                 else:
                     torch.save(net.cpu().state_dict(), save_path)
 
+        try:
+            save_path = os.path.join(self.save_dir, save_filename)
+        except Exception as e:
+            print('An error occurred during saving of networks:', str(e))
+            return
+
     def unload_network(self, name):
         """Unload network and gc.
         """
@@ -201,7 +224,10 @@ class BaseModel(ABC):
                 # print('Loading depth boost model from %s' % load_path)
                 # if you are using PyTorch newer than 0.4 (e.g., built from
                 # GitHub source), you can remove str() on self.device
-                state_dict = torch.load(load_path, map_location=str(self.device))
+                try:
+                    state_dict = torch.load(load_path, map_location=str(self.device))
+                except Exception as e:
+                    print('An error occurred during loading of networks:', str(e))
                 if hasattr(state_dict, '_metadata'):
                     del state_dict._metadata
 
@@ -211,6 +237,10 @@ class BaseModel(ABC):
                 net.load_state_dict(state_dict)
 
     def print_networks(self, verbose):
+        try:
+            print('---------- Networks initialized -------------')
+        except Exception as e:
+            print('An error occurred during network initialization:', str(e))
         """Print the total number of parameters in the network and (if verbose) network architecture
 
         Parameters:
