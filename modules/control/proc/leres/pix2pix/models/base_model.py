@@ -112,7 +112,10 @@ class BaseModel(ABC):
 
         It also calls <compute_visuals> to produce additional visualization results
         """
-        self.forward()
+        try:
+            self.forward()
+        except Exception as e:
+            print('An error occurred during testing:', str(e))
         self.compute_visuals()
 
     def compute_visuals(self): # noqa
