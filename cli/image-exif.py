@@ -6,6 +6,7 @@ import re
 import sys
 import json
 from PIL import Image, ExifTags, TiffImagePlugin, PngImagePlugin
+import logging
 from rich import print # pylint: disable=redefined-builtin
 
 # warnings.filterwarnings("ignore", category=UserWarning)
@@ -34,6 +35,9 @@ class Exif: # pylint: disable=single-string-used-for-slots
         except Exception:
             exif_dict = dict(img.info.items())
         for key, val in exif_dict.items():
+            if val is None:
+                logging.warning('Exif value is None for key: %s', key)
+                continue
             if isinstance(val, bytes): # decode bytestring
                 val = self.decode(val)
             if val is not None:
@@ -91,7 +95,7 @@ def read_exif(filename: str):
         exif = Exif(img)
         print('image:', filename, 'format:', img.format, 'metadata:', json.dumps(vars(exif.exif)['_data'], indent=2))
     except Exception as e:
-        print('metadata error reading:', filename, e)
+        logging.error('Error reading metadata for file: %s', filename, exc_info=True)
     # exif.exif['Software'] = 'This is a Test'
     # img.save('input-scored.jpg', exif=exif.bytes())
 
