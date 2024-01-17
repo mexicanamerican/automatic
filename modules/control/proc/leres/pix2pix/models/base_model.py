@@ -237,6 +237,10 @@ class BaseModel(ABC):
                 net.load_state_dict(state_dict)
 
     def print_networks(self, verbose):
+        try:
+            print('---------- Networks initialized -------------')
+        except Exception as e:
+            print('An error occurred during network initialization:', str(e))
         """Print the total number of parameters in the network and (if verbose) network architecture
 
         Parameters:
