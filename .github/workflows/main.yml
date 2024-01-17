@@ -1,4 +1,4 @@
-name: CI
+name: CI [Trigger]
 
 on:
   push:
@@ -27,6 +27,6 @@ jobs:
       - name: Run tests
         run: pytest
 
-      - name: Build and deploy
+      - name: Build and deploy [Trigger]
         run: |
           # Add build and deploy commands here
