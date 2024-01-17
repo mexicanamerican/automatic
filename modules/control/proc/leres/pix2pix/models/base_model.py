@@ -1,3 +1,4 @@
+import torch
 import gc
 import os
 from abc import ABC, abstractmethod
@@ -20,6 +21,7 @@ class BaseModel(ABC):
     """
 
     def __init__(self, opt):
+        """Initialize the BaseModel class."""
         """Initialize the BaseModel class.
 
         Parameters:
@@ -67,7 +69,7 @@ class BaseModel(ABC):
         Parameters:
             input (dict): includes the data itself and its metadata information.
         """
-        pass
+
 
     @abstractmethod
     def forward(self):
