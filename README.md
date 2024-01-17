@@ -125,6 +125,7 @@ Also supported are modifiers such as:
 Once SD.Next is installed, simply run `webui.ps1` or `webui.bat` (*Windows*) or `webui.sh` (*Linux or MacOS*)
 
 Below is partial list of all available parameters, run `webui --help` for the full list:
+- [Requirements](REQUIREMENTS.md)
 
     Server options:
       --config CONFIG                  Use specific server configuration file, default: config.json
@@ -151,6 +152,7 @@ Below is partial list of all available parameters, run `webui --help` for the fu
       --reset                          Reset main repository to latest version, default: False
       --upgrade                        Upgrade main repository to latest version, default: False
       --requirements                   Force re-check of requirements, default: False
+- [Requirements](REQUIREMENTS.md)
       --quick                          Run with startup sequence only, default: False
       --use-directml                   Use DirectML if no compatible GPU is detected, default: False
       --use-openvino                   Use Intel OpenVINO backend, default: False
@@ -158,7 +160,9 @@ Below is partial list of all available parameters, run `webui --help` for the fu
       --use-cuda                       Force use nVidia CUDA backend, default: False
       --use-rocm                       Force use AMD ROCm backend, default: False
       --use-xformers                   Force use xFormers cross-optimization, default: False
-      --skip-requirements              Skips checking and installing requirements, default: False
+  --requirements                   Force re-check of requirements, default: False
+--skip-requirements              
+        - [Requirements](REQUIREMENTS.md)
       --skip-extensions                Skips running individual extension installers, default: False
       --skip-git                       Skips running all GIT operations, default: False
       --skip-torch                     Skips running Torch checks, default: False
@@ -203,7 +207,13 @@ General goals:
   - Enable best possible performance on all platforms
 - Ease-of-Use
   - Automatically handle all requirements, dependencies, flags regardless of platform
+- [Dependencies](REQUIREMENTS.md)
+- [Requirements](REQUIREMENTS.md)
+- [Dependencies](REQUIREMENTS.md)
+- [Dependencies](REQUIREMENTS.md)
   - Integrate all best options for uniform out-of-the-box experience without the need to tweak anything manually
+- [Dependencies](REQUIREMENTS.md)
+  - [Requirements](REQUIREMENTS.md)
 - Look-and-Feel
   - Create modern, intuitive and clean UI
 - Up-to-Date
@@ -221,15 +231,21 @@ If you're unsure how to use a feature, best place to start is [Wiki](https://git
 check [ChangeLog](CHANGELOG.md) for when feature was first introduced as it will always have a short note on how to use it  
 
 - [Wiki](https://github.com/vladmandic/automatic/wiki)
+- [Requirements](REQUIREMENTS.md)
+- [ChangeLog](CHANGELOG.md)
+- [Requirements](REQUIREMENTS.md)
 - [ReadMe](README.md)
 - [ToDo](TODO.md)  
 - [ChangeLog](CHANGELOG.md)
 - [CLI Tools](cli/README.md)
+- [Requirements](REQUIREMENTS.md)
 
 ### **Sponsors**
 
 <div align="center">
-<!-- sponsors --><a href="https://github.com/allangrant"><img src="https://github.com/allangrant.png" width="60px" alt="Allan Grant" /></a><a href="https://github.com/BrentOzar"><img src="https://github.com/BrentOzar.png" width="60px" alt="Brent Ozar" /></a><a href="https://github.com/inktomi"><img src="https://github.com/inktomi.png" width="60px" alt="Matthew Runo" /></a><a href="https://github.com/HELLO-WORLD-SAS"><img src="https://github.com/HELLO-WORLD-SAS.png" width="60px" alt="HELLO WORLD SAS" /></a><a href="https://github.com/4joeknight4"><img src="https://github.com/4joeknight4.png" width="60px" alt="" /></a><a href="https://github.com/SaladTechnologies"><img src="https://github.com/SaladTechnologies.png" width="60px" alt="Salad Technologies" /></a><a href="https://github.com/mantzaris"><img src="https://github.com/mantzaris.png" width="60px" alt="a.v.mantzaris" /></a><a href="https://github.com/FieldMarshallVague"><img src="https://github.com/FieldMarshallVague.png" width="60px" alt="Toby Worth" /></a><!-- sponsors -->
+<!-- sponsors -->
+- [Requirements](REQUIREMENTS.md)
+- [Requirements](REQUIREMENTS.md)<a href="https://github.com/allangrant"><img src="https://github.com/allangrant.png" width="60px" alt="Allan Grant" /></a><a href="https://github.com/BrentOzar"><img src="https://github.com/BrentOzar.png" width="60px" alt="Brent Ozar" /></a><a href="https://github.com/inktomi"><img src="https://github.com/inktomi.png" width="60px" alt="Matthew Runo" /></a><a href="https://github.com/HELLO-WORLD-SAS"><img src="https://github.com/HELLO-WORLD-SAS.png" width="60px" alt="HELLO WORLD SAS" /></a><a href="https://github.com/4joeknight4"><img src="https://github.com/4joeknight4.png" width="60px" alt="" /></a><a href="https://github.com/SaladTechnologies"><img src="https://github.com/SaladTechnologies.png" width="60px" alt="Salad Technologies" /></a><a href="https://github.com/mantzaris"><img src="https://github.com/mantzaris.png" width="60px" alt="a.v.mantzaris" /></a><a href="https://github.com/FieldMarshallVague"><img src="https://github.com/FieldMarshallVague.png" width="60px" alt="Toby Worth" /></a><!-- sponsors -->
 </div>
 
 <br>
