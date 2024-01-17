@@ -177,7 +177,15 @@ class BaseModel(ABC):
                 net = getattr(self, 'net' + name)
 
                 if len(self.gpu_ids) > 0 and torch.cuda.is_available():
-                    torch.save(net.module.cpu().state_dict(), save_path)
+                    save_filename = '%s_net_%s.pth' % (epoch, name)
+                    save_path = os.path.join(self.save_dir, save_filename)
+
+                    if len(self.gpu_ids) > 0 and torch.cuda.is_available():
+                        torch.save(net.cpu().state_dict(), save_path)
+                        net.cuda(self.gpu_ids[0])
+                    else:
+                        torch.save(net.cpu().state_dict(), save_path)
+                    print('Network %s saved to: %s' % (name, save_path))
                     net.cuda(self.gpu_ids[0])
                 else:
                     torch.save(net.cpu().state_dict(), save_path)
