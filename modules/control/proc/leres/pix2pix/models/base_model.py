@@ -4,12 +4,28 @@ from abc import ABC, abstractmethod
 from collections import OrderedDict
 
 import torch
+import gc
+import os
+from abc import ABC, abstractmethod
+from collections import OrderedDict
 
 from modules.control.util import torch_gc
+import gc
+import os
+from abc import ABC, abstractmethod
+from collections import OrderedDict
 from . import networks
 
 
 class BaseModel(ABC):
+    """This class is an abstract base class (ABC) for models.
+    To create a subclass, you need to implement the following five functions:
+        -- <__init__>:                      initialize the class; first call BaseModel.__init__(self, opt).
+        -- <set_input>:                     unpack data from dataset and apply preprocessing.
+        -- <forward>:                       produce intermediate results.
+        -- <optimize_parameters>:           calculate losses, gradients, and update network weights.
+        -- <modify_commandline_options>:    (optionally) add model-specific options and set default options.
+    """
     """This class is an abstract base class (ABC) for models.
     To create a subclass, you need to implement the following five functions:
         -- <__init__>:                      initialize the class; first call BaseModel.__init__(self, opt).
@@ -67,17 +83,17 @@ class BaseModel(ABC):
         Parameters:
             input (dict): includes the data itself and its metadata information.
         """
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def optimize_parameters(self):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
-        pass
+        raise NotImplementedError
 
     def setup(self, opt):
         """Load and print networks; create schedulers
@@ -87,6 +103,8 @@ class BaseModel(ABC):
         """
         if self.isTrain:
             self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
+            for scheduler in self.schedulers:
+                scheduler = scheduler[0]
         if not self.isTrain or opt.continue_train:
             load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
             self.load_networks(load_suffix)
@@ -109,7 +127,7 @@ class BaseModel(ABC):
 
     def compute_visuals(self): # noqa
         """Calculate additional output images for visdom and HTML visualization"""
-        pass
+        raise NotImplementedError
 
     def get_image_paths(self):
         """ Return image paths that are used to load current data"""
