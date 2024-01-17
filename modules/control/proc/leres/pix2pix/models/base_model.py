@@ -120,6 +120,12 @@ class BaseModel(ABC):
 
     def compute_visuals(self): # noqa
         """Calculate additional output images for visdom and HTML visualization"""
+        try:
+            # Add try-except block to catch any exceptions during visual computation
+            pass  # Replace pass with actual visual computation code
+        except Exception as e:
+            print('An error occurred during visual computation:', str(e))
+        """Calculate additional output images for visdom and HTML visualization"""
         pass
 
     def get_image_paths(self):
