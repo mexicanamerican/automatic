@@ -5,8 +5,9 @@ from collections import OrderedDict
 
 import torch
 
-from modules.control.util import torch_gc
+from modules.control.util import torch_gc, torch
 from . import networks
+import itertools
 
 
 class BaseModel(ABC):
@@ -67,12 +68,12 @@ class BaseModel(ABC):
         Parameters:
             input (dict): includes the data itself and its metadata information.
         """
-        pass
+        raise NotImplementedError('set_input method not implemented')
 
     @abstractmethod
     def forward(self):
-        """Run forward pass; called by both functions <optimize_parameters> and <test>."""
-        pass
+        """Run forward raise NotImplementedError('forward method not implemented'); called by both functions <optimize_parameters> and <test>."""
+        raise NotImplementedError('optimize_parameters method not implemented')
 
     @abstractmethod
     def optimize_parameters(self):
