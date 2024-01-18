@@ -8,6 +8,7 @@ import torch
 
 from modules.control.util import torch_gc
 import torch.optim as optim
+from collections import OrderedDict
 from . import networks
 
 
@@ -283,7 +284,21 @@ class BaseModel(ABC):
                     self.__patch_instance_norm_state_dict(state_dict, net, key.split('.'))
                 net.load_state_dict(state_dict)
 
-    def print_networks(self, verbose):
+    def print_networks(self, verbose:bool=True):
+        """Print the total number of parameters in the network and (if verbose) network architecture
+
+        Parameters:
+            verbose (bool) -- if verbose: print the network architecture
+        """
+        print('---------- Networks initialized -------------')
+        for name in self.model_names:
+            if isinstance(name, str):
+                net = getattr(self, 'net' + name)
+                num_params = 0
+                for name, param in net.named_parameters():
+                    if param.requires_grad:
+                        num_params += param.numel()
+                        print(f'[Network {name}] {name}: {num_params}')
         """Print the total number of parameters in the network and (if verbose) network architecture
 
         Parameters:
