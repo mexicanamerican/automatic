@@ -220,6 +220,8 @@ class BaseModel(ABC):
                 load_path = os.path.join(self.save_dir, load_filename)
                 net = getattr(self, 'net' + name)
                 if isinstance(net, torch.nn.DataParallel):
+                    net = getattr(self, 'net' + name).module
+                if isinstance(net, torch.nn.DataParallel):
                     net = net.module
                 # print('Loading depth boost model from %s' % load_path)
                 # if you are using PyTorch newer than 0.4 (e.g., built from
