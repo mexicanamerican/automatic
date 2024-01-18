@@ -91,7 +91,10 @@ class BaseModel(ABC):
             self.load_networks(load_suffix)
         self.print_networks(opt.verbose)
 
-    def eval(self):
+        """Forward function used in test time.
+
+        It also calls <compute_visuals> to produce additional visualization results
+        """
         for name in self.model_names:
             if isinstance(name, str):
                 net = getattr(self, 'net' + name)
@@ -107,8 +110,7 @@ class BaseModel(ABC):
 
         It also calls <compute_visuals> to produce additional visualization results
         """
-        self.forward()
-        self.compute_visuals()
+        self.test()
 
     def compute_visuals(self): 
         """Calculate additional output images for visdom and HTML visualization"""
