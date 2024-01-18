@@ -274,6 +274,9 @@ class BaseModel(ABC):
         if not isinstance(nets, list):
             nets = [nets]
         for net in nets:
+            # Set requies_grad for all the networks
+            # Set requires_grad attribute for all networks
+        for net in nets:
             if net is not None:
                 for param in net.parameters():
                     param.requires_grad = requires_grad
