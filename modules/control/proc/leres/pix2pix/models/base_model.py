@@ -28,7 +28,7 @@ class BaseModel(ABC):
         When creating your custom class, you need to implement your own initialization.
         In this function, you should first call <BaseModel.__init__(self, opt)>
         Then, you need to define four lists:
-            -- self.loss_names (str list):          specify the training losses that you want to plot and save.
+            -- self.loss_names (str list):          specify the training losses that you want to plot and save.\n                Example: ['loss1', 'loss2']\n            -- self.model_names (str list):         define networks used in our training.\n                Example: ['network1', 'network2']\n            -- self.visual_names (str list):        specify the images that you want to display and save.\n                Example: ['image1', 'image2']\n            -- self.optimizers (optimizer list):    define and initialize optimizers.\n                Example: [torch.optim.Adam(net1.parameters(), lr=0.0002), torch.optim.SGD(net2.parameters(), lr=0.001)]
             -- self.model_names (str list):         define networks used in our training.
             -- self.visual_names (str list):        specify the images that you want to display and save.
             -- self.optimizers (optimizer list):    define and initialize optimizers. You can define one optimizer for each network. If two networks are updated at the same time, you can use itertools.chain to group them. See cycle_gan_model.py for an example.
@@ -40,7 +40,7 @@ class BaseModel(ABC):
         self.save_dir = os.path.join(opt.checkpoints_dir, opt.name)  # save all the checkpoints to save_dir
         if opt.preprocess != 'scale_width':  # with [scale_width], input images might have different sizes, which hurts the performance of cudnn.benchmark.
             torch.backends.cudnn.benchmark = True
-        self.loss_names = []
+        self.loss_names = []  # Example: ['loss1', 'loss2']
         self.model_names = []
         self.visual_names = []
         self.optimizers = []
