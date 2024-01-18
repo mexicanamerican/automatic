@@ -79,7 +79,7 @@ class BaseModel(ABC):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
         pass
 
-    def setup(self, opt):
+    def custom_setup(self, opt):
         """Load and print networks; create schedulers
 
         Parameters:
