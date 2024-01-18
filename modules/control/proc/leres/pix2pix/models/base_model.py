@@ -151,12 +151,14 @@ class BaseModel(ABC):
                 errors_ret[name] = float(getattr(self, 'loss_' + name))  # float(...) works for both scalar tensor and float number
         return errors_ret
 
-    def save_networks(self, epoch):
+    def save_networks(self, epoch, save_dir):
         """Save all the networks to the disk.
 
         Parameters:
             epoch (int) -- current epoch; used in the file name '%s_net_%s.pth' % (epoch, name)
-        """
+            save_dir (str) -- directory where the networks will be saved
+
+        This method saves all the networks to the disk at the end of each epoch. The networks are saved with the file name '{epoch}_net_{name}.pth' and in the specified save directory."""
         for name in self.model_names:
             if isinstance(name, str):
                 save_filename = '%s_net_%s.pth' % (epoch, name)
