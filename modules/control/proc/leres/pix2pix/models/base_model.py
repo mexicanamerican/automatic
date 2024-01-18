@@ -22,6 +22,8 @@ class BaseModel(ABC):
     def __init__(self, opt):
         """Initialize the BaseModel class.
 
+        This method initializes the BaseModel class.
+
         Parameters:
             opt (Option class)-- stores all the experiment flags; needs to be a subclass of BaseOptions
 
@@ -79,7 +81,7 @@ class BaseModel(ABC):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
         pass
 
-    def custom_setup(self, opt):
+    def setup(self, opt):
         """Load and print networks; create schedulers
 
         Parameters:
