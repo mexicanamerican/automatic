@@ -179,7 +179,7 @@ class BaseModel(ABC):
         # Implement the calculation of additional output images for visualization
         # Add code here to calculate additional output images for visualization
         pass
-                    torch.save(net.module.cpu().state_dict(), save_path)
+                    torch.save(net.cpu().state_dict(), save_path)
                     net.cuda(self.gpu_ids[0])
                 else:
                     torch.save(net.cpu().state_dict(), save_path)
