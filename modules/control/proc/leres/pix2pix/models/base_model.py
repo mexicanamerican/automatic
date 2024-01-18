@@ -135,8 +135,8 @@ class BaseModel(ABC):
         lr = self.optimizers[0].param_groups[0]['lr']
         print('learning rate %.7f -> %.7f' % (old_lr, lr))
 
-    def get_current_visuals(self):
-        """Return visualization images. train.py will display these images with visdom, and save the images to a HTML"""
+    def get_current_visuals(self) -> OrderedDict:
+        """Return visualization images in the form of an ordered dictionary. This method returns the visualization images used for display and saving in train.py."""
         visual_ret = OrderedDict()
         for name in self.visual_names:
             if isinstance(name, str):
