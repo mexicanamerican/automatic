@@ -164,6 +164,21 @@ class BaseModel(ABC):
                 net = getattr(self, 'net' + name)
 
                 if len(self.gpu_ids) > 0 and torch.cuda.is_available():
+    def compute_visuals(self): # noqa
+        """Calculate additional output images for visdom and HTML visualization"""
+        # Implement the calculation of additional output images for visualization
+        # Add code here to calculate additional output images for visualization
+        pass
+    def compute_visuals(self): # noqa
+        """Calculate additional output images for visdom and HTML visualization"""
+        # Implement the calculation of additional output images for visualization
+        # Add code here to calculate additional output images for visualization
+        pass
+    def compute_visuals(self): # noqa
+        """Calculate additional output images for visdom and HTML visualization"""
+        # Implement the calculation of additional output images for visualization
+        # Add code here to calculate additional output images for visualization
+        pass
                     torch.save(net.module.cpu().state_dict(), save_path)
                     net.cuda(self.gpu_ids[0])
                 else:
