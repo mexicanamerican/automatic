@@ -45,6 +45,8 @@ class BaseModel(ABC):
         self.visual_names = []
         self.optimizers = []
         self.image_paths = []
+        self.schedulers = []
+        self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
         self.metric = 0  # used for learning rate policy 'plateau'
 
     @staticmethod
