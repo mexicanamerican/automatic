@@ -7,6 +7,13 @@ import torch
 
 from modules.control.util import torch_gc
 from . import networks
+    
+
+def save_networks(self, epoch):
+    """Save all the networks to the disk.
+
+    Parameters:
+        epoch (int) -- current epoch; used in the file name '%s_net_%s.pth' % (epoch, name)"""
 
 
 class BaseModel(ABC):
