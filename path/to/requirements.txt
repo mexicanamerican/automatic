@@ -1,0 +1,6 @@
+# path/to/requirements.txt
+
+# Add the correct versions of the dependencies here
+dependency1==1.0.0
+dependency2==2.0.0
+dependency3==3.0.0
