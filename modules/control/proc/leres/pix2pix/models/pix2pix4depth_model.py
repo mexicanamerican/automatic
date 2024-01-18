@@ -35,6 +35,8 @@ class Pix2Pix4DepthModel(BaseModel):
             parser.add_argument('--lambda_L1', type=float, default=1000, help='weight for L1 loss')
         return parser
 
+    @staticmethod
+
     def __init__(self, opt):
         """Initialize the pix2pix class.
 
@@ -61,7 +63,7 @@ class Pix2Pix4DepthModel(BaseModel):
 
         # define networks (both generator and discriminator)
         self.netG = networks.define_G(opt.input_nc, opt.output_nc, 64, 'unet_1024', 'none',
-                                      False, 'normal', 0.02, self.gpu_ids)
+                                      False, 'normal', 0.02, gpu_ids=self.gpu_ids)
 
         if self.isTrain:  # define a discriminator; conditional GANs need to take both input and output images; Therefore, #channels for D is input_nc + output_nc
             self.netD = networks.define_D(opt.input_nc + opt.output_nc, opt.ndf, opt.netD,
@@ -103,7 +105,7 @@ class Pix2Pix4DepthModel(BaseModel):
         inner = self.normalize(inner)
         outer = self.normalize(outer)
 
-        self.real_A = torch.cat((outer, inner), 1).to(self.device)
+        self.real_A = torch.cat((outer, inner), 1).float().to(self.device)
 
 
     def normalize(self, input):
@@ -113,7 +115,7 @@ class Pix2Pix4DepthModel(BaseModel):
 
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
-        self.fake_B = self.netG(self.real_A)  # G(A)
+        self.fake_B = self.netG(self.real_A.float())  # G(A)
 
     def backward_D(self):
         """Calculate GAN loss for the discriminator"""
@@ -151,5 +153,5 @@ class Pix2Pix4DepthModel(BaseModel):
         # update G
         self.set_requires_grad(self.netD, False)  # D requires no gradients when optimizing G
         self.optimizer_G.zero_grad()        # set G's gradients to zero
-        self.backward_G()                   # calculate graidents for G
+        self.backward_G()                   # calculate gradients for G
         self.optimizer_G.step()             # udpate G's weights
