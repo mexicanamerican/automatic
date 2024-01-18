@@ -1,5 +1,6 @@
 import os
 import torch
+import torch
 
 class BaseModelHG():
     def name(self):
