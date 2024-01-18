@@ -108,12 +108,11 @@ def init_net(net, init_type='normal', init_gain=0.02, gpu_ids=None):
 
     Return an initialized network.
     """
-    if gpu_ids is None:
-        gpu_ids = []
-    if len(gpu_ids) > 0:
-        assert(torch.cuda.is_available())
-        net.to(gpu_ids[0])
-        net = torch.nn.DataParallel(net, gpu_ids)  # multi-GPUs
+    if gpu_ids is not None and torch.cuda.is_available():
+        device = torch.device('cuda:{}'.format(gpu_ids[0]))
+        net.to(device)
+        if len(gpu_ids) > 1:
+            net = torch.nn.DataParallel(net, gpu_ids)
     init_weights(net, init_type, init_gain=init_gain)
     return net
 
@@ -168,6 +167,7 @@ def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, in
         net = UnetGenerator(input_nc, output_nc, 10, ngf, norm_layer=norm_layer, use_dropout=use_dropout)
     else:
         raise NotImplementedError('Generator model name [%s] is not recognized' % netG)
+    return init_net(net, init_type, init_gain, gpu_ids)
     return init_net(net, init_type, init_gain, gpu_ids)
 
 
