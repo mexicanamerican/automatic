@@ -269,7 +269,7 @@ class BaseModel(ABC):
         else:
             self.__patch_instance_norm_state_dict(state_dict, getattr(module, key), keys, i + 1)
 
-    def load_networks(self, epoch):
+    def load_networks(self, epoch):   # noqa
         """Load all the networks from the disk.
 
         Parameters:
