@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from collections import OrderedDict
 
 import torch
+import itertools
 
 from modules.control.util import torch_gc
 from . import networks
@@ -31,7 +32,9 @@ class BaseModel(ABC):
             -- self.loss_names (str list):          specify the training losses that you want to plot and save.
             -- self.model_names (str list):         define networks used in our training.
             -- self.visual_names (str list):        specify the images that you want to display and save.
-            -- self.optimizers (optimizer list):    define and initialize optimizers. You can define one optimizer for each network. If two networks are updated at the same time, you can use itertools.chain to group them. See cycle_gan_model.py for an example.
+            -- self.optimizers (optimizer list):    define and initialize optimizers.
+            -- self.schedulers (scheduler list):    define and initialize schedulers to adjust learning rates during training. 
+You can define one scheduler for each optimizer.
         """
         self.opt = opt
         self.gpu_ids = opt.gpu_ids
@@ -48,6 +51,7 @@ class BaseModel(ABC):
         self.metric = 0  # used for learning rate policy 'plateau'
 
     @staticmethod
+    @staticmethod
     def modify_commandline_options(parser, is_train):
         """Add new model-specific options, and rewrite default values for existing options.
 
@@ -59,6 +63,7 @@ class BaseModel(ABC):
             the modified parser.
         """
         return parser
+        parser.set_defaults(lr_policy='plateau', verbose=True)
 
     @abstractmethod
     def set_input(self, input):
