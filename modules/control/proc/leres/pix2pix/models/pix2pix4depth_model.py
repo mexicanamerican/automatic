@@ -82,6 +82,10 @@ class Pix2Pix4DepthModel(BaseModel):
     def set_input_train(self, input):
         self.outer = input['data_outer'].to(self.device)
         self.outer = torch.nn.functional.interpolate(self.outer,(1024,1024),mode='bilinear',align_corners=False)
+        if 'data_gtfake' in input:
+            self.gtfake = input['data_gtfake'].to(self.device)
+            self.gtfake = torch.nn.functional.interpolate(self.gtfake,(1024,1024),mode='bilinear',align_corners=False)
+            self.real_B = self.gtfake
 
         self.inner = input['data_inner'].to(self.device)
         self.inner = torch.nn.functional.interpolate(self.inner,(1024,1024),mode='bilinear',align_corners=False)
@@ -109,9 +113,7 @@ class Pix2Pix4DepthModel(BaseModel):
 
 
     def normalize(self, input):
-        input = input * 2
-        input = input - 1
-        return input
+        return (input * 2) - 1
 
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
@@ -154,4 +156,4 @@ class Pix2Pix4DepthModel(BaseModel):
         self.set_requires_grad(self.netD, False)  # D requires no gradients when optimizing G
         self.optimizer_G.zero_grad()        # set G's gradients to zero
         self.backward_G()                   # calculate gradients for G
-        self.optimizer_G.step()             # udpate G's weights
+        self.optimizer_G.step()             # update G's weights
