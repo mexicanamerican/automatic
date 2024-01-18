@@ -112,7 +112,7 @@ class BaseModel(ABC):
         """
         self.test()
 
-    def compute_visuals(self): 
+    def compute_visuals(self):
         """Calculate additional output images for visdom and HTML visualization"""
         pass
 
