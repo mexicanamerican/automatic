@@ -123,6 +123,7 @@ class BaseModel(ABC):
         return self.image_paths
 
     def update_learning_rate(self):
+        """Update learning rates for all the networks and print the learning rate after the update. Called at the end of every epoch."""
         """Update learning rates for all the networks; called at the end of every epoch"""
         old_lr = self.optimizers[0].param_groups[0]['lr']
         for scheduler in self.schedulers:
