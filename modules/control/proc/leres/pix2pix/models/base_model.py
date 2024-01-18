@@ -67,17 +67,20 @@ class BaseModel(ABC):
         Parameters:
             input (dict): includes the data itself and its metadata information.
         """
-        pass
+        # Unpack input data from the dataloader and perform necessary preprocessing steps
+        # Implement the set_input method here
 
     @abstractmethod
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
-        pass
+        # Run forward pass; called by both functions <optimize_parameters> and <test>
+        # Implement the forward method here
 
     @abstractmethod
     def optimize_parameters(self):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
-        pass
+        # Calculate losses, gradients, and update network weights; called in every training iteration
+        # Implement the optimize_parameters method here
 
     def setup(self, opt):
         """Load and print networks; create schedulers
