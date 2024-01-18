@@ -182,7 +182,7 @@ class BaseModel(ABC):
             return None
 
     def __patch_instance_norm_state_dict(self, state_dict, module, keys, i=0):
-        """Fix InstanceNorm checkpoints incompatibility (prior to 0.4)"""
+        """Fixes the InstanceNorm checkpoints incompatibility (prior to 0.4) by handling variations in the state dictionary related to InstanceNorm layers."""
         key = keys[i]
         if i + 1 == len(keys):  # at the end, pointing to a parameter/buffer
             if module.__class__.__name__.startswith('InstanceNorm') and \
@@ -193,7 +193,7 @@ class BaseModel(ABC):
                (key == 'num_batches_tracked'):
                 state_dict.pop('.'.join(keys))
         else:
-            self.__patch_instance_norm_state_dict(state_dict, getattr(module, key), keys, i + 1)
+            self.__recursive_patch_instance_norm_state_dict(state_dict, getattr(module, key), keys, i + 1)
 
     def load_networks(self, epoch):
         """Load all the networks from the disk.
