@@ -1,0 +1,10 @@
+# path/to/git_commands
+
+# Stage all changes
+git add .
+
+# Commit the changes
+git commit -m "Commit message"
+
+# Push the changes to the remote repository
+git push origin branch_name
