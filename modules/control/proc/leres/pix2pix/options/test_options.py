@@ -18,5 +18,5 @@ class TestOptions(BaseOptions):
         parser.set_defaults(model='pix2pix4depth')
         # To avoid cropping, the load_size should be the same as crop_size
         parser.set_defaults(load_size=parser.get_default('crop_size'))
-        self.isTrain = False
+        self.isTrain = False if 'test' in parser.get_defaults('phase') else True
         return parser
