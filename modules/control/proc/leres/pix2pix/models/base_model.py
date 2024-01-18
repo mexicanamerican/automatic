@@ -7,6 +7,7 @@ from collections import OrderedDict
 import torch
 
 from modules.control.util import torch_gc
+import torch.optim as optim
 from . import networks
 
 
@@ -135,17 +136,16 @@ class BaseModel(ABC):
         self.print_networks(opt.verbose)
         return self.image_paths
 
-    def update_learning_rate(self):
+    def update_learning_rate(self, epoch):
         """Update learning rates for all the networks; called at the end of every epoch"""
-        old_lr = self.optimizers[0].param_groups[0]['lr']
-        for scheduler in self.schedulers:
-            if self.opt.lr_policy == 'plateau':
-                scheduler.step(self.metric)
-            else:
-                scheduler.step()
-
-        lr = self.optimizers[0].param_groups[0]['lr']
-        print('learning rate %.7f -> %.7f' % (old_lr, lr))
+        for optimizer in self.optimizers:
+            for scheduler in self.schedulers:
+                if self.opt.lr_policy == 'plateau':
+                    scheduler.step(self.metric)
+                else:
+                    scheduler.step()
+            lr = optimizer.param_groups[0]['lr']
+            print(f'learning rate {lr}')
 
     def get_current_visuals(self):
         """Return visualization images. train.py will display these images with visdom, and save the images to a HTML"""
