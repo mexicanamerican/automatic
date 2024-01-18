@@ -1,6 +1,7 @@
 import gc
 import os
 from abc import ABC, abstractmethod
+import argparse
 from collections import OrderedDict
 
 import torch
@@ -47,8 +48,9 @@ class BaseModel(ABC):
         self.image_paths = []
         self.metric = 0  # used for learning rate policy 'plateau'
 
-    @staticmethod
-    def modify_commandline_options(parser, is_train):
+    @classmethod
+    @classmethod
+    def modify_commandline_options(cls, parser, is_train):
         """Add new model-specific options, and rewrite default values for existing options.
 
         Parameters:
@@ -58,6 +60,9 @@ class BaseModel(ABC):
         Returns:
             the modified parser.
         """
+            # Add new model-specific options and default values
+        parser.add_argument('--model_specific_option', type=int, default=1, help='Model specific option')
+        parser.set_defaults(some_option=True)
         return parser
 
     @abstractmethod
