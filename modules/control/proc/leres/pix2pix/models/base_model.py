@@ -105,6 +105,12 @@ class BaseModel(ABC):
                 net.eval()
 
     def test(self):
+    """Forward function used in test time."""
+    self.forward()
+    self.compute_visuals()
+        """Forward function used in test time. It also calls <compute_visuals> to produce additional visualization results."""
+        self.forward()
+        self.compute_visuals()
         """Forward function used in test time.
 
         It also calls <compute_visuals> to produce additional visualization results
