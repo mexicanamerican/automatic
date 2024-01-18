@@ -63,7 +63,7 @@ class Pix2Pix4DepthModel(BaseModel):
 
         # define networks (both generator and discriminator)
         self.netG = networks.define_G(opt.input_nc, opt.output_nc, 64, 'unet_1024', 'none',
-                                      False, 'normal', 0.02, gpu_ids=self.gpu_ids)
+                                      False, 'normal', 0.02, gpu_ids=opt.gpu_ids)
 
         if self.isTrain:  # define a discriminator; conditional GANs need to take both input and output images; Therefore, #channels for D is input_nc + output_nc
             self.netD = networks.define_D(opt.input_nc + opt.output_nc, opt.ndf, opt.netD,
@@ -85,7 +85,7 @@ class Pix2Pix4DepthModel(BaseModel):
         if 'data_gtfake' in input:
             self.gtfake = input['data_gtfake'].to(self.device)
             self.gtfake = torch.nn.functional.interpolate(self.gtfake,(1024,1024),mode='bilinear',align_corners=False)
-            self.real_B = self.gtfake
+            self.real_B = self.gtfake if 'data_gtfake' in input else None
 
         self.inner = input['data_inner'].to(self.device)
         self.inner = torch.nn.functional.interpolate(self.inner,(1024,1024),mode='bilinear',align_corners=False)
@@ -131,7 +131,7 @@ class Pix2Pix4DepthModel(BaseModel):
         self.loss_D_real = self.criterionGAN(pred_real, True)
         # combine loss and calculate gradients
         self.loss_D = (self.loss_D_fake + self.loss_D_real) * 0.5
-        self.loss_D.backward()
+        self.optimizer_D.step()
 
     def backward_G(self):
         """Calculate GAN and L1 loss for the generator"""
@@ -153,7 +153,8 @@ class Pix2Pix4DepthModel(BaseModel):
         self.backward_D()                # calculate gradients for D
         self.optimizer_D.step()          # update D's weights
         # update G
-        self.set_requires_grad(self.netD, False)  # D requires no gradients when optimizing G
-        self.optimizer_G.zero_grad()        # set G's gradients to zero
-        self.backward_G()                   # calculate gradients for G
-        self.optimizer_G.step()             # update G's weights
+        self.forward()
+        self.set_requires_grad(self.netD, True)  # enable backprop for D
+        self.optimizer_D.zero_grad()     # set D's gradients to zero
+        self.backward_D()                # calculate gradients for D
+        self.optimizer_D.step()          # update D's weights
