@@ -66,7 +66,9 @@ class BaseModel(ABC):
         Parameters:
             input (dict): includes the data itself and its metadata information.
         """
-        pass
+        def compute_visuals(self): # noqa
+            """Calculate additional output images for visdom and HTML visualization"""
+            pass
 
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
