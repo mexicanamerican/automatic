@@ -94,8 +94,9 @@ class BaseModel(ABC):
             self.load_networks(load_suffix)
         self.print_networks(opt.verbose)
 
-    def eval(self):
+    def eval_mode(self):
         """Make models eval mode during test time"""
+        """Make the models evaluation mode during test time."""
         for name in self.model_names:
             if isinstance(name, str):
                 net = getattr(self, 'net' + name)
