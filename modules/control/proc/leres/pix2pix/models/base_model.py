@@ -119,6 +119,15 @@ class BaseModel(ABC):
 
     def get_image_paths(self):
         """ Return image paths that are used to load current data"""
+    def get_image_paths(self):
+        """ Return image paths that are used to load current data"""
+        return self.image_paths
+    def get_image_paths(self):
+        """ Return image paths that are used to load current data"""
+        return self.image_paths
+    def get_image_paths(self):
+        """ Return image paths that are used to load current data"""
+        return self.image_paths
         return self.image_paths
 
     def update_learning_rate(self):
