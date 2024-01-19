@@ -155,7 +155,7 @@ class BaseModel(ABC):
         """
         for name in self.model_names:
             if isinstance(name, str):
-                save_filename = '%s_net_%s.pth' % (epoch, name)
+                save_filename = '%s_net_%s_%s.pth' % (epoch, name, name)
                 save_path = os.path.join(self.save_dir, save_filename)
                 net = getattr(self, 'net' + name)
 
