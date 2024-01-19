@@ -7,6 +7,7 @@ import torch
 
 from modules.control.util import torch_gc
 from . import networks
+from modules.control.util import torch_gc
 
 
 class BaseModel(ABC):
@@ -247,7 +248,7 @@ class BaseModel(ABC):
         """Print the total number of parameters in the network and (if verbose) network architecture
 
         Parameters:
-            verbose (bool) -- if verbose: print the network architecture
+            verbose (bool) -- if opt.verbose: print the network architecture
         """
         print('---------- Networks initialized -------------')
         for name in self.model_names:
