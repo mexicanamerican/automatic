@@ -106,8 +106,8 @@ class BaseModel(ABC):
                 net.eval()
 
     def test(self):
-        """Forward function used in test time.
-
+        """Run forward pass; called by both functions <optimize_parameters> and <test>.
+        
         It also calls <compute_visuals> to produce additional visualization results
         """
         self.forward()
