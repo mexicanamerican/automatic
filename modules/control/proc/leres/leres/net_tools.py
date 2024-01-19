@@ -34,12 +34,12 @@ def load_ckpt(args, depth_model, shift_model, focal_model):
         print("loading checkpoint %s" % args.load_ckpt)
         checkpoint = torch.load(args.load_ckpt)
         if shift_model is not None:
-            shift_model.load_state_dict(strip_prefix_if_present(checkpoint['shift_model'], 'module.'),
+            shift_model.load_state_dict(checkpoint['shift_model'],
                                     strict=True)
         if focal_model is not None:
-            focal_model.load_state_dict(strip_prefix_if_present(checkpoint['focal_model'], 'module.'),
+            focal_model.load_state_dict(checkpoint['focal_model'],
                                     strict=True)
-        depth_model.load_state_dict(strip_prefix_if_present(checkpoint['depth_model'], "module."),
+        depth_model.load_state_dict(checkpoint['depth_model'],
                                     strict=True)
         del checkpoint
         if torch.cuda.is_available():
