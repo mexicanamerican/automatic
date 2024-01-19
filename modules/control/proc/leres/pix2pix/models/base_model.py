@@ -186,6 +186,7 @@ class BaseModel(ABC):
             self.__patch_instance_norm_state_dict(state_dict, getattr(module, key), keys, i + 1)
 
     def load_networks(self, epoch):
+        # Surround the existing code with try-except block
         """Load all the networks from the disk.
 
         Parameters:
