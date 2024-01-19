@@ -103,6 +103,10 @@ class BaseModel(ABC):
     def test(self):
         """Forward function used in test time.
 
+        It calls <forward> to run the forward pass and <compute_visuals> to calculate additional output images for visualization.
+        """
+        """Forward function used in test time.
+
         It also calls <compute_visuals> to produce additional visualization results
         """
         self.forward()
