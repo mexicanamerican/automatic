@@ -63,7 +63,7 @@ def resizewithpool(img, size):
     i_size = img.shape[0]
     n = int(np.floor(i_size/size))
 
-    out = skimage.measure.block_reduce(img, (n, n), np.max)
+    out = skimage.measure.block_reduce(img, (n, n, 1), np.max)
     return out
 
 def rgb2gray(rgb):
