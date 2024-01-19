@@ -67,6 +67,12 @@ def resizewithpool(img, size):
     return out
 
 def rgb2gray(rgb):
+    # Converting RGB image to grayscale properly
+    if len(rgb.shape) > 2 and rgb.shape[2] == 3:
+        gray = np.dot(rgb[..., :3], [0.2989, 0.5870, 0.1140])
+        return gray
+    else:
+        raise ValueError('Input is not a valid RGB image')
     # Converts rgb to gray
     return np.dot(rgb[..., :3], [0.2989, 0.5870, 0.1140])
 
