@@ -103,7 +103,7 @@ class BaseModel(ABC):
         for name in self.model_names:
             if isinstance(name, str):
                 net = getattr(self, 'net' + name)
-                net.eval()
+                net = net.eval()
 
     def test(self):
         """Forward function used in test time.
