@@ -285,4 +285,4 @@ class BaseModel(ABC):
         for net in nets:
             if net is not None:
                 for param in net.parameters():
-                    param.requires_grad = requires_grad
+                                        param.requires_grad = requires_grad
