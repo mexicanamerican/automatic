@@ -51,7 +51,7 @@ def estimateleres(img, model, w, h):
 def generatemask(size):
     # Generates a Guassian mask
     mask = np.zeros(size, dtype=np.float32)
-    sigma = int(size[0]/16)
+    sigma = max(int(size[0]/16), 1)
     k_size = int(2 * np.ceil(2 * int(size[0]/16)) + 1)
     mask[int(0.15*size[0]):size[0] - int(0.15*size[0]), int(0.15*size[1]): size[1] - int(0.15*size[1])] = 1
     mask = cv2.GaussianBlur(mask, (int(k_size), int(k_size)), sigma)
@@ -532,7 +532,7 @@ def estimateboost(img, model, model_type, pix2pixmodel, max_res=512, depthmap_sc
         # To speed up the implementation, we only generate the Gaussian mask once with a sufficiently large size
         # and resize it to our needed size while merging the patches.
         if mask.shape != org_size:
-            mask = cv2.resize(mask_org, (org_size[1],org_size[0]), interpolation=cv2.INTER_LINEAR)
+            mask = cv2.resize(mask, (org_size[1],org_size[0]), interpolation=cv2.INTER_LINEAR)
 
         tobemergedto = imageandpatchs.estimation_updated_image
 
