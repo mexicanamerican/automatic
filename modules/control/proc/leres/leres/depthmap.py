@@ -137,12 +137,10 @@ def calculateprocessingres(img, basesize, confidence=0.1, scale_threshold=3, who
 def doubleestimate(img, size1, size2, pix2pixsize, model, net_type, pix2pixmodel):
     # Generate the low resolution estimation
     estimate1 = singleestimate(img, size1, model, net_type)
-    # Resize to the inference size of merge network.
     estimate1 = cv2.resize(estimate1, (pix2pixsize, pix2pixsize), interpolation=cv2.INTER_CUBIC)
 
     # Generate the high resolution estimation
     estimate2 = singleestimate(img, size2, model, net_type)
-    # Resize to the inference size of merge network.
     estimate2 = cv2.resize(estimate2, (pix2pixsize, pix2pixsize), interpolation=cv2.INTER_CUBIC)
 
     # Inference on the merge model
@@ -150,6 +148,9 @@ def doubleestimate(img, size1, size2, pix2pixsize, model, net_type, pix2pixmodel
     pix2pixmodel.test()
     visuals = pix2pixmodel.get_current_visuals()
     prediction_mapped = visuals['fake_B']
+    prediction_mapped = (prediction_mapped+1)/2
+    prediction_mapped = (prediction_mapped - torch.min(prediction_mapped)) / (torch.max(prediction_mapped) - torch.min(prediction_mapped))
+    prediction_mapped = prediction_mapped.squeeze().cpu().numpy()
     prediction_mapped = (prediction_mapped+1)/2
     prediction_mapped = (prediction_mapped - torch.min(prediction_mapped)) / (
                 torch.max(prediction_mapped) - torch.min(prediction_mapped))
