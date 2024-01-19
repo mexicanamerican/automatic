@@ -17,7 +17,7 @@ class BaseModel(ABC):
         -- <forward>:                       produce intermediate results.
         -- <optimize_parameters>:           calculate losses, gradients, and update network weights.
         -- <modify_commandline_options>:    (optionally) add model-specific options and set default options.
-    """
+        -- <eval>:                          make models eval mode during test time."""
 
     def __init__(self, opt):
         """Initialize the BaseModel class.
