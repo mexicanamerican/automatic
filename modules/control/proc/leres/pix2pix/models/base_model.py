@@ -136,12 +136,8 @@ class BaseModel(ABC):
                     print('learning rate after updating: {:.7f}'.format(optimizer.param_groups[0]['lr']))
 
     def get_current_visuals(self):
-        """Return visualization images. train.py will display these images with visdom, and save the images to a HTML"""
-        visual_ret = OrderedDict()
-        for name in self.visual_names:
-            if isinstance(name, str):
-                visual_ret[name] = getattr(self, name)
-        return visual_ret
+        """Return visualization images as a dictionary"""
+        return {name: getattr(self, name) for name in self.visual_names}
 
     def get_current_losses(self):
         """Return traning losses / errors. train.py will print out these errors on console, and save them to a file"""
