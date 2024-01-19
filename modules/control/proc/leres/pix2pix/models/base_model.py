@@ -242,3 +242,15 @@ class BaseModel(ABC):
             if net is not None:
                 for param in net.parameters():
                     param.requires_grad = requires_grad
+        for optimizer in self.optimizers:
+            optimizer.zero_grad()
+        self.forward()
+        self.backward()
+        for optimizer in self.optimizers:
+            optimizer.step()
+        for optimizer in self.optimizers:
+            optimizer.zero_grad()
+        self.forward()
+        self.backward()
+        for optimizer in self.optimizers:
+            optimizer.step()
