@@ -2,7 +2,8 @@ import os
 import torch
 from collections import OrderedDict
 import importlib
-import modules.control.proc.leres
+from modules.control.proc.leres import models
+import modules.control.proc.leres as leres
 
 
 def get_func(func_name):
