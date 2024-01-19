@@ -1,7 +1,11 @@
 # Stable Diffusion Version 2
 ![t2i](assets/stable-samples/txt2img/768/merged-0006.png)
 ![t2i](assets/stable-samples/txt2img/768/merged-0002.png)
-![t2i](assets/stable-samples/txt2img/768/merged-0005.png)
+![t2i](assets/stable-samples/txt2img/768/merged-0005.png)**Troubleshooting Tips:** If you encounter any issues during the GitHub Actions run, try the following troubleshooting tips:
+1. Check that all dependencies are correctly installed and up to date.
+2. Ensure that the environment is properly configured before running the code.
+3. Verify that the necessary input data and files are accessible to the code.
+4. Look for any error messages or logs for insights into the root cause of the failure.
 
 This repository contains [Stable Diffusion](https://github.com/CompVis/stable-diffusion) models trained from scratch and will be continuously updated with
 new checkpoints. The following list provides an overview of all currently available models. More coming soon.
@@ -58,7 +62,7 @@ ________________________________
   
 ## Requirements
 
-You can update an existing [latent diffusion](https://github.com/CompVis/latent-diffusion) environment by running
+**Running the code: How to update an existing [latent diffusion](https://github.com/CompVis/latent-diffusion) environment:** You can update the existing latent diffusion environment by running
 
 ```
 conda install pytorch==1.12.1 torchvision==0.13.1 -c pytorch
