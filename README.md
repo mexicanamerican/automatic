@@ -105,6 +105,10 @@ Also supported are modifiers such as:
 
 ## Install
 
+## Troubleshooting
+
+Add troubleshooting instructions here for resolving common GitHub Actions failures.
+
 - [Step-by-step install guide](https://github.com/vladmandic/automatic/wiki/Installation)
 - [Advanced install notes](https://github.com/vladmandic/automatic/wiki/Advanced-Install)
 - [Common installation errors](https://github.com/vladmandic/automatic/discussions/1627)  
