@@ -162,6 +162,10 @@ class BaseModel(ABC):
         visual_ret = OrderedDict()
         for name in self.visual_names:
             if isinstance(name, str):
+        # Calculate additional output images
+        # ...
+        # Calculate additional output images
+        # ...
                 visual_ret[name] = getattr(self, name)
         return visual_ret
 
