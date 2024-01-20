@@ -238,9 +238,9 @@ class BaseModel(ABC):
                 num_params = 0
                 for param in net.parameters():
                     num_params += param.numel()
+                print('[Network %s] Total number of parameters : %.3f M' % (name, num_params / 1e6))
                 if verbose:
                     print(net)
-                print('[Network %s] Total number of parameters : %.3f M' % (name, num_params / 1e6))
         print('-----------------------------------------------')
 
     def set_requires_grad(self, nets, requires_grad=False):
