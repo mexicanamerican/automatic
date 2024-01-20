@@ -59,6 +59,7 @@ All individual features are not listed here, instead check [ChangeLog](CHANGELOG
 ## Model support
 
 Additional models will be added as they become available and there is public interest in them
+- Instructions for running the GitHub Actions workflow
 
 - [RunwayML Stable Diffusion](https://github.com/Stability-AI/stablediffusion/) 1.x and 2.x *(all variants)*  
 - [StabilityAI Stable Diffusion XL](https://github.com/Stability-AI/generative-models)  
@@ -104,6 +105,51 @@ Also supported are modifiers such as:
 - *ONNX/Olive* (experimental)  
 
 ## Install
+
+### GitHub Actions
+
+To run the GitHub Actions workflow, follow these steps:
+1. Step 1
+2. Step 2
+3. Step 3
+
+#### Troubleshooting
+If you encounter any issues with the workflow, try the following:
+- Troubleshooting step 1
+- Troubleshooting step 2
+
+#### Configuration
+Ensure that the following configuration steps are completed:
+- Configuration step 1
+- Configuration step 2
+
+### GitHub Actions
+
+To run the GitHub Actions workflow, follow these steps:
+1. Step 1
+2. Step 2
+3. Step 3
+
+#### Troubleshooting
+If you encounter any issues with the workflow, try the following:
+- Troubleshooting step 1
+- Troubleshooting step 2
+
+#### Configuration
+### Workflow Setup and Configuration
+
+Prior to running the GitHub Actions workflow, ensure the following setup and configuration steps are completed:
+1. Configuration step 1
+2. Configuration step 2
+3. Configuration step 3
+
+#### Potential Issues
+If you encounter any problems, consider the following potential issues and their solutions:
+- Issue 1
+- Issue 2
+- Issue 3:
+- Configuration step 1
+- Configuration step 2
 
 - [Step-by-step install guide](https://github.com/vladmandic/automatic/wiki/Installation)
 - [Advanced install notes](https://github.com/vladmandic/automatic/wiki/Advanced-Install)
@@ -194,6 +240,8 @@ The idea behind the fork is to enable latest technologies and advances in text-t
 *Sometimes this is not the same as "as simple as possible to use".*
 
 General goals:
+- Instructions for running the GitHub Actions workflow
+- Instructions for running the GitHub Actions workflow
 
 - Multi-model
   - Enable usage of as many as possible txt2img and img2img generative models  
@@ -202,6 +250,7 @@ General goals:
 - Performance
   - Enable best possible performance on all platforms
 - Ease-of-Use
+- Step by step instructions for running the workflow
   - Automatically handle all requirements, dependencies, flags regardless of platform
   - Integrate all best options for uniform out-of-the-box experience without the need to tweak anything manually
 - Look-and-Feel
@@ -217,7 +266,8 @@ General goals:
 
 ### **Docs**
 
-If you're unsure how to use a feature, best place to start is [Wiki](https://github.com/vladmandic/automatic/wiki) and if its not there,  
+If you're unsure how to use a feature, the best place to start is [Wiki](https://github.com/vladmandic/automatic/wiki)
+- Instructions for running the GitHub Actions workflow and if its not there,  
 check [ChangeLog](CHANGELOG.md) for when feature was first introduced as it will always have a short note on how to use it  
 
 - [Wiki](https://github.com/vladmandic/automatic/wiki)
