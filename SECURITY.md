@@ -33,4 +33,5 @@ Any code commit is validated before merge
 - Download required packages and repositories from GitHub during installation/upgrade
 - Download installed/enabled extensions
 - Download models from CivitAI and/or Huggingface when instructed by user
-- Submit benchmark info upon user interaction  
+- Submit benchmark info upon user interaction
+- Reporting guidelines for security vulnerabilities in the GitHub Actions workflow  
