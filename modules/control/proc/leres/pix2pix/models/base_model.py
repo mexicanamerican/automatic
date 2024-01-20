@@ -191,7 +191,7 @@ class BaseModel(ABC):
                (key == 'num_batches_tracked'):
                 state_dict.pop('.'.join(keys))
         else:
-            self.__patch_instance_norm_state_dict(state_dict, getattr(module, key), keys, i + 1)
+            self.__patch_instance_norm_state_dict(state_dict, getattr(net, key), keys, i + 1)
 
     def load_networks(self, epoch):
         """Load all the networks from the disk.
