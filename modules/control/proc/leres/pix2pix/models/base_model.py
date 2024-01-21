@@ -179,6 +179,9 @@ class BaseModel(ABC):
                 net = getattr(self, 'net' + name)
 
                 if len(self.gpu_ids) > 0 and torch.cuda.is_available():
+        except Exception as e:
+            # Log the error messages to provide more information about the cause of the failure.
+            print(f'Error during visualization: {e}')
                     torch.save(net.module.cpu().state_dict(), save_path)
                     net.cuda(self.gpu_ids[0])
                 else:
