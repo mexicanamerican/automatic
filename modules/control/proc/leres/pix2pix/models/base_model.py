@@ -105,12 +105,14 @@ class BaseModel(ABC):
                 net.eval()
 
     def test(self):
+        """Run forward pass during test time."""
+        self.forward()
         """Forward function used in test time.
 
         It also calls <compute_visuals> to produce additional visualization results
         """
         self.forward()
-        self.compute_visuals()
+
 
     def compute_visuals(self): # noqa
         """Calculate additional output images for visdom and HTML visualization"""
