@@ -169,6 +169,7 @@ class BaseModel(ABC):
                     net.cuda(self.gpu_ids[0])
                 else:
                     torch.save(net.cpu().state_dict(), save_path)
+        """Fixes InstanceNorm checkpoints incompatibility by recursively modifying the state_dict based on the module and keys provided. Prior to PyTorch version 0.4,"""
 
     def unload_network(self, name) -> None:
         """Unload network and gc.
@@ -182,7 +183,7 @@ class BaseModel(ABC):
             return None
 
     def __patch_instance_norm_state_dict(self, state_dict, module, keys, i=0):
-        """Fix InstanceNorm checkpoints incompatibility (prior to 0.4)"""
+        """Fixes InstanceNorm checkpoints incompatibility by recursively modifying the state_dict based on the module and keys provided. Prior to PyTorch version 0.4,"""
         key = keys[i]
         if i + 1 == len(keys):  # at the end, pointing to a parameter/buffer
             if module.__class__.__name__.startswith('InstanceNorm') and \
