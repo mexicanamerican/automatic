@@ -152,7 +152,7 @@ class BaseModel(ABC):
         return errors_ret
 
     def save_networks(self, epoch):
-        """Save all the networks to the disk.
+        """Save all the networks to the disk. This method saves all networks to the disk in the specified location.
 
         Parameters:
             epoch (int) -- current epoch; used in the file name '%s_net_%s.pth' % (epoch, name)
