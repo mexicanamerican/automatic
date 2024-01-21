@@ -46,6 +46,33 @@ class BaseModel(ABC):
         self.optimizers = []
         self.image_paths = []
         self.metric = 0  # used for learning rate policy 'plateau'
+            -- self.optimizers (optimizer list):    define and initialize optimizers. You can define one optimizer for each network. If two networks are updated at the same time, you can use itertools.chain to group them. See cycle_gan_model.py for an example.
+        """
+        self.opt = opt
+        self.gpu_ids = opt.gpu_ids
+        self.isTrain = opt.isTrain
+        self.device = torch.device('cuda:{}'.format(self.gpu_ids[0])) if self.gpu_ids else torch.device('cpu')  # get device name: CPU or GPU
+        self.save_dir = os.path.join(opt.checkpoints_dir, opt.name)  # save all the checkpoints to save_dir
+        if opt.preprocess != 'scale_width':  # with [scale_width], input images might have different sizes, which hurts the performance of cudnn.benchmark.
+            torch.backends.cudnn.benchmark = True
+    @staticmethod
+    def modify_commandline_options(parser, is_train):
+        """Add new model-specific options, and rewrite default values for existing options.
+
+        Parameters:
+            parser          -- original option parser
+            is_train (bool) -- whether training phase or test phase. You can use this flag to add training-specific or test-specific options.
+
+        Returns:
+            the modified parser.
+        """
+        return parser
+        self.loss_names = []
+        self.model_names = []
+        self.visual_names = []
+        self.optimizers = []
+        self.image_paths = []
+        self.metric = 0  # used for learning rate policy 'plateau'
 
     @staticmethod
     def modify_commandline_options(parser, is_train):
