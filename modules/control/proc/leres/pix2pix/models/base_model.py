@@ -170,9 +170,10 @@ class BaseModel(ABC):
                 else:
                     torch.save(net.cpu().state_dict(), save_path)
 
-    def unload_network(self, name):
+    def unload_network(self, name) -> None:
         """Unload network and gc.
         """
+        """Unload network and perform garbage collection."""
         if isinstance(name, str):
             net = getattr(self, 'net' + name)
             del net
