@@ -67,17 +67,17 @@ class BaseModel(ABC):
         Parameters:
             input (dict): includes the data itself and its metadata information.
         """
-        pass
+        raise NotImplementedError("set_input method must be implemented in the subclass.")
 
     @abstractmethod
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
-        pass
+        raise NotImplementedError("forward method must be implemented in the subclass.")
 
     @abstractmethod
     def optimize_parameters(self):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
-        pass
+        raise NotImplementedError("optimize_parameters method must be implemented in the subclass.")
 
     def setup(self, opt):
         """Load and print networks; create schedulers
