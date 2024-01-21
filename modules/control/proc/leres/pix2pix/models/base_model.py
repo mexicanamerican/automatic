@@ -1,6 +1,8 @@
 import gc
 import os
 from abc import ABC, abstractmethod
+import itertools
+import torch.backends.cudnn
 from collections import OrderedDict
 
 import torch
@@ -67,7 +69,7 @@ class BaseModel(ABC):
         Parameters:
             input (dict): includes the data itself and its metadata information.
         """
-        pass
+        # Implementation needed
 
     @abstractmethod
     def forward(self):
@@ -107,7 +109,7 @@ class BaseModel(ABC):
         self.forward()
         self.compute_visuals()
 
-    def compute_visuals(self): # noqa
+    def compute_visuals(self): # noqa # Implementation needed
         """Calculate additional output images for visdom and HTML visualization"""
         pass
 
