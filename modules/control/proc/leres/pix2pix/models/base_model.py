@@ -175,6 +175,7 @@ class BaseModel(ABC):
                 else:
                     torch.save(net.cpu().state_dict(), save_path)
 
+
     def unload_network(self, name):
         """Unload network and gc.
         """
