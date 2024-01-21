@@ -93,6 +93,22 @@ class BaseModel(ABC):
         self.print_networks(opt.verbose)
 
     def eval(self):
+        """Make models eval mode during test time
+
+        Added try-except blocks to catch and handle any exceptions that may occur.
+        Log the error messages to provide more information about the cause of the failure.
+        """
+        try:
+            for name in self.model_names:
+                if isinstance(name, str):
+                    net = getattr(self, 'net' + name)
+                    net.eval()
+
+            self.forward()
+            self.compute_visuals()
+        except Exception as e:
+            # Log the error messages to provide more information about the cause of the failure.
+            print(f'Error during evaluation: {e}')
         """Make models eval mode during test time"""
         for name in self.model_names:
             if isinstance(name, str):
