@@ -191,6 +191,7 @@ class BaseModel(ABC):
         else:
             self.__patch_instance_norm_state_dict(state_dict, getattr(module, key), keys, i + 1)
 
+    # Implement logic to load all the networks
     def load_networks(self, epoch):
         """Load all the networks from the disk.
 
