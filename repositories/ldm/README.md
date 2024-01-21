@@ -62,7 +62,7 @@ You can update an existing [latent diffusion](https://github.com/CompVis/latent-
 
 ```
 conda install pytorch==1.12.1 torchvision==0.13.1 -c pytorch
-pip install transformers==4.19.2 diffusers invisible-watermark
+pip install transformers==4.20.0 diffusers invisible-watermark
 pip install -e .
 ``` 
 #### xformers efficient attention
@@ -77,6 +77,13 @@ export CUDA_HOME=/usr/local/cuda-11.4
 conda install -c nvidia/label/cuda-11.4.0 cuda-nvcc
 conda install -c conda-forge gcc
 conda install -c conda-forge gxx_linux-64==9.5.0
+cd ..
+git clone https://github.com/facebookresearch/xformers.git
+cd xformers
+git submodule update --init --recursive
+pip install -r requirements.txt
+pip install -e .
+cd ../stablediffusion
 ```
 
 Then, run the following (compiling takes up to 30 min).
