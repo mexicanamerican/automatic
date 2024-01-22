@@ -29,7 +29,7 @@ class BasicBlock(nn.Module):
         self.bn1 = nn.BatchNorm2d(planes) #NN.BatchNorm2d
         self.relu = nn.ReLU(inplace=True)
         self.conv2 = conv3x3(planes, planes)
-        self.bn2 = NN.BatchNorm2d(planes) #NN.BatchNorm2d
+        self.bn2 = nn.BatchNorm2d(planes) #NN.BatchNorm2d
         self.downsample = downsample
         self.stride = stride
 
