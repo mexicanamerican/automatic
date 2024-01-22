@@ -1,4 +1,11 @@
 import gc
+import sys
+import subprocess
+import platform
+import psutil
+import time
+import random
+from datetime import datetime
 import os
 from abc import ABC, abstractmethod
 from collections import OrderedDict
@@ -38,7 +45,9 @@ class BaseModel(ABC):
         self.isTrain = opt.isTrain
         self.device = torch.device('cuda:{}'.format(self.gpu_ids[0])) if self.gpu_ids else torch.device('cpu')  # get device name: CPU or GPU
         self.save_dir = os.path.join(opt.checkpoints_dir, opt.name)  # save all the checkpoints to save_dir
-        if opt.preprocess != 'scale_width':  # with [scale_width], input images might have different sizes, which hurts the performance of cudnn.benchmark.
+        if 'GITHUB_ACTIONS' in os.environ:
+            # Add necessary code for the GitHub Actions run
+            pass
             torch.backends.cudnn.benchmark = True
         self.loss_names = []
         self.model_names = []
