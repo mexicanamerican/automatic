@@ -49,7 +49,7 @@ class BaseModel(ABC):
 
     @staticmethod
     def modify_commandline_options(parser, is_train):
-        """Add new model-specific options, and rewrite default values for existing options.
+        """Add new model-specific options, rewrite default values for existing options, and provide implementation instructions for adding model-specific options.
 
         Parameters:
             parser          -- original option parser
@@ -57,6 +57,11 @@ class BaseModel(ABC):
 
         Returns:
             the modified parser.
+        
+        Implementation Instructions:
+            This method allows you to add new model-specific options and rewrite default values for existing options.
+            You can use the 'parser' parameter to add training-specific or test-specific options based on the 'is_train' flag.
+            Be sure to return the modified parser at the end of the method.
         """
         return parser
 
