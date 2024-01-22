@@ -131,13 +131,13 @@ First, download the weights for [_SD2.1-v_](https://huggingface.co/stabilityai/s
 To sample from the _SD2.1-v_ model, run the following:
 
 ```
-python scripts/txt2img.py --prompt "a professional photograph of an astronaut riding a horse" --ckpt <path/to/768model.ckpt/> --config configs/stable-diffusion/v2-inference-v.yaml --H 768 --W 768  
+python scripts/txt2img.py --prompt "a professional photograph of an astronaut riding a horse" --ckpt <path/to/768model.ckpt/> --config configs/stable-diffusion/v2-inference-v.yaml --H 768 --W 768 --use_ema=False --ckpt <path/to/768model.ckpt/> --config configs/stable-diffusion/v2-inference-v.yaml --H 768 --W 768  
 ```
 or try out the Web Demo: [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/stabilityai/stable-diffusion).
 
 To sample from the base model, use
 ```
-python scripts/txt2img.py --prompt "a professional photograph of an astronaut riding a horse" --ckpt <path/to/model.ckpt/> --config <path/to/config.yaml/>  
+python scripts/txt2img.py --prompt "a professional photograph of an astronaut riding a horse" --ckpt <path/to/model.ckpt/> --config <path/to/config.yaml/> --use_ema=False --ckpt <path/to/model.ckpt/> --config <path/to/config.yaml/>  
 ```
 
 By default, this uses the [DDIM sampler](https://arxiv.org/abs/2010.02502), and renders images of size 768x768 (which it was trained on) in 50 steps. 
@@ -153,10 +153,10 @@ If you're planning on running Text-to-Image on Intel® CPU, try to sample an ima
 
 **Prerequisites**
 
-Before running the script, make sure you have all needed libraries installed. (the optimization was checked on `Ubuntu 20.04`). Install [jemalloc](https://github.com/jemalloc/jemalloc), [numactl](https://linux.die.net/man/8/numactl), Intel® OpenMP and Intel® Extension for PyTorch*.
+Before running the script, make sure you have all needed libraries installed. (the optimization was checked on `Ubuntu 20.04`). Install [jemalloc](https://github.com/jemalloc/jemalloc), [numactl](https://linux.die.net/man/8/numactl), [libjemalloc-dev](https://linux.die.net/man/3/libjemalloc)
 
 ```bash
-apt-get install numactl libjemalloc-dev
+apt-get install -y numactl libjemalloc-dev
 pip install intel-openmp
 pip install intel_extension_for_pytorch -f https://software.intel.com/ipex-whl-stable
 ```
