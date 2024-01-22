@@ -18,6 +18,8 @@ class BaseOptions():
         self.initialized = False
 
     def initialize(self, parser):
+        
+        try:
         """Define the common options that are used in both training and test."""
         # basic parameters
         parser.add_argument('--dataroot', help='path to images (should have subfolders trainA, trainB, valA, valB, etc)')
@@ -95,7 +97,8 @@ class BaseOptions():
         # modify model-related parser options
         model_name = opt.model
         model_option_setter = models.get_option_setter(model_name)
-        parser = model_option_setter(parser, self.isTrain)
+             except Exception as e:
+            print('Error occurred during option parsing:', str(e))
         opt, _ = parser.parse_known_args()  # parse again with new defaults
 
         # modify dataset-related parser options
