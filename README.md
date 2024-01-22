@@ -103,6 +103,15 @@ Also supported are modifiers such as:
 - *Apple M1/M2* on *OSX* using built-in support in Torch with **MPS** optimizations  
 - *ONNX/Olive* (experimental)  
 
+## Troubleshooting
+
+If you encounter any errors with GitHub Actions, try the following troubleshooting steps:
+
+- **ERROR_MESSAGE_1:** 
+  - SOLUTION_1: 
+- **Error Message 2:** 
+  - *Solution*: 
+
 ## Install
 
 - [Step-by-step install guide](https://github.com/vladmandic/automatic/wiki/Installation)
