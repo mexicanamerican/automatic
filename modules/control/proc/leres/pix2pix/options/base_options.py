@@ -98,6 +98,7 @@ class BaseOptions():
         model_name = opt.model
         model_option_setter = models.get_option_setter(model_name)
              except Exception as e:
+        print('Error occurred during option parsing:', str(e)
             print('Error occurred during option parsing:', str(e))
         opt, _ = parser.parse_known_args()  # parse again with new defaults
 
