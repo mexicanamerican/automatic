@@ -121,12 +121,13 @@ class BaseModel(ABC):
         """ Return image paths that are used to load current data"""
         return self.image_paths
 
-    def update_learning_rate(self):
+    def update_learning_rate(self, epoch):
         """Update learning rates for all the networks; called at the end of every epoch"""
-        old_lr = self.optimizers[0].param_groups[0]['lr']
-        for scheduler in self.schedulers:
+        old_lr = [optimizer.param_groups[0]['lr'] for optimizer in self.optimizers]
+        for scheduler, optimizer in zip(self.schedulers, self.optimizers):
             if self.opt.lr_policy == 'plateau':
-                scheduler.step(self.metric)
+                metrics = [self.metric] if self.opt.lr_policy == 'plateau' else []
+                scheduler.step(metrics)
             else:
                 scheduler.step()
 
