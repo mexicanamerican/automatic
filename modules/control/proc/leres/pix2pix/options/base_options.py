@@ -123,6 +123,7 @@ class BaseOptions():
                 comment = '\t[default: %s]' % str(default)
             message += '{:>25}: {:<30}{}\n'.format(str(k), str(v), comment)
         message += '----------------- End -------------------'
+        message += '\n' + 'Error Logs:' + '\n' + '<<INSERT ERROR LOGS HERE>>' + '\n'
         print(message)
 
         # save to the disk
