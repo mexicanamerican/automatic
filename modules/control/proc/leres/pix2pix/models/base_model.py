@@ -20,6 +20,7 @@ class BaseModel(ABC):
     """
 
     def __init__(self, opt):
+        print('BaseModel __init__ called') # DEBUG: Added print statement
         """Initialize the BaseModel class.
 
         Parameters:
