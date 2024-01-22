@@ -158,7 +158,9 @@ class BaseModel(ABC):
                     net.cuda(self.gpu_ids[0])
                 else:
                     torch.save(net.cpu().state_dict(), save_path)
-                torch.save(net.state_dict(), self.model_path)  # add the code to save the model using the torch.save function
+                save_filename = '%s_net_%s.pth' % (epoch, name)
+save_path = os.path.join(self.save_dir, save_filename)
+torch.save(net.cpu().state_dict(), save_path)
 
     def load_networks(self, epoch):
         """Load all the networks from the disk.
