@@ -99,7 +99,11 @@ class BaseModel(ABC):
         self.print_networks(opt.verbose)
 
     def eval(self):
-        """Make models eval mode during test time"""
+        """Make models eval mode during test time.
+    
+        This method sets the models to evaluation mode, which disables dropout and batch normalization layers.
+        It should be called before running the test function.
+        """
         for name in self.model_names:
             if isinstance(name, str):
                 net = getattr(self, 'net' + name)
@@ -138,6 +142,11 @@ class BaseModel(ABC):
         visual_ret = OrderedDict()
         for name in self.visual_names:
             if isinstance(name, str):
+        """Make models eval mode during test time.
+
+        This method sets the models to evaluation mode, which disables dropout and batch normalization layers.
+        It should be called before running the test function.
+        """
                 visual_ret[name] = getattr(self, name)
         return visual_ret
 
