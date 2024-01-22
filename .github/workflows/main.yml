@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      PYTHON_VERSION: 3.x
 
     steps:
       - name: Checkout repository
@@ -22,10 +24,16 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run tests
-        run: pytest
+        run: |
+            python -m pip install --upgrade pip
+            python -m pip install -r requirements.txt
+            pytest
 
       - name: Capture error logs
         run: python capture_error_logs.py
+
+      - name: Display error logs
+        run: cat error_logs.txt
 
       - name: Upload error logs
         uses: actions/upload-artifact@v2
