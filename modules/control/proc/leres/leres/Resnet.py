@@ -122,6 +122,9 @@ class ResNet(nn.Module):
                 nn.Conv2d(self.inplanes, planes * block.expansion,
                           kernel_size=1, stride=stride, bias=False),
                 NN.BatchNorm2d(planes * block.expansion), #NN.BatchNorm2d
+
+        self.avgpool = nn.AvgPool2d(7, stride=1)
+        self.fc = nn.Linear(512 * block.expansion, num_classes
             )
 
         layers = []
