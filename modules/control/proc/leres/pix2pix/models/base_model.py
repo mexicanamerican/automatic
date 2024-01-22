@@ -251,10 +251,10 @@ class BaseModel(ABC):
         print('-----------------------------------------------')
 
     def set_requires_grad(self, nets, requires_grad=False):
-        """Set requies_grad=Fasle for all the networks to avoid unnecessary computations
+        """Set requires_grad parameter for the specified networks to avoid unnecessary computations. If 'requires_grad' is set to True, the network parameters will participate in gradient computation during backpropagation, allowing them to be optimized during training. If 'requires_grad' is set to False, the network parameters will not participate in gradient computation during backpropagation, making them fixed and preventing them from being optimized during training.
         Parameters:
             nets (network list)   -- a list of networks
-            requires_grad (bool)  -- whether the networks require gradients or not
+            requires_grad (bool): Boolean flag to specify whether the networks require gradients or not. If True, sets the 'requires_grad' attributes of the network parameters to True, allowing them to participate in gradient computation during backpropagation. If False, sets the 'requires_grad' attributes of the network parameters to False, preventing them from participating in gradient computation during backpropagation.: Boolean flag to specify whether the networks require gradients or not. If True, sets the 'requires_grad' attributes of the network parameters to True, allowing them to participate in gradient computation during backpropagation. If False, sets the 'requires_grad' attributes of the network parameters to False, preventing them from participating in gradient computation during backpropagation.
         """
         if not isinstance(nets, list):
             nets = [nets]
