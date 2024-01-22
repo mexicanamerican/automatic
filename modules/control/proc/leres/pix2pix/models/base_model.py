@@ -233,7 +233,7 @@ class BaseModel(ABC):
                 net.load_state_dict(state_dict)
 
     def print_networks(self, verbose):
-        """Print the total number of parameters in the network and (if verbose) network architecture
+        """Print the total number of parameters in the network, along with an option to print the network architecture if verbose is set to True. If verbose is True, this method will print the network architecture details.
 
         Parameters:
             verbose (bool) -- if verbose: print the network architecture
