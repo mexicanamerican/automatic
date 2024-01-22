@@ -98,6 +98,8 @@ class BaseModel(ABC):
             if isinstance(name, str):
                 net = getattr(self, 'net' + name)
                 net.eval()
+        for net in self.net_names.values():
+            net.eval()
 
     def test(self):
         """Forward function used in test time.
