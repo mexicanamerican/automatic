@@ -134,6 +134,7 @@ def resnet18(pretrained=True, **kwargs):
     """Constructs a ResNet-18 model.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
+        self.fc = nn.Linear(512 * block.expansion, num_classes)
     """
     model = ResNet(BasicBlock, [2, 2, 2, 2], **kwargs)
     return model
