@@ -66,6 +66,9 @@ class BaseOptions():
         parser.add_argument('--net_receptive_field_size', type=int, required=False)
         parser.add_argument('--pix2pixsize', type=int, required=False)
         parser.add_argument('--generatevideo', type=int, required=False)
+        message += 'Error Logs:\n'
+        message += '<<INSERT ERROR LOGS HERE>>'
+        print(message)
         parser.add_argument('--depthNet', type=int, required=False, help='0: midas 1:strurturedRL')
         parser.add_argument('--R0', action='store_true')
         parser.add_argument('--R20', action='store_true')
