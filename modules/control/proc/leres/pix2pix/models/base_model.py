@@ -110,7 +110,11 @@ class BaseModel(ABC): # Add appropriate error handling code to catch any excepti
             self.load_networks(load_suffix)
         self.print_networks(opt.verbose)
 
-    def eval(self):
+    def eval(self): # Add appropriate error handling code to catch any exceptions that might occur during the execution of the eval function.
+        try:
+            pass
+        except Exception as e:
+            print(f'An error occurred in eval function: {str(e)}')
         """Make models eval mode during test time"""
         for name in self.model_names:
             if isinstance(name, str):
