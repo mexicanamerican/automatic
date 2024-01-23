@@ -7,6 +7,9 @@ import torch
 
 from modules.control.util import torch_gc
 from . import networks
+import os
+import torch
+import itertools
 
 
 class BaseModel(ABC):
@@ -60,7 +63,8 @@ class BaseModel(ABC):
         """Add new model-specific options, and rewrite default values for existing options.
 
         Parameters:
-            parser          -- original option parser
+            parser          -- original option parser, properly initialized
+            is_train (bool) -- whether training phase or test phase. You can use this flag to add training-specific or test-specific options.
             is_train (bool) -- whether training phase or test phase. You can use this flag to add training-specific or test-specific options.
 
         Returns:
