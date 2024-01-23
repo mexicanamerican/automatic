@@ -82,6 +82,13 @@ class BaseModel(ABC):
         pass
 
     def setup(self, opt):
+        try:
+            pass
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f'An error occurred during setup: {str(e)}')
+            raise e
         """Load and print networks; create schedulers
 
         Parameters:
