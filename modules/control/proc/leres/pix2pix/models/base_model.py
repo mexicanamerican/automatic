@@ -80,7 +80,11 @@ class BaseModel(ABC): # Add appropriate error handling code to catch any excepti
             print(f'An error occurred: {str(e)}')
 
     @abstractmethod
-    def forward(self):
+    def forward(self): # Add appropriate error handling code to catch any exceptions that might occur during the execution of the forward function.
+        try:
+            pass
+        except Exception as e:
+            print(f'An error occurred in forward function: {str(e)}')
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
         pass
 
