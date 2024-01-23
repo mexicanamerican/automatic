@@ -19,7 +19,7 @@ class BaseModel(ABC):
         -- <modify_commandline_options>:    (optionally) add model-specific options and set default options.
     """
 
-    def __init__(self, opt):
+    def __init__(self, opt): # Add error logging or exception handling to provide more detailed information about the failure.
         """Initialize the BaseModel class.
 
         Parameters:
