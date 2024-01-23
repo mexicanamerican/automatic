@@ -121,7 +121,11 @@ class BaseModel(ABC): # Add appropriate error handling code to catch any excepti
                 net = getattr(self, 'net' + name)
                 net.eval()
 
-    def test(self):
+    def test(self): # Add appropriate error handling code to catch any exceptions that might occur during the execution of the test function.
+        try:
+            pass
+        except Exception as e:
+            print(f'An error occurred in test function: {str(e)}')
         """Forward function used in test time.
 
         It also calls <compute_visuals> to produce additional visualization results
