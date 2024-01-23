@@ -107,6 +107,16 @@ class BaseModel(ABC):
 
     def eval(self):
         """Make models eval mode during test time"""
+        self.forward()
+        self.set_eval_mode()
+
+    def set_eval_mode(self): # noqa
+        """Set models to evaluation mode"""
+        for name in self.model_names:
+            if isinstance(name, str):
+                net = getattr(self, 'net' + name)
+                net.eval()
+        """Make models eval mode during test time"""
         for name in self.model_names:
             if isinstance(name, str):
                 net = getattr(self, 'net' + name)
