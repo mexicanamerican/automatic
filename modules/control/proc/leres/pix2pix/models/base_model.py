@@ -1,5 +1,5 @@
 import gc
-import os
+from torch.utils.data import DataLoader
 from abc import ABC, abstractmethod
 import torch.nn.functional as F
 import torch.optim
@@ -123,6 +123,8 @@ class BaseModel(ABC):
 
         It also calls <compute_visuals> to produce additional visualization results
         """
+        input_data = {}
+        self.set_input(input_data)
         self.forward()
         self.compute_visuals()
 
