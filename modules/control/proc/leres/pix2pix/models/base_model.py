@@ -1,6 +1,8 @@
 import gc
 import os
 from abc import ABC, abstractmethod
+import torch
+import itertools
 from collections import OrderedDict
 
 import torch
@@ -73,7 +75,8 @@ class BaseModel(ABC):
         return parser
 
     @abstractmethod
-    def set_input(self, input):
+    def set_input(self, input_data):
+        pass
         """Unpack input data from the dataloader and perform necessary pre-processing steps.
 
         Parameters:
