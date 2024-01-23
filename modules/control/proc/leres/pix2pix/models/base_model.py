@@ -192,7 +192,12 @@ class BaseModel(ABC):
                (key == 'num_batches_tracked'):
                 state_dict.pop('.'.join(keys))
         else:
-            self.__patch_instance_norm_state_dict(state_dict, getattr(module, key), keys, i + 1)
+                try:
+                    self.__patch_instance_norm_state_dict(state_dict, getattr(module, key), keys, i + 1)
+                except Exception as e:
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.error(f'An error occurred during network loading: {str(e)}')
 
     def load_networks(self, epoch):
         """Load all the networks from the disk.
