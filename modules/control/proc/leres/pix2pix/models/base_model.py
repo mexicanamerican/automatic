@@ -1,12 +1,15 @@
 import gc
 import os
 from abc import ABC, abstractmethod
+import torch
+import os
+from . import networks
 from collections import OrderedDict
 
 import torch
 
 from modules.control.util import torch_gc
-from . import networks
+from modules.control import networks
 
 
 class BaseModel(ABC):
@@ -17,6 +20,7 @@ class BaseModel(ABC):
         -- <forward>:                       produce intermediate results.
         -- <optimize_parameters>:           calculate losses, gradients, and update network weights.
         -- <modify_commandline_options>:    (optionally) add model-specific options and set default options.
+        -- <save_networks>:                  save all the networks to the disk.
     """
 
     def __init__(self, opt):
@@ -87,9 +91,9 @@ class BaseModel(ABC):
         """
         if self.isTrain:
             self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
-        if not self.isTrain or opt.continue_train:
-            load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
-            self.load_networks(load_suffix)
+            if not self.isTrain or opt.continue_train:
+                load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
+                self.load_networks(load_suffix)
         self.print_networks(opt.verbose)
 
     def eval(self):
@@ -206,10 +210,6 @@ class BaseModel(ABC):
                     del state_dict._metadata
 
                 # patch InstanceNorm checkpoints prior to 0.4
-                for key in list(state_dict.keys()):  # need to copy keys here because we mutate in loop
-                    self.__patch_instance_norm_state_dict(state_dict, net, key.split('.'))
-                net.load_state_dict(state_dict)
-
     def print_networks(self, verbose):
         """Print the total number of parameters in the network and (if verbose) network architecture
 
