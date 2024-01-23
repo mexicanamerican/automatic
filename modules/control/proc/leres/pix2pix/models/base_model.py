@@ -87,7 +87,7 @@ class BaseModel(ABC):
     @abstractmethod
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
-        pass
+        raise NotImplementedError("You need to implement the forward method in your subclass.")
 
     @abstractmethod
     def optimize_parameters(self):
