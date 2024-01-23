@@ -1,7 +1,11 @@
 import gc
 import os
 from abc import ABC, abstractmethod
-import torch.nn, torch.optim, torch.nn.functional.nn, torch.optim, torch.nn.functional
+import torch.nn.functional as F
+import torch.optim
+import torch.nn.functional as F
+import torch.optim as optim
+import torch.nn.functional as F
 import itertools
 from collections import OrderedDict
 
