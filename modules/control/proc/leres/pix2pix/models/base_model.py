@@ -224,10 +224,9 @@ class BaseModel(ABC):
                 for param in net.parameters():
                     num_params += param.numel()
                 if verbose:
-                    print(net)
-                print('[Network %s] Total number of parameters : %.3f M' % (name, num_params / 1e6))
-        print('-----------------------------------------------')
-
+                for key in list(state_dict.keys()):
+                    self.__patch_instance_norm_state_dict(state_dict, net, key.split('.'))
+                net.load_state_dict(state_dict)
     def set_requires_grad(self, nets, requires_grad=False):
         """Set requies_grad=Fasle for all the networks to avoid unnecessary computations
         Parameters:
