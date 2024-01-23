@@ -230,7 +230,11 @@ class BaseModel(ABC):
         Parameters:
             verbose (bool) -- if verbose: print the network architecture
         """
-        print('---------- Networks initialized -------------')
+        try:
+            print('---------- Networks initialized -------------')
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
         for name in self.model_names:
             if isinstance(name, str):
                 net = getattr(self, 'net' + name)
@@ -240,7 +244,11 @@ class BaseModel(ABC):
                 if verbose:
                     print(net)
                 print('[Network %s] Total number of parameters : %.3f M' % (name, num_params / 1e6))
-        print('-----------------------------------------------')
+        try:
+            print('-----------------------------------------------')
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
 
     def set_requires_grad(self, nets, requires_grad=False):
         """Set requies_grad=Fasle for all the networks to avoid unnecessary computations
