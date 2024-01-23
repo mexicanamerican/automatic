@@ -133,7 +133,11 @@ class BaseModel(ABC): # Add appropriate error handling code to catch any excepti
         self.forward()
         self.compute_visuals()
 
-    def compute_visuals(self): # noqa
+    def compute_visuals(self): # Add appropriate error handling code to catch any exceptions that might occur during the execution of the compute_visuals function.
+        try:
+            pass
+        except Exception as e:
+            print(f'An error occurred in compute_visuals function: {str(e)}')
         """Calculate additional output images for visdom and HTML visualization"""
         pass
 
