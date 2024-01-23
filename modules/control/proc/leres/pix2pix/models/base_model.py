@@ -74,7 +74,10 @@ class BaseModel(ABC): # Add appropriate error handling code to catch any excepti
         Parameters:
             input (dict): includes the data itself and its metadata information.
         """
-        pass
+        try:
+            pass
+        except Exception as e:
+            print(f'An error occurred: {str(e)}')
 
     @abstractmethod
     def forward(self):
