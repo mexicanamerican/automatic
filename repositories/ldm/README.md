@@ -1,7 +1,23 @@
 # Stable Diffusion Version 2
 ![t2i](assets/stable-samples/txt2img/768/merged-0006.png)
 ![t2i](assets/stable-samples/txt2img/768/merged-0002.png)
-![t2i](assets/stable-samples/txt2img/768/merged-0005.png)
+![t2i](assets/stable-samples/txt2img/768/merged-0005.png)## Troubleshooting and Issue Reporting
+
+If you encounter any issues with GitHub Actions, please follow the instructions below to troubleshoot and report the problem. This will help us investigate and resolve the issue effectively.
+
+### Troubleshooting Steps:
+1. Check the error logs in the GitHub Actions tab to identify the cause of the failure.
+2. Review the workflow file for any potential misconfigurations or errors.
+3. Ensure that all required environment variables and secrets are correctly set.
+
+### Reporting the Issue:
+When reporting an issue, please include the following information:
+- Description of the problem encountered
+- Relevant error logs from the GitHub Actions tab
+- Workflow file configuration
+- Any relevant context or steps to reproduce
+
+By providing this information, you help us to understand and address the issue more efficiently.
 
 This repository contains [Stable Diffusion](https://github.com/CompVis/stable-diffusion) models trained from scratch and will be continuously updated with
 new checkpoints. The following list provides an overview of all currently available models. More coming soon.
