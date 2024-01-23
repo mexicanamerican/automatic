@@ -20,6 +20,8 @@ class BaseModel(ABC):
     """
 
     def __init__(self, opt):
+        import logging
+        logger = logging.getLogger(__name__)
         """Initialize the BaseModel class.
 
         Parameters:
