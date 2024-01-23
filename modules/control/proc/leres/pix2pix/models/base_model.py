@@ -89,7 +89,11 @@ class BaseModel(ABC): # Add appropriate error handling code to catch any excepti
         pass
 
     @abstractmethod
-    def optimize_parameters(self):
+    def optimize_parameters(self): # Add appropriate error handling code to catch any exceptions that might occur during the execution of the optimize_parameters function.
+        try:
+            pass
+        except Exception as e:
+            print(f'An error occurred in optimize_parameters function: {str(e)}')
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
         pass
 
