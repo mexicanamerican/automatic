@@ -58,7 +58,14 @@ class BaseModel(ABC): # Add appropriate error handling code to catch any excepti
         Returns:
             the modified parser.
         """
-        return parser
+        try:
+            return parser
+        except Exception as e:
+            print(f'An error occurred: {str(e)}')
+            return parser
+        except Exception as e:
+            print(f'An error occurred: {str(e)}')
+            return parser
 
     @abstractmethod
     def set_input(self, input):
