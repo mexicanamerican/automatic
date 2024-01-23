@@ -20,6 +20,8 @@ class BaseModel(ABC):
     """
 
     def __init__(self, opt):
+        import logging
+        logger = logging.getLogger(__name__)
         """Initialize the BaseModel class.
 
         Parameters:
@@ -80,6 +82,13 @@ class BaseModel(ABC):
         pass
 
     def setup(self, opt):
+        try:
+            pass
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f'An error occurred during setup: {str(e)}')
+            raise e
         """Load and print networks; create schedulers
 
         Parameters:
@@ -183,7 +192,12 @@ class BaseModel(ABC):
                (key == 'num_batches_tracked'):
                 state_dict.pop('.'.join(keys))
         else:
-            self.__patch_instance_norm_state_dict(state_dict, getattr(module, key), keys, i + 1)
+                try:
+                    self.__patch_instance_norm_state_dict(state_dict, getattr(module, key), keys, i + 1)
+                except Exception as e:
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.error(f'An error occurred during network loading: {str(e)}')
 
     def load_networks(self, epoch):
         """Load all the networks from the disk.
@@ -216,7 +230,11 @@ class BaseModel(ABC):
         Parameters:
             verbose (bool) -- if verbose: print the network architecture
         """
-        print('---------- Networks initialized -------------')
+        try:
+            print('---------- Networks initialized -------------')
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
         for name in self.model_names:
             if isinstance(name, str):
                 net = getattr(self, 'net' + name)
@@ -226,7 +244,11 @@ class BaseModel(ABC):
                 if verbose:
                     print(net)
                 print('[Network %s] Total number of parameters : %.3f M' % (name, num_params / 1e6))
-        print('-----------------------------------------------')
+        try:
+            print('-----------------------------------------------')
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
 
     def set_requires_grad(self, nets, requires_grad=False):
         """Set requies_grad=Fasle for all the networks to avoid unnecessary computations
