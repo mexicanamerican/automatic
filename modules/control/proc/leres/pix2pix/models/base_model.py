@@ -1,7 +1,7 @@
 import gc
 import os
 from abc import ABC, abstractmethod
-import torch
+import torch.nn, torch.optim, torch.nn.functional.nn, torch.optim, torch.nn.functional
 import itertools
 from collections import OrderedDict
 
@@ -90,7 +90,7 @@ class BaseModel(ABC):
         raise NotImplementedError("You need to implement the forward method in your subclass.")
 
     @abstractmethod
-    def optimize_parameters(self):
+    def optimize_parameters(self, *args, **kwargs):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
         pass
 
