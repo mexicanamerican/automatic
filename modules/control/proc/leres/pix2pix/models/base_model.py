@@ -4,9 +4,22 @@ from abc import ABC, abstractmethod
 from collections import OrderedDict
 
 import torch
-
+import gc
+import os
+from abc import ABC, abstractmethod
+from collections import OrderedDict
+import torch
+import itertools
 from modules.control.util import torch_gc
 from . import networks
+
+# Add torch.cuda and torch.optim as they are used in the code
+import torch.cuda
+import torch.optim
+
+# Add torch.cuda and torch.optim as they are used in the code
+import torch.cuda
+import torch.optim
 
 
 class BaseModel(ABC):
