@@ -97,7 +97,7 @@ class BaseModel(ABC): # Add appropriate error handling code to catch any excepti
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
         pass
 
-    def setup(self, opt):
+    def setup(self, opt): # Add appropriate error handling code to catch any exceptions that might occur during the execution of the setup function.
         """Load and print networks; create schedulers
 
         Parameters:
