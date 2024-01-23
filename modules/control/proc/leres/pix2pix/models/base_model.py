@@ -142,12 +142,12 @@ It also calls <compute_visuals> to produce additional visualization results
                 lr = param_group['lr']
                 print('learning rate %.7f -> %.7f' % (old_lr, lr))
 
-    def get_current_visuals(self):
+    def get_current_visuals(self) -> OrderedDict[str, any]:
         """Return visualization images. train.py will display these images with visdom, and save the images to a HTML"""
-        visual_ret = OrderedDict()
+        visual_ret: OrderedDict[str, any] = OrderedDict()
         for name in self.visual_names:
             if isinstance(name, str):
-                visual_ret[name] = getattr(self, name)
+                visual_ret[name] = getattr(self, name).detach().cpu().numpy()
         return visual_ret
 
     def get_current_losses(self):
