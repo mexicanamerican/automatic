@@ -121,6 +121,8 @@ It also calls <compute_visuals> to produce additional visualization results
 
     def compute_visuals(self): # noqa
         """Calculate additional output images for visdom and HTML visualization"""
+        # Add necessary business logic to calculate additional output images
+        pass
         pass
 
     def get_image_paths(self):
