@@ -9,7 +9,18 @@ Examples:
 
 # system imports
 import os
+import os
 import re
+import sys
+import logging
+from logging.handlers import RotatingFileHandler
+from github import environment
+from rich.theme import Theme
+from rich.logging import RichHandler
+from rich.console import Console
+from rich.pretty import install as pretty_install
+from rich.traceback import install as traceback_install
+from os import environ
 import gc
 import sys
 import json
@@ -437,6 +448,8 @@ if __name__ == '__main__':
         if args.type == 'lora' or args.type == 'lyco' or args.type == 'dreambooth':
             train_lora()
     except KeyboardInterrupt:
+        log.error('An interrupt was requested.')
+        sdapi.interrupt()
         log.error('interrupt requested')
         sdapi.interrupt()
     mem_stats()
