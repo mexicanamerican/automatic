@@ -169,7 +169,16 @@ It also calls <compute_visuals> to produce additional visualization results
 
         Parameters:
             epoch (int) -- current epoch; used in the file name '%s_net_%s.pth' % (epoch, name)
-        for optimizer in self.optimizers:
+                        save_filename = '%s_net_%s.pth' % (epoch, name)
+                save_path = os.path.join(self.save_dir, save_filename)
+                net = getattr(self, 'net' + name)
+
+                if isinstance(net, torch.nn.DataParallel):
+                    net = net.module
+                state_dict = net.state_dict()
+                if hasattr(state_dict, '_metadata'):
+                    del state_dict._metadata
+                torch.save(state_dict, save_path)
             for param_group in optimizer.param_groups:
                 old_lr = param_group['lr']
                 if self.opt.lr_policy == 'plateau':
