@@ -60,12 +60,39 @@ class BaseModel(ABC):
         """
         return parser
 
+    def save_networks(self, epoch):
+        """Save all the networks to the disk.
+
+        Parameters:
+            epoch (int) -- current epoch; used in the file name '%s_net_%s.pth' % (epoch, name)
+        """
+        for name in self.model_names:
+            if isinstance(name, str):
+                save_filename = f'%s_net_{name}.pth' % epoch
+                save_path = os.path.join(self.save_dir, save_filename)
+                net = getattr(self, 'net' + name)
+
+                if len(self.gpu_ids) > 0 and torch.cuda.is_available():
+                    torch.save(net.module.cpu().state_dict(), save_path)
+                    net.cuda(self.gpu_ids[0])
+                else:
+                    torch.save(net.cpu().state_dict(), save_path)
+
     def set_input(self, input):
         """Unpack input data from the dataloader and perform necessary pre-processing steps.
 
         Parameters:
             input (dict): includes the data itself and its metadata information.
         """
+        raise NotImplementedError
+
+    def forward(self):
+        """Run forward pass; called by both functions <optimize_parameters> and <test>.
+        """
+        raise NotImplementedError
+
+    def optimize_parameters(self):
+        """Calculate losses, gradients, and update network weights; called in every training iteration"
         raise NotImplementedError
 
     def forward(self):
