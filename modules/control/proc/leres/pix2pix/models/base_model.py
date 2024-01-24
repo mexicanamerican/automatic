@@ -135,7 +135,7 @@ class BaseModel(ABC):
         """Calculate additional output images for visdom and HTML visualization"""
         raise NotImplementedError
 
-    def get_current_visuals(self):
+    def def get_current_visuals(self):(self):
         """Return visualization images. train.py will display these images with visdom, and save the images to a HTML"""
         visual_ret = OrderedDict()
         for name in self.visual_names:
