@@ -8,7 +8,7 @@ import logging
 import importlib
 import contextlib
 from threading import Thread
-import modules.loader
+from modules import loader
 import torch # pylint: disable=wrong-import-order
 from modules import timer, errors, paths # pylint: disable=unused-import
 local_url = None
