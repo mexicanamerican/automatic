@@ -48,7 +48,7 @@ All individual features are not listed here, instead check [ChangeLog](CHANGELOG
 
 **SD.Next** supports two main backends: *Original* and *Diffusers*:
 
-- **Original**: Based on [LDM](https://github.com/Stability-AI/stablediffusion) reference implementation and significantly expanded on by [A1111](https://github.com/AUTOMATIC1111/stable-diffusion-webui)  
+new line(s) to replace
   This is the default backend and it is fully compatible with all existing functionality and extensions  
   Supports **SD 1.x** and **SD 2.x** models  
   All other model types such as *SD-XL, LCM, PixArt, Segmind, Kandinsky, etc.* require backend **Diffusers**  
@@ -113,6 +113,62 @@ Also supported are modifiers such as:
 
 > [!TIP]
 > - Server can run without virtual environment,  
+  Recommended to use `VENV` to avoid library version conflicts with other applications  
+> - **nVidia/CUDA** / **AMD/ROCm** / **Intel/OneAPI** are auto-detected if present and available,  
+  For any other use case such as **DirectML**, **ONNX/Olive**, **OpenVINO** specify required parameter explicitly  
+  or wrong packages may be installed as installer will assume CPU-only environment  
+> - Full startup sequence is logged in `sdnext.log`,  
+  so if you encounter any issues, please check it first  
+
+### Run
+
+Once SD.Next is installed, simply run `webui.ps1` or `webui.bat` (*Windows*) or `webui.sh` (*Linux or MacOS*)
+
+Below is partial list of all available parameters, run `webui --help` for the full list:
+
+    Server options:
+      --config CONFIG                  Use specific server configuration file, default: config.json
+      --ui-config UI_CONFIG            Use specific UI configuration file, default: ui-config.json
+      --medvram                        Split model stages and keep only active part in VRAM, default: False
+      --lowvram                        Split model components and keep only active part in VRAM, default: False
+      --ckpt CKPT                      Path to model checkpoint to load immediately, default: None
+      --vae VAE                        Path to VAE checkpoint to load immediately, default: None
+      --data-dir DATA_DIR              Base path where all user data is stored, default:
+      --models-dir MODELS_DIR          Base path where all models are stored, default: models
+      --share                          Enable UI accessible through Gradio site, default: False
+      --insecure                       Enable extensions tab regardless of other options, default: False
+      --listen                         Launch web server using public IP address, default: False
+      --auth AUTH                      Set access authentication like "user:pwd,user:pwd""
+      --autolaunch                     Open the UI URL in the system's default browser upon launch
+      --docs                           Mount Gradio docs at /docs, default: False
+      --no-hashing                     Disable hashing of checkpoints, default: False
+      --no-metadata                    Disable reading of metadata from models, default: False
+      --no-download                    Disable download of default model, default: False
+      --backend {original,diffusers}   force model pipeline type
+
+    Setup options:
+      --debug                          Run installer with debug logging, default: False
+      --reset                          Reset main repository to latest version, default: False
+      --upgrade                        Upgrade main repository to latest version, default: False
+      --requirements                   Force re-check of requirements, default: False
+      --quick                          Run with startup sequence only, default: False
+      --use-directml                   Use DirectML if no compatible GPU is detected, default: False
+      --use-openvino                   Use Intel OpenVINO backend, default: False
+      --use-ipex                       Force use Intel OneAPI XPU backend, default: False
+      --use-cuda                       Force use nVidia CUDA backend, default: False
+      --use-rocm                       Force use AMD ROCm backend, default: False
+      --use-xformers                   Force use xFormers cross-optimization, default: False
+      --skip-requirements              Skips checking and installing requirements, default: False
+      --skip-extensions                Skips running individual extension installers, default: False
+      --skip-git                       Skips running all GIT operations, default: False
+      --skip-torch                     Skips running Torch checks, default: False
+      --skip-all                       Skips running all checks, default: False
+      --experimental                   Allow unsupported versions of libraries, default: False
+      --reinstall                      Force reinstallation of all requirements, default: False
+      --safe                           Run in safe mode with no user extensions
+
+
+## Notes
   Recommended to use `VENV` to avoid library version conflicts with other applications  
 > - **nVidia/CUDA** / **AMD/ROCm** / **Intel/OneAPI** are auto-detected if present and available,  
   For any other use case such as **DirectML**, **ONNX/Olive**, **OpenVINO** specify required parameter explicitly  
