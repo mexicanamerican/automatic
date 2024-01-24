@@ -7,6 +7,7 @@ import torch
 
 from modules.control.util import torch_gc
 from . import networks
+from collections import OrderedDict
 
 
 class BaseModel(ABC):
