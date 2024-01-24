@@ -131,7 +131,7 @@ class BaseModel(ABC):
         self.forward()
         self.compute_visuals()
 
-    def compute_visuals(self): # noqa
+    def compute_visuals(self): 
         """Calculate additional output images for visdom and HTML visualization"""
         raise NotImplementedError
 
