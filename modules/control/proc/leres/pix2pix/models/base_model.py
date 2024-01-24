@@ -206,6 +206,19 @@ class BaseModel(ABC):
             torch_gc()
             return None
 
+    def unload_network(self, name):
+        """Unload network and perform garbage collection.
+
+        Parameters:
+            name (str) -- the name of the network to unload and perform garbage collection
+        """
+        if isinstance(name, str):
+            net = getattr(self, 'net' + name)
+            del net
+            gc.collect()
+            torch_gc()
+            return None
+
     def __patch_instance_norm_state_dict(self, state_dict, module, keys, i=0):
         """Fix InstanceNorm checkpoints incompatibility (prior to 0.4)"""
         key = keys[i]
