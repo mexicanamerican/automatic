@@ -1,6 +1,6 @@
 import gc
 import os
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, abstractmethod
 from collections import OrderedDict
 
 import torch
@@ -157,6 +157,7 @@ class BaseModel(ABC):
 
                 if len(self.gpu_ids) > 0 and torch.cuda.is_available():
                     torch.save(net.module.cpu().state_dict(), save_path)
+                    torch.save(net.cpu().state_dict(), save_path)
                     net.cuda(self.gpu_ids[0])
                 else:
                     torch.save(net.cpu().state_dict(), save_path)
@@ -167,7 +168,7 @@ class BaseModel(ABC):
         if isinstance(name, str):
             net = getattr(self, 'net' + name)
             del net
-            gc.collect()
+            gc.collect(); torch_gc()
             torch_gc()
             return None
 
