@@ -8,7 +8,7 @@ from PIL import Image
 
 from modules.control.util import HWC3, resize_image
 from .leres.depthmap import estimateboost, estimateleres
-from .leres.multi_depth_model_woauxi import RelDepthModel
+from .leres.multi_depth_model_without_auxi import RelDepthModel
 from .leres.net_tools import strip_prefix_if_present
 from .pix2pix.models.pix2pix4depth_model import Pix2Pix4DepthModel
 from .pix2pix.options.test_options import TestOptions
@@ -20,7 +20,7 @@ class LeresDetector:
         self.pix2pixmodel = pix2pixmodel
 
     @classmethod
-    def from_pretrained(cls, pretrained_model_or_path, filename=None, pix2pix_filename=None, cache_dir=None):
+    def from_pretrained(cls, pretrained_model_or_path, filename="res101.pth", pix2pix_filename="latest_net_G.pth", cache_dir=None):
         filename = filename or "res101.pth"
         pix2pix_filename = pix2pix_filename or "latest_net_G.pth"
         if os.path.isdir(pretrained_model_or_path):
