@@ -17,6 +17,7 @@ class BaseModel(ABC):
         -- <forward>:                       produce intermediate results.
         -- <optimize_parameters>:           calculate losses, gradients, and update network weights.
         -- <modify_commandline_options>:    (optionally) add model-specific options and set default options.
+        -- <save_networks>:                 save all the networks to the disk.
     """
 
     def __init__(self, opt):
