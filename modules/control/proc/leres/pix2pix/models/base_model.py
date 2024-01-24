@@ -123,17 +123,17 @@ class BaseModel(ABC):
         self.print_networks(opt.verbose)
         return self.image_paths
 
-    def update_learning_rate(self):
-        """Update learning rates for all the networks; called at the end of every epoch"""
-        old_lr = self.optimizers[0].param_groups[0]['lr']
-        for scheduler in self.schedulers:
-            if self.opt.lr_policy == 'plateau':
-                scheduler.step(self.metric)
-            else:
-                scheduler.step()
+    def test(self):
+        """Forward function used in test time.
 
-        lr = self.optimizers[0].param_groups[0]['lr']
-        print('learning rate %.7f -> %.7f' % (old_lr, lr))
+        It also calls <compute_visuals> to produce additional visualization results
+        """
+        self.forward()
+        self.compute_visuals()
+
+    def compute_visuals(self): # noqa
+        """Calculate additional output images for visdom and HTML visualization"""
+        raise NotImplementedError
 
     def get_current_visuals(self):
         """Return visualization images. train.py will display these images with visdom, and save the images to a HTML"""
