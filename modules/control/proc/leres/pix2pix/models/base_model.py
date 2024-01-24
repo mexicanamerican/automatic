@@ -20,6 +20,8 @@ class BaseModel(ABC):
     """
 
     def __init__(self, opt):
+        self.save_dir = os.path.join(opt.checkpoints_dir, opt.name)
+        self.device = torch.device('cuda:%d' % opt.gpu_ids[0]) if opt.gpu_ids else torch.device('cpu')
         """Initialize the BaseModel class.
 
         Parameters:
