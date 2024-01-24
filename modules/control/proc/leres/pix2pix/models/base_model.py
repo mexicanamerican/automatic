@@ -123,6 +123,7 @@ class BaseModel(ABC):
 
     def compute_visuals(self): # noqa
         """Calculate additional output images for visdom and HTML visualization"""
+        # Add your code here to calculate additional output images for visualization
         pass
 
     def get_image_paths(self):
