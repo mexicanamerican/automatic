@@ -245,7 +245,13 @@ class BaseModel(ABC):
         print('-----------------------------------------------')
         print('-----------------------------------------------')
 
-    def set_requires_grad(self, nets, requires_grad=False):
+    def set_requires_grad(self, nets, requires_grad=False): 
+        if not isinstance(nets, list):
+            nets = [nets]
+        for net in nets:
+            if net is not None:
+                for param in net.parameters():
+                    param.requires_grad = requires_grad
         """Set requies_grad=Fasle for all the networks to avoid unnecessary computations
         Parameters:
             nets (network list)   -- a list of networks
