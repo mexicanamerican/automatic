@@ -72,7 +72,7 @@ class BaseModel(ABC):
         Parameters:
             input (dict): includes the data itself and its metadata information.
         """
-        pass
+        pass # Implement forward pass logic here
 
     @abstractmethod
     def forward(self):
