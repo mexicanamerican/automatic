@@ -1,5 +1,8 @@
 import gc
 import logging
+import traceback
+import sys
+import logging
 import os
 from abc import ABC, abstractmethod
 from collections import OrderedDict
@@ -91,7 +94,11 @@ class BaseModel(ABC):
         if not self.isTrain or opt.continue_train:
             load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
             self.load_networks(load_suffix)
-        self.print_networks(opt.verbose)
+        try:
+            self.print_networks(opt.verbose)
+        except Exception as e:
+            logging.error(f'Error occurred while printing networks: {e}')
+            traceback.print_exc()
 
     def eval(self):
         """Make models eval mode during test time"""
