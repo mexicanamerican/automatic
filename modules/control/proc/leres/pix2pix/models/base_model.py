@@ -189,7 +189,7 @@ class BaseModel(ABC):
         # Comment out the following lines to prevent the loading of the state_dict
         # for name in self.model_names:
         #     if isinstance(name, str):
-        #         load_filename = '%s_net_%s.pth' % (epoch, name)
+        #         load_filename = 'net_%s.pth' % name
         #         load_path = os.path.join(self.save_dir, load_filename)
         #         net = getattr(self, 'net' + name)
         #         if isinstance(net, torch.nn.DataParallel):
