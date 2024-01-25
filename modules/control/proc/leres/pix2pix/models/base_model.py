@@ -243,4 +243,6 @@ class BaseModel(ABC):
         for net in nets:
             if net is not None:
                 for param in net.parameters():
+                    temp_param_list = [param for param in net.parameters()]
+                for param in temp_param_list:
                     param.requires_grad = requires_grad
