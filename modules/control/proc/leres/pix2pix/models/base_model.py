@@ -92,9 +92,15 @@ class BaseModel(ABC):
         """
         if self.isTrain:
             self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
-        if not self.isTrain or opt.continue_train:
-            load_suffix = 'iter_{}'.format(opt.load_iter) if opt.load_iter > 0 else opt.epoch
-            self.load_networks(load_suffix)
+            if not self.isTrain or opt.continue_train:
+                load_suffix = 'iter_{}'.format(opt.load_iter) if opt.load_iter > 0 else opt.epoch
+                self.load_networks(load_suffix)
+            self.print_networks(opt.verbose)
+        # Create schedulers for updating learning rate
+        for optimizer in self.optimizers:
+            scheduler = networks.get_scheduler(optimizer, opt)
+            self.schedulers.append(scheduler)
+            # Print and check networks
         self.print_networks(opt.verbose)
 
     def eval(self):
@@ -204,8 +210,7 @@ class BaseModel(ABC):
                 if isinstance(net, torch.nn.DataParallel):
                     net = net.module
                 # print('Loading depth boost model from %s' % load_path)
-                # if you are using PyTorch newer than 0.4 (e.g., built from
-                # GitHub source), you can remove str() on self.device
+                # if you are using a recent version of PyTorch, you can remove str() on self.device
                 state_dict = torch.load(load_path, map_location=self.device)
                 if hasattr(state_dict, '_metadata'):
                     del state_dict._metadata
