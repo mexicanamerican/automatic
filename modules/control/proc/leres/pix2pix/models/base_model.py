@@ -214,7 +214,11 @@ class BaseModel(ABC):
         """Print the total number of parameters in the network and (if verbose) network architecture
 
         Parameters:
-            verbose (bool) -- if verbose: print the network architecture
+            verbose (bool) -- if verbose:
+            num_params = 0
+            for param in net.parameters():
+                num_params += param.numel()
+            print(f'[{name}] Network architecture:\n{net}\nTotal number of parameters: {num_params / 1e6:.3f} M') print the network architecture
         """
         print('---------- Networks initialized -------------')
         for name in self.model_names:
