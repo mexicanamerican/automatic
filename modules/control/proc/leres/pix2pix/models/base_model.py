@@ -3,6 +3,10 @@ import logging
 import traceback
 import sys
 import logging
+import logging
+import traceback
+import sys
+import logging
 import os
 from abc import ABC, abstractmethod
 from collections import OrderedDict
@@ -98,6 +102,7 @@ class BaseModel(ABC):
             self.print_networks(opt.verbose)
         except Exception as e:
             logging.error(f'Error occurred while printing networks: {e}')
+            traceback.print_exc()
             traceback.print_exc()
 
     def eval(self):
