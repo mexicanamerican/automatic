@@ -48,7 +48,8 @@ class BaseModel(ABC):
         self.metric = 0  # used for learning rate policy 'plateau'
 
     @staticmethod
-    def modify_commandline_options(parser, is_train):
+    @staticmethod
+    def modify_commandline_options(parser, is_train, additional_options=None):
         """Add new model-specific options, and rewrite default values for existing options.
 
         Parameters:
@@ -58,6 +59,10 @@ class BaseModel(ABC):
         Returns:
             the modified parser.
         """
+        if additional_options is not None:
+            # Add model-specific options and set default values for existing options
+            parser.add_argument('--model-specific-option', type=bool, default=True, help='Specify model-specific option')
+
         return parser
 
     @abstractmethod
