@@ -116,7 +116,9 @@ class BaseModel(ABC):
         self.forward()
         self.compute_visuals()
 
-    def compute_visuals(self): # noqa
+    def compute_visuals(self): 
+        """Calculate additional output images for visdom and HTML visualization"""
+        # TODO: Add code to calculate and generate additional output images for visdom and HTML visualization
         """Calculate additional output images for visdom and HTML visualization"""
         pass
 
