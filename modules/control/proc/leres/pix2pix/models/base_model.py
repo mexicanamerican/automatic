@@ -93,11 +93,8 @@ class BaseModel(ABC):
                 self.load_networks(load_suffix)
 
     def eval(self):
-        """Make models eval mode during test time"""
-        for name in self.model_names:
-            if isinstance(name, str):
-                net = getattr(self, 'net' + name)
-                net.eval()
+        """Run forward pass; called by both functions <optimize_parameters> and <test>."""
+        pass
 
     def test(self):
         """Forward function used in test time.
