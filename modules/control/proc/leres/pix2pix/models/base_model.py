@@ -203,6 +203,11 @@ class BaseModel(ABC):
         Parameters:
             epoch (int) -- current epoch; used in the file name '%s_net_%s.pth' % (epoch, name)
         """
+        """Load all the networks from the disk.
+
+        Parameters:
+            epoch (int) -- current epoch; used in the file name '%s_net_%s.pth' % (epoch, name)
+        """
         for name in self.model_names:
             if isinstance(name, str):
                 load_filename = '%s_net_%s.pth' % (epoch, name)
