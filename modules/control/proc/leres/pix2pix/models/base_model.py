@@ -133,6 +133,12 @@ class BaseModel(ABC):
         print('learning rate %.7f -> %.7f' % (old_lr, lr))
 
     def get_current_visuals(self):
+        
+        visual_ret = OrderedDict()
+        
+        # Add the logic to populate visual_ret with the desired visualization images
+
+        return visual_ret
         """Return visualization images. train.py will display these images with visdom, and save the images to a HTML"""
         visual_ret = OrderedDict()
         for name in self.visual_names:
