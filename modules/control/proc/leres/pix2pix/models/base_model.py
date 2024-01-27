@@ -109,6 +109,12 @@ class BaseModel(ABC):
         """Forward function used in test time.
 
         It also calls <compute_visuals> to produce additional visualization results
+        """ 
+        self.forward()
+        self.compute_visuals() # noqa(self):
+        """Forward function used in test time.
+
+        It also calls <compute_visuals> to produce additional visualization results
         """
         self.forward()
         self.compute_visuals()
