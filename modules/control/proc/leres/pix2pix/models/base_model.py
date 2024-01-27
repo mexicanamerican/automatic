@@ -32,6 +32,11 @@ class BaseModel(ABC):
             -- self.model_names (str list):         define networks used in our training.
             -- self.visual_names (str list):        specify the images that you want to display and save.
             -- self.optimizers (optimizer list):    define and initialize optimizers. You can define one optimizer for each network. If two networks are updated at the same time, you can use itertools.chain to group them. See cycle_gan_model.py for an example.
+        -- self.unload_network(self, name):
+            "Unload the specified network by deleting the reference, performing garbage collection, and calling `torch_gc()`.
+
+            Parameters:
+                name (str): the name of the network to be unloaded"
         """
         self.opt = opt
         self.gpu_ids = opt.gpu_ids
@@ -178,14 +183,15 @@ class BaseModel(ABC):
                     torch.save(net.cpu().state_dict(), save_path)
 
     def unload_network(self, name):
-        """Unload network and gc.
-        """
+        """Unload the specified network by deleting the reference, performing garbage collection, and calling `torch_gc()`.
+
+        Parameters:
+            name (str): the name of the network to be unloaded"""
         if isinstance(name, str):
             net = getattr(self, 'net' + name)
             del net
             gc.collect()
             torch_gc()
-            return None
 
     def __patch_instance_norm_state_dict(self, state_dict, module, keys, i=0):
         """Fix InstanceNorm checkpoints incompatibility (prior to 0.4)"""
