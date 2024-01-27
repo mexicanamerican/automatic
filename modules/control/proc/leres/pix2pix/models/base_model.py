@@ -120,55 +120,23 @@ class BaseModel(ABC):
         self.forward()
         self.compute_visuals()
 
-    def compute_visuals(self): # noqa
-        """Calculate additional output images for visdom and HTML visualization"""
-        pass
-
-    def get_image_paths(self):
-        """ Return image paths that are used to load current data"""
-        return self.image_paths
-
-    def update_learning_rate(self):
-        """Update learning rates for all the networks; called at the end of every epoch"""
-        old_lr = self.optimizers[0].param_groups[0]['lr']
-        for scheduler in self.schedulers:
-            if self.opt.lr_policy == 'plateau':
-                scheduler.step(self.metric)
-            else:
-                scheduler.step()
-
-        lr = self.optimizers[0].param_groups[0]['lr']
-        print('learning rate %.7f -> %.7f' % (old_lr, lr))
-
-    def get_current_visuals(self):
-        """Return visualization images. train.py will display these images with visdom, and save the images to a HTML"""
-        visual_ret = OrderedDict()
-        for name in self.visual_names:
-            if isinstance(name, str):
-                visual_ret[name] = getattr(self, name)
-        return visual_ret
-
-    def get_current_losses(self):
-        """Return traning losses / errors. train.py will print out these errors on console, and save them to a file"""
-        errors_ret = OrderedDict()
-        for name in self.loss_names:
-            if isinstance(name, str):
-                errors_ret[name] = float(getattr(self, 'loss_' + name))  # float(...) works for both scalar tensor and float number
-        return errors_ret
-
-    def save_networks(self, epoch):
-        """Save all the networks to the disk.
+    def print_networks(self, verbose):
+        """Print the total number of parameters in the network and (if verbose) network architecture
 
         Parameters:
-            epoch (int) -- current epoch; used in the file name '%s_net_%s.pth' % (epoch, name)
+            verbose (bool) -- if verbose: print the network architecture
         """
+        print('---------- Networks initialized -------------')
         for name in self.model_names:
             if isinstance(name, str):
-                save_filename = '%s_net_%s.pth' % (epoch, name)
-                save_path = os.path.join(self.save_dir, save_filename)
                 net = getattr(self, 'net' + name)
-
-                if len(self.gpu_ids) > 0 and torch.cuda.is_available():
+                num_params = 0
+                for param in net.parameters():
+                    num_params += param.numel()
+                if verbose:
+                    print(net)
+                print('[Network %s] Total number of parameters : %.3f M' % (name, num_params / 1e6))
+        print('-----------------------------------------------')
                     torch.save(net.cpu().state_dict(), save_path)
                 else:
                     torch.save(net.cpu().state_dict(), save_path)
