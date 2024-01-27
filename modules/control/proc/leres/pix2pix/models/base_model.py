@@ -124,8 +124,10 @@ class BaseModel(ABC):
         for scheduler in self.schedulers:
             if self.opt.lr_policy == 'plateau':
                 scheduler.step(self.metric)
-            else:
+            elif self.opt.lr_policy == 'step':
                 scheduler.step()
+            elif self.opt.lr_policy == 'constant':
+                pass
 
         lr = self.optimizers[0].param_groups[0]['lr']
         print('learning rate %.7f -> %.7f' % (old_lr, lr))
