@@ -40,7 +40,7 @@ class BaseModel(ABC):
         self.save_dir = os.path.join(opt.checkpoints_dir, opt.name)  # save all the checkpoints to save_dir
         if opt.preprocess != 'scale_width':  # with [scale_width], input images might have different sizes, which hurts the performance of cudnn.benchmark.
             torch.backends.cudnn.benchmark = True
-        self.loss_names = []
+        self.loss_names = [] # Add a comment to specify the training losses that you want to plot and save.
         self.model_names = []
         self.visual_names = []
         self.optimizers = []
@@ -58,7 +58,7 @@ class BaseModel(ABC):
         Returns:
             the modified parser.
         """
-        return parser
+        # Add model-specific options and set default values for existing options.
 
     @abstractmethod
     def set_input(self, input):
@@ -118,6 +118,14 @@ class BaseModel(ABC):
     def update_learning_rate(self):
         """Update learning rates for all the networks; called at the end of every epoch"""
         old_lr = self.optimizers[0].param_groups[0]['lr']
+        for scheduler in self.schedulers:
+            if self.opt.lr_policy == 'plateau':
+                scheduler.step(self.metric)
+            else:
+                scheduler.step()
+
+        lr = self.optimizers[0].param_groups[0]['lr']
+        print('learning rate %.7f -> %.7f' % (old_lr, lr))
         for scheduler in self.schedulers:
             if self.opt.lr_policy == 'plateau':
                 scheduler.step(self.metric)
