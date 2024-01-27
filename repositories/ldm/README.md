@@ -1,4 +1,18 @@
-# Stable Diffusion Version 2
+## Interpreting GitHub Actions Error Logs
+
+To interpret and analyze the error logs from the GitHub Actions run, follow these steps:
+1. Check the GitHub Actions tab in the repository to access the latest workflow runs.
+2. Click on the failed workflow run to view the error logs and identify any specific error messages.
+3. Search for the error message within the logs to understand the cause of the failure and determine troubleshooting steps.
+
+To interpret and analyze the error logs from the GitHub Actions run, follow these steps:
+1. Check the GitHub Actions tab in the repository to access the latest workflow runs.
+2. Click on the failed workflow run to view the error logs and identify any specific error messages.
+3. Search for the error message within the logs to understand the cause of the failure and determine troubleshooting steps.
+
+## GitHub Actions
+
+To run the GitHub Actions workflow, push changes to the 'master' branch. The workflow will trigger automatically. If you encounter any issues, refer to the error logs to troubleshoot the problem.
 ![t2i](assets/stable-samples/txt2img/768/merged-0006.png)
 ![t2i](assets/stable-samples/txt2img/768/merged-0002.png)
 ![t2i](assets/stable-samples/txt2img/768/merged-0005.png)
