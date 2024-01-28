@@ -121,9 +121,9 @@ class BaseModel(ABC):
         self.forward()
         self._compute_visuals()
 
-    def compute_visuals(self): # noqa
+    def compute_visuals(self):
         """Calculate additional output images for visdom and HTML visualization"""
-        self.compute_visuals()
+        pass
 
     def get_image_paths(self):
         """ Return image paths that are used to load current data"""
