@@ -176,6 +176,14 @@ class BaseModel(ABC):
             gc.collect()
             torch_gc()
             return None
+        """Unload network and gc.
+        """
+        if isinstance(name, str):
+            net = getattr(self, 'net' + name)
+            del net
+            gc.collect()
+            torch_gc()
+            return None
 
     def __patch_instance_norm_state_dict(self, state_dict, module, keys, i=0):
         """Fix InstanceNorm checkpoints incompatibility (prior to 0.4)"""
@@ -214,6 +222,8 @@ class BaseModel(ABC):
                 # patch InstanceNorm checkpoints prior to 0.4
                 for key in list(state_dict.keys()):  # need to copy keys here because we mutate in loop
                     self.__patch_instance_norm_state_dict(state_dict, net, key.split('.'))
+
+                net.load_state_dict(state_dict)
                 net.load_state_dict(state_dict)
 
     def print_networks(self, verbose):
@@ -232,6 +242,8 @@ class BaseModel(ABC):
                 if verbose:
                     print(net)
                 print('[Network %s] Total number of parameters : %.3f M' % (name, num_params / 1e6))
+    
+    
         print('-----------------------------------------------')
 
     def set_requires_grad(self, nets, requires_grad=False):
