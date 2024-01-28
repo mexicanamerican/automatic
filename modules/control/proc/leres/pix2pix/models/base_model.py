@@ -159,7 +159,7 @@ class BaseModel(ABC):
                     torch.save(net.cpu().state_dict(), save_path)
 
     def unload_network(self, name):
-        """Unload network and gc.
+        """Unload network and perform garbage collection.
         """
         if isinstance(name, str):
             net = getattr(self, 'net' + name)
@@ -191,6 +191,18 @@ class BaseModel(ABC):
         for name in self.model_names:
             if isinstance(name, str):
                     torch.save(net.cpu().state_dict(), save_path)
+
+    def unload_network(self, name):
+        """Unload network and perform garbage collection.
+        """
+        if isinstance(name, str):
+            net = getattr(self, 'net' + name)
+            del net
+            gc.collect()
+            torch_gc()
+            return None
+
+    def __patch_instance_norm_state_dict(self, state_dict, module, keys, i=0):
 
     def unload_network(self, name):
         """Unload network and gc.
