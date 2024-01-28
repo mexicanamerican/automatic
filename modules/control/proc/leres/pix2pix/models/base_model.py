@@ -91,8 +91,14 @@ class BaseModel(ABC):
             load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
             self.load_networks(load_suffix)
         self.print_networks(opt.verbose)
+        print('-----------------------------------------------')
 
     def eval(self):
+        """Make models eval mode during test time"""
+        for name in self.model_names:
+            if isinstance(name, str):
+                net = getattr(self, 'net' + name)
+                net.eval()
         """Make models eval mode during test time"""
         for name in self.model_names:
             if isinstance(name, str):
@@ -102,14 +108,16 @@ class BaseModel(ABC):
     def test(self):
         """Forward function used in test time.
 
-        It also calls <compute_visuals> to produce additional visualization results
+        It also calls <forward> to produce intermediate results and
+        <compute_visuals> to produce additional visualization results
         """
         self.forward()
         self.compute_visuals()
 
-    def compute_visuals(self): # noqa
+    def compute_visuals(self): 
         """Calculate additional output images for visdom and HTML visualization"""
-        pass
+        # Calculate additional output images for visdom and HTML visualization
+        # Add code to calculate additional output images for visualization
 
     def get_image_paths(self):
         """ Return image paths that are used to load current data"""
@@ -160,6 +168,22 @@ class BaseModel(ABC):
                     net.cuda(self.gpu_ids[0])
                 else:
                     torch.save(net.cpu().state_dict(), save_path)
+        """Save all the networks to the disk.
+
+        Parameters:
+            epoch (int) -- current epoch; used in the file name '%s_net_%s.pth' % (epoch, name)
+        """
+        for name in self.model_names:
+            if isinstance(name, str):
+                save_filename = '%s_net_%s.pth' % (epoch, name)
+                save_path = os.path.join(self.save_dir, save_filename)
+                net = getattr(self, 'net' + name)
+
+                if len(self.gpu_ids) > 0 and torch.cuda.is_available():
+                    torch.save(net.module.cpu().state_dict(), save_path)
+                    net.cuda(self.gpu_ids[0])
+                else:
+                    torch.save(net.cpu().state_dict(), save_path)
 
     def unload_network(self, name):
         """Unload network and gc.
@@ -186,6 +210,17 @@ class BaseModel(ABC):
             self.__patch_instance_norm_state_dict(state_dict, getattr(module, key), keys, i + 1)
 
     def load_networks(self, epoch):
+        for name in self.model_names:
+            if isinstance(name, str):
+                load_filename = '%s_net_%s.pth' % (epoch, name)
+                load_path = os.path.join(self.save_dir, load_filename)
+                net = getattr(self, 'net' + name)
+                if isinstance(net, torch.nn.DataParallel):
+                    net = net.module
+                state_dict = torch.load(load_path, map_location=str(self.device))
+                if hasattr(state_dict, '_metadata'):
+                    del state_dict._metadata
+                net.load_state_dict(state_dict)
         """Load all the networks from the disk.
 
         Parameters:
@@ -211,6 +246,21 @@ class BaseModel(ABC):
                 net.load_state_dict(state_dict)
 
     def print_networks(self, verbose):
+        """Print the total number of parameters in the network and (if verbose) network architecture
+
+        Parameters:
+            verbose (bool) -- if verbose: print the network architecture
+        """
+        print('---------- Networks initialized -------------')
+        for name in self.model_names:
+            if isinstance(name, str):
+                net = getattr(self, 'net' + name)
+                num_params = 0
+                for param in net.parameters():
+                    num_params += param.numel()
+                if verbose:
+                    print(net)
+                print('[Network %s] Total number of parameters : %.3f M' % (name, num_params / 1e6))
         """Print the total number of parameters in the network and (if verbose) network architecture
 
         Parameters:
