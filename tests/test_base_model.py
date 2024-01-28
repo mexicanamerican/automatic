@@ -1,7 +1,7 @@
 import unittest
 from os import os
 
-from modules.control.proc.leres.pix2pix.models.base_model import BaseModel
+from modules.control.proc.leres.pix2pix.models.base_model import BaseModel, OtherModule
 from webui import torch
 
 
