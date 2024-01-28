@@ -92,7 +92,9 @@ class BaseModel(ABC):
         self.print_networks(opt.verbose)
 
     def eval(self):
-        """Make models eval mode during test time"""
+        """Forward function used in test time.
+
+        It also calls <compute_visuals> to produce additional visualization results"""
         for name in self.model_names:
             if isinstance(name, str):
                 net = getattr(self, 'net' + name)
