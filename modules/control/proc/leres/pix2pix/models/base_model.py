@@ -16,7 +16,7 @@ class BaseModel(ABC):
         -- <set_input>:                     unpack data from dataset and apply preprocessing.
         -- <forward>:                       produce intermediate results.
         -- <optimize_parameters>:           calculate losses, gradients, and update network weights.
-        -- <modify_commandline_options>:    (optionally) add model-specific options and set default options.
+        -- <setup>:                      load and print networks; create schedulers
     """
 
     def __init__(self, opt):
