@@ -7,7 +7,7 @@ from webui import torch
 
 class TestBaseModel(unittest.TestCase):
     def test_init(self):
-        # Test initialization of BaseModel
+        # Test initialization of BaseModel with different options
         opt = {}  # Replace with appropriate options
         model = BaseModel(opt)
         self.assertEqual(model.opt, opt)
@@ -23,21 +23,21 @@ class TestBaseModel(unittest.TestCase):
         self.assertEqual(model.metric, 0)
 
     def test_modify_commandline_options(self):
-        # Test modify_commandline_options function
+        # Test modify_commandline_options function to add model-specific options and set default options function
         parser = None  # Replace with appropriate parser
         is_train = True  # Replace with appropriate value
         modified_parser = BaseModel.modify_commandline_options(parser, is_train)
         # Assert the modified parser is returned correctly
 
     def test_set_input(self):
-        # Test set_input function
+        # Test set_input function with different input data
         model = BaseModel({})  # Replace with appropriate options
         input_data = {}  # Replace with appropriate input data
         model.set_input(input_data)
         # Assert the input data is correctly set in the model
 
     def test_forward(self):
-        # Test forward function
+        # Test forward function to ensure correct intermediate results
         model = BaseModel({})  # Replace with appropriate options
         model.forward()
         # Assert the forward pass is executed correctly
@@ -67,7 +67,7 @@ class TestBaseModel(unittest.TestCase):
         # Assert the test function is executed correctly
 
     def test_compute_visuals(self):
-        # Test compute_visuals function
+        # Test optimize_parameters function to calculate losses, gradients, and update network weights function
         model = BaseModel({})  # Replace with appropriate options
         model.compute_visuals()
         # Assert the compute_visuals function is executed correctly
