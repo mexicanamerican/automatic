@@ -225,6 +225,7 @@ class BaseModel(ABC):
 
                 net.load_state_dict(state_dict)
 
+<snippet index="0" reason="Implement the print_networks method">
     def print_networks(self, verbose):
         """Print the total number of parameters in the network and (if verbose) network architecture
 
