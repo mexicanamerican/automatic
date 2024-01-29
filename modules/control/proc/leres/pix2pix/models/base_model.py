@@ -91,67 +91,23 @@ class BaseModel(ABC):
         self.opt = opt
         self.gpu_ids = opt.gpu_ids
         self.isTrain = opt.isTrain
-        self.device = torch.device('cuda:{}'.format(self.gpu_ids[0])) if self.gpu_ids else torch.device('cpu')  # get device name: CPU or GPU
-        self.save_dir = os.path.join(opt.checkpoints_dir, opt.name)  # save all the checkpoints to save_dir
-        if opt.preprocess != 'scale_width':  # with [scale_width], input images might have different sizes, which hurts the performance of cudnn.benchmark.
-            torch.backends.cudnn.benchmark = True
-        self.loss_names = []
-        self.model_names = []
-        def eval(self):
-            """Make models eval mode during test time"""
+        def print_networks(self, verbose):
+            """Print the total number of parameters in the network and (if verbose) network architecture
+
+            Parameters:
+                verbose (bool) -- if verbose: print the network architecture
+            """
+            print('---------- Networks initialized -------------')
             for name in self.model_names:
                 if isinstance(name, str):
                     net = getattr(self, 'net' + name)
-                    net.eval()
-        self.visual_names = []
-        self.optimizers = []
-        self.image_paths = []
-        if self.isTrain:
-            self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
-        if not self.isTrain or opt.continue_train:
-            load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
-            self.load_networks(load_suffix)
-        self.print_networks(opt.verbose)
-
-    def eval(self):
-        """Make models eval mode during test time"""
-        for name in self.model_names:
-            if isinstance(name, str):
-                net = getattr(self, 'net' + name)
-                net.eval()
-
-    def test(self):
-        """""Forward function used in test time.
-
-        It also calls <compute_visuals> to produce additional visualization results
-        "
-
-        It also calls <compute_visuals> to produce additional visualization results
-        """
-        self.forward()
-        self.compute_visuals()
-
-    def compute_visuals(self): # noqa
-        """Calculate additional output images for visdom and HTML visualization"""
-        # Your implementation here(self): # noqa
-        """Calculate additional output images for visdom and HTML visualization"""
-        # Your implementation here(self): # noqa
-        """Calculate additional output images for visdom and HTML visualization"""
-        pass
-
-    def get_image_paths(self):
-        """ Return image paths that are used to load current data"""
-        return self.image_paths
-
-    def update_learning_rate(self):
-        """Update learning rates for all the networks; called at the end of every epoch"""
-        old_lr = self.optimizers[0].param_groups[0]['lr']
-        for scheduler in self.schedulers:
-            if self.opt.lr_policy == 'plateau':
-                scheduler.step(self.metric)
-            else:
-                scheduler.step()
-
+                    num_params = 0
+                    for param in net.parameters():
+                        num_params += param.numel()
+                    if verbose:
+                        print(net)
+                    print('[Network %s] Total number of parameters : %.3f M' % (name, num_params / 1e6))
+            print('-----------------------------------------------')
         lr = self.optimizers[0].param_groups[0]['lr']
         print('learning rate %.7f -> %.7f' % (old_lr, lr))
 
