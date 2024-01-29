@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up CUDA and GCC dependencies
+        run: |
+          export CUDA_HOME=/usr/local/cuda-11.4
+          conda install -c nvidia/label/cuda-11.4.0 cuda-nvcc
+          conda install -c conda-forge gcc
+          conda install -c conda-forge gxx_linux-64==9.5.0
+
+      - name: Install Python dependencies
+        run: |
+          pip install -r requirements.txt
+
+      # Existing steps...
