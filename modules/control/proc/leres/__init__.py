@@ -6,7 +6,7 @@ import torch
 from huggingface_hub import hf_hub_download
 from PIL import Image
 
-from modules.control.util import HWC3, resize_image
+from modules.control.proc.leres.util import HWC3, resize_image
 from .leres.depthmap import estimateboost, estimateleres
 from .leres.multi_depth_model_woauxi import RelDepthModel
 from .leres.net_tools import strip_prefix_if_present
@@ -70,13 +70,13 @@ class LeresDetector:
         max_val = (2**(8*numbytes))-1
 
         # check output before normalizing and mapping to 16 bit
-        if depth_max - depth_min > np.finfo("float").eps:
+        if depth_max - depth_min > np.finfo(np.float32).eps:
             out = max_val * (depth - depth_min) / (depth_max - depth_min)
         else:
             out = np.zeros(depth.shape)
 
         # single channel, 16 bit image
-        depth_image = out.astype("uint16")
+        depth_image = out.astype(np.uint16)
 
         # convert to uint8
         depth_image = cv2.convertScaleAbs(depth_image, alpha=255.0/65535.0)
