@@ -104,8 +104,11 @@ class BaseModel(ABC):
 
         It also calls <compute_visuals> to produce additional visualization results
         """
-        self.forward()
-        self.compute_visuals()
+        """Run forward pass and compute additional visualization results."""
+        with torch.no_grad():
+            self.forward()
+            """Calculate additional output images for visdom and HTML visualization"""
+        pass
 
     def compute_visuals(self): # noqa
         """Calculate additional output images for visdom and HTML visualization"""
