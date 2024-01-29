@@ -1,5 +1,5 @@
 import torch.nn as nn
-import torch.nn as NN
+import torch.nn
 
 __all__ = ['ResNet', 'resnet18', 'resnet34', 'resnet50', 'resnet101',
            'resnet152']
@@ -26,10 +26,10 @@ class BasicBlock(nn.Module):
     def __init__(self, inplanes, planes, stride=1, downsample=None):
         super(BasicBlock, self).__init__()
         self.conv1 = conv3x3(inplanes, planes, stride)
-        self.bn1 = NN.BatchNorm2d(planes) #NN.BatchNorm2d
+        self.bn1 = nn.BatchNorm2d(planes) #nn.BatchNorm2d
         self.relu = nn.ReLU(inplace=True)
         self.conv2 = conv3x3(planes, planes)
-        self.bn2 = NN.BatchNorm2d(planes) #NN.BatchNorm2d
+        self.bn2 = nn.BatchNorm2d(planes) #nn.BatchNorm2d
         self.downsample = downsample
         self.stride = stride
 
@@ -58,12 +58,12 @@ class Bottleneck(nn.Module):
     def __init__(self, inplanes, planes, stride=1, downsample=None):
         super(Bottleneck, self).__init__()
         self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=1, bias=False)
-        self.bn1 = NN.BatchNorm2d(planes) #NN.BatchNorm2d
+        self.bn1 = nn.BatchNorm2d(planes) #nn.BatchNorm2d
         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride,
                                padding=1, bias=False)
-        self.bn2 = NN.BatchNorm2d(planes) #NN.BatchNorm2d
+        self.bn2 = nn.BatchNorm2d(planes) #nn.BatchNorm2d
         self.conv3 = nn.Conv2d(planes, planes * self.expansion, kernel_size=1, bias=False)
-        self.bn3 = NN.BatchNorm2d(planes * self.expansion) #NN.BatchNorm2d
+        self.bn3 = nn.BatchNorm2d(planes * self.expansion) #nn.BatchNorm2d
         self.relu = nn.ReLU(inplace=True)
         self.downsample = downsample
         self.stride = stride
@@ -98,7 +98,7 @@ class ResNet(nn.Module):
         super(ResNet, self).__init__()
         self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3,
                                bias=False)
-        self.bn1 = NN.BatchNorm2d(64)  #NN.BatchNorm2d
+        self.bn1 = nn.BatchNorm2d(64)  #nn.BatchNorm2d
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.layer1 = self._make_layer(block, 64, layers[0])
@@ -121,7 +121,7 @@ class ResNet(nn.Module):
             downsample = nn.Sequential(
                 nn.Conv2d(self.inplanes, planes * block.expansion,
                           kernel_size=1, stride=stride, bias=False),
-                NN.BatchNorm2d(planes * block.expansion), #NN.BatchNorm2d
+                nn.BatchNorm2d(planes * block.expansion), #nn.BatchNorm2d
             )
 
         layers = []
