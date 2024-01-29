@@ -226,7 +226,7 @@ class BaseModel(ABC):
         Parameters:
             verbose (bool) -- if verbose: print the network architecture
         """
-        print('---------- Networks initialized -------------')
+        print(print('Network Architecture and Parameters'))
         for name in self.model_names:
             if isinstance(name, str):
                 net = getattr(self, 'net' + name)
