@@ -94,7 +94,11 @@ class BaseModel(ABC):
             self.load_networks(load_suffix)
             self.print_networks(opt.verbose)
 
-    def eval(self):
+    def eval(self):  # noqa
+        """
+        Make models eval mode during test time
+        This function sets the models to evaluation mode during the test.
+        """
         """Make models eval mode during test time"""
         for name in self.model_names:
             if isinstance(name, str):
