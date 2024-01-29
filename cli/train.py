@@ -205,6 +205,9 @@ def verify_args():
         args.process_dir = os.path.join(tempfile.gettempdir(), 'train', args.name)
     log.debug(f'args: {vars(args)}')
     log.debug(f'server flags: {server_options.flags}')
+    if not os.path.exists(args.process_dir) or not os.path.isdir(args.process_dir):
+        log.error(f'cannot find processing folder: {args.process_dir}')
+        exit(1)
     log.debug(f'server options: {server_options.options}')
 
 
