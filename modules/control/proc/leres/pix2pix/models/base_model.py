@@ -244,9 +244,8 @@ class BaseModel(ABC):
             nets (network list)   -- a list of networks
             requires_grad (bool)  -- whether the networks require gradients or not
         """
-        if not isinstance(nets, list):
-            nets = [nets]
-        for net in nets:
+        for net in self.model_names:
+            net = getattr(self, 'net' + net)
             if net is not None:
                 for param in net.parameters():
                     param.requires_grad = requires_grad
