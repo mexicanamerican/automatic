@@ -100,7 +100,13 @@ class BaseModel(ABC):
             if isinstance(name, str):
                 net = getattr(self, 'net' + name)
                 net.eval()
-        pass
+        def test(self):
+            """Forward function used in test time.
+
+            It also calls <compute_visuals> to produce additional visualization results
+            """
+            self.forward()
+            self.compute_visuals()
 
     def test(self):
         """Forward function used in test time.
@@ -110,7 +116,9 @@ class BaseModel(ABC):
         self.forward()
         self.compute_visuals()
 
-    def compute_visuals(self): # noqa
+    def compute_visuals(self):
+        """Calculate additional output images for visdom and HTML visualization"""
+        pass
         """Calculate additional output images for visdom and HTML visualization"""
         pass
 
