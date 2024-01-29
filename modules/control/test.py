@@ -23,7 +23,7 @@ def test_processors(image):
             output = processor(image)
             processor.reset()
         if output.size != image.size:
-            output = output.resize(image.size, Image.Resampling.LANCZOS)
+            output = output.resize(image.size, Image.LANCZOS)
         if output.mode != image.mode:
             output = output.convert(image.mode)
         shared.log.debug(f'Testing processor: input={image} mode={image.mode} output={output} mode={output.mode}')
@@ -36,6 +36,11 @@ def test_processors(image):
         draw.text((8, 8), processor_id, (255,255,255), font=font)
         images.append(output)
         yield output, None, None, images
+        font = ImageFont.truetype('DejaVuSansMono', 48)
+        draw.text((10, 10), processor_id, (0,0,0), font=font)
+        draw.text((8, 8), processor_id, (255,255,255), font=font)
+        images.append(output)
+        yield output, None, None, images
     rows = round(math.sqrt(len(images)))
     cols = math.ceil(len(images) / rows)
     w, h = 256, 256
@@ -43,7 +48,7 @@ def test_processors(image):
     grid = Image.new('RGB', size=size, color='black')
     shared.log.info(f'Test processors: images={len(images)} grid={grid}')
     for i, image in enumerate(images):
-        x = (i % cols * w) + (i % cols)
+        x = (i % cols * w) + (i % cols) * 2
         y = (i // cols * h) + (i // cols)
         thumb = image.copy().convert('RGB')
         thumb.thumbnail((w, h), Image.Resampling.HAMMING)
@@ -96,6 +101,7 @@ def test_controlnets(prompt, negative, image):
     shared.log.info(f'Test ControlNets: images={len(images)} grid={grid}')
     for i, image in enumerate(images):
         x = (i % cols * w) + (i % cols)
+        y = (i // cols * h) + (i // cols) * 2
         y = (i // cols * h) + (i // cols)
         thumb = image.copy().convert('RGB')
         thumb.thumbnail((w, h), Image.Resampling.HAMMING)
@@ -149,6 +155,7 @@ def test_adapters(prompt, negative, image):
     shared.log.info(f'Test Adapters: images={len(images)} grid={grid}')
     for i, image in enumerate(images):
         x = (i % cols * w) + (i % cols)
+        y = (i // cols * h) + (i // cols) * 2
         y = (i // cols * h) + (i // cols)
         thumb = image.copy().convert('RGB')
         thumb.thumbnail((w, h), Image.Resampling.HAMMING)
@@ -201,6 +208,7 @@ def test_xs(prompt, negative, image):
     shared.log.info(f'Test ControlNet-XS: images={len(images)} grid={grid}')
     for i, image in enumerate(images):
         x = (i % cols * w) + (i % cols)
+        y = (i // cols * h) + (i // cols) * 2
         y = (i // cols * h) + (i // cols)
         thumb = image.copy().convert('RGB')
         thumb.thumbnail((w, h), Image.Resampling.HAMMING)
@@ -254,6 +262,7 @@ def test_lite(prompt, negative, image):
     shared.log.info(f'Test ControlNet-XS: images={len(images)} grid={grid}')
     for i, image in enumerate(images):
         x = (i % cols * w) + (i % cols)
+        y = (i // cols * h) + (i // cols) * 2
         y = (i // cols * h) + (i // cols)
         thumb = image.copy().convert('RGB')
         thumb.thumbnail((w, h), Image.Resampling.HAMMING)
