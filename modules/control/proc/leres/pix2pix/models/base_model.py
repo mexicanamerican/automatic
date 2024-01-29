@@ -97,6 +97,12 @@ class BaseModel(ABC):
             torch.backends.cudnn.benchmark = True
         self.loss_names = []
         self.model_names = []
+        def eval(self):
+            """Make models eval mode during test time"""
+            for name in self.model_names:
+                if isinstance(name, str):
+                    net = getattr(self, 'net' + name)
+                    net.eval()
         self.visual_names = []
         self.optimizers = []
         self.image_paths = []
