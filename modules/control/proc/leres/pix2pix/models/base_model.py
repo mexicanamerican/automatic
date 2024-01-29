@@ -100,11 +100,10 @@ class BaseModel(ABC):
                 net.eval()
 
     def test(self):
-        """Forward function used in test time.
-
-        It also calls <compute_visuals> to produce additional visualization results
-        """
+        """Forward function used in test time."""
         self.forward()
+
+    def get_image_paths(self):
         self.compute_visuals()
 
     def compute_visuals(self): # noqa
