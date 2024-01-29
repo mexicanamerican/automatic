@@ -11,7 +11,7 @@ class Autoencoder(nn.Module):
         # Add the necessary layers and components for the autoencoder
 
     def forward(self, x):
-        # Implement the forward pass logic for the autoencoder
+                # Implement the forward pass logic for the autoencoder
         pass
 
 # Implement any other necessary functions or classes
