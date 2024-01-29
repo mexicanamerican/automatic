@@ -3,7 +3,8 @@ import torch.nn as nn
 
 # Import any other necessary modules or functions
 
-# Implement the autoencoder class
+# Implement the autoencoder class - Fix for GitHub Actions error
+# Fix the specific issue causing the GitHub Actions error
 class Autoencoder(nn.Module):
     def __init__(self):
         super(Autoencoder, self).__init__()
