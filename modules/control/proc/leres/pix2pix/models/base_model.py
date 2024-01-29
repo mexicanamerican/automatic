@@ -101,7 +101,45 @@ class BaseModel(ABC):
 
     def test(self):
         """Forward function used in test time."""
-        self.forward()
+        pass
+    
+    @abstractmethod
+    def optimize_parameters(self):
+        """Calculate losses, gradients, and update network weights; called in every training iteration"""
+        pass
+    
+    def setup(self, opt):
+        """Load and print networks; create schedulers
+    
+        Parameters:
+            opt (Option class) -- stores all the experiment flags; needs to be a subclass of BaseOptions
+        """
+        if self.isTrain:
+            self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
+        if not self.isTrain or opt.continue_train:
+            load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
+            self.load_networks(load_suffix)
+        
+    
+    def eval(self):
+        """Make models eval mode during test time"""
+        for name in self.model_names:
+            if isinstance(name, str):
+                net = getattr(self, 'net' + name)
+                net.eval()
+    
+    def get_image_paths(self):
+        self.compute_visuals()
+    
+    def compute_visuals(self): # noqa
+        """Calculate additional output images for visdom and HTML visualization"""
+        pass
+    
+    def get_image_paths(self):
+        """ Return image paths that are used to load current data"""
+        return self.image_paths
+    
+    def update_learning_rate(self):
 
     def get_image_paths(self):
         self.compute_visuals()
