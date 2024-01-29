@@ -248,7 +248,7 @@ def train_embedding():
         log.error(f'embedding exists {fn}')
         return
     log.info(f'create embedding {create_options}')
-    res = sdapi.postsync('/sdapi/v1/create/embedding', create_options)
+    res = sdapi.postsync('/sdapi/v1/create/embedding', options.embedding)
     if 'info' in res and 'error' in res['info']: # formatted error
         log.error(res.info)
     elif 'info' in res: # no error
