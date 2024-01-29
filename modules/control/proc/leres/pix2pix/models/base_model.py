@@ -154,7 +154,8 @@ class BaseModel(ABC):
 
         Parameters:
             epoch (int) -- current epoch; used in the file name '%s_net_%s.pth' % (epoch, name)
-        """
+
+            This function saves all the networks to the disk, using the current epoch and network names as part of the file names."""
         for name in self.model_names:
             if isinstance(name, str):
                 save_filename = '%s_net_%s.pth' % (epoch, name)
