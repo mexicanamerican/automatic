@@ -100,6 +100,7 @@ class BaseModel(ABC):
             if isinstance(name, str):
                 net = getattr(self, 'net' + name)
                 net.eval()
+        pass
 
     def test(self):
         """Forward function used in test time.
