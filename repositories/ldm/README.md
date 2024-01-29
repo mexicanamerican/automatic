@@ -61,8 +61,8 @@ ________________________________
 You can update an existing [latent diffusion](https://github.com/CompVis/latent-diffusion) environment by running
 
 ```
-conda install pytorch==1.12.1 torchvision==0.13.1 -c pytorch
-pip install transformers==4.19.2 diffusers invisible-watermark
+conda install pytorch==1.8.1 torchvision==0.13.1 -c pytorch
+pip install transformers==4.10.3 diffusers invisible-watermark
 pip install -e .
 ``` 
 #### xformers efficient attention
@@ -83,7 +83,7 @@ Then, run the following (compiling takes up to 30 min).
 
 ```commandline
 cd ..
-git clone https://github.com/facebookresearch/xformers.git
+git clone https://github.com/facebookresearch/xformers==1.2.1==1.2.1.git
 cd xformers
 git submodule update --init --recursive
 pip install -r requirements.txt
@@ -123,7 +123,7 @@ Stable Diffusion 2 is a latent diffusion model conditioned on the penultimate te
 We provide a [reference script for sampling](#reference-sampling-script).
 #### Reference Sampling Script
 
-This script incorporates an [invisible watermarking](https://github.com/ShieldMnt/invisible-watermark) of the outputs, to help viewers [identify the images as machine-generated](scripts/tests/test_watermark.py).
+This script incorporates an [invisible watermarking](https://github.com/ShieldMnt/invisible-watermark==1.0.1) of the outputs, to help viewers [identify the images as machine-generated](scripts/tests/test_watermark.py).
 We provide the configs for the _SD2-v_ (768px) and _SD2-base_ (512px) model.
 
 First, download the weights for [_SD2.1-v_](https://huggingface.co/stabilityai/stable-diffusion-2-1) and [_SD2.1-base_](https://huggingface.co/stabilityai/stable-diffusion-2-1-base). 
