@@ -76,17 +76,17 @@ def mem_stats():
 
 def parse_args():
     global args # pylint: disable=global-statement
-    parser = argparse.ArgumentParser(description = 'SD.Next Train')
+    parser = argparse.ArgumentParser(description = 'SD.Next Train', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     group_server = parser.add_argument_group('Server')
     group_server.add_argument('--server', type=str, default='http://127.0.0.1:7860', required=False, help='server url, default: %(default)s')
     group_server.add_argument('--user', type=str, default=None, required=False, help='server url, default: %(default)s')
     group_server.add_argument('--password', type=str, default=None, required=False, help='server url, default: %(default)s')
-    group_server.add_argument('--dir', type=str, default=None, required=False, help='folder with trained networks, default: use server setting')
+    group_server.add_argument('--dir', '-d', type=str, default=None, required=False, help='folder with trained networks, default: use server setting')
 
-    group_main = parser.add_argument_group('Main')
-    group_main.add_argument('--type', type=str, choices=['embedding', 'ti', 'lora', 'lyco', 'dreambooth', 'hypernetwork'], default=None, required=True, help='training type')
-    group_main.add_argument('--model', type=str, default='', required=False, help='base model to use for training, default: current loaded model')
+    group_main = parser.add_argument_group('Main', 'Main training options')
+    group_main.add_argument('--type', '-t', type=str, choices=['embedding', 'ti', 'lora', 'lyco', 'dreambooth', 'hypernetwork'], default='embedding', required=True, help='training type')
+    group_main.add_argument('--model', '-m', type=str, default='', required=False, help='base model to use for training, default: current loaded model')
     group_main.add_argument('--name', type=str, default=None, required=True, help='output filename')
     group_main.add_argument('--tag', type=str, default='person', required=False, help='primary tags, default: %(default)s')
     group_main.add_argument('--comments', type=str, default='', required=False, help='comments to be added to trained model metadata, default: %(default)s')
