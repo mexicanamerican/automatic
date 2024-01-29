@@ -68,5 +68,11 @@ urllib3==1.26.18
 Pillow==10.1.0
 timm==0.9.12
 pydantic==1.10.13
+torch==1.9.0
+torchvision==0.10.0
+torch==1.9.0
+torchvision==0.10.0
 typing-extensions==4.9.0
 peft
+torch==1.9.0
+torchvision==0.10.0
