@@ -157,6 +157,10 @@ class BaseModel(ABC):
 
                 if len(self.gpu_ids) > 0 and torch.cuda.is_available():
                     torch.save(net.cpu().state_dict(), save_path)
+            # Remove patching of InstanceNorm checkpoints
+            
+            # __patch_instance_norm_state_dict function removed
+            # Corresponding calls are removed from the load_networks method
                     net.cuda(self.gpu_ids[0])
                 else:
                     torch.save(net.cpu().state_dict(), save_path)
