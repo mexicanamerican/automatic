@@ -110,7 +110,9 @@ class BaseModel(ABC):
             """Calculate additional output images for visdom and HTML visualization"""
         pass
 
-    def compute_visuals(self): # noqa
+    def compute_visuals(self):    # noqa
+        """Calculate additional output images for visdom and HTML visualization"""
+        # New implementation for calculating additional output images for visualization
         """Calculate additional output images for visdom and HTML visualization"""
         pass
 
