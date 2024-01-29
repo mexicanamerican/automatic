@@ -58,12 +58,24 @@ ________________________________
   
 ## Requirements
 
-You can update an existing [latent diffusion](https://github.com/CompVis/latent-diffusion) environment by running
+export CUDA_HOME=/usr/local/cuda-11.4
+conda install -c nvidia/label/cuda-11.4.0 cuda-nvcc
+conda install -c conda-forge gcc
+conda install -c conda-forge gxx_linux-64==9.5.0
+# Then, run the following to set up xformers (compiling takes up to 30 min).
+
+cd ..
+git clone https://github.com/facebookresearch/xformers.git
+cd xformers
+git submodule update --init --recursive
+pip install -r requirements.txt
+pip install -e .
 
 ```
-conda install pytorch==1.12.1 torchvision==0.13.1 -c pytorch
-pip install transformers==4.19.2 diffusers invisible-watermark
-pip install -e .
+export CUDA_HOME=/usr/local/cuda-11.4
+conda install -c nvidia/label/cuda-11.4.0 cuda-nvcc
+conda install -c conda-forge gcc
+conda install -c conda-forge gxx_linux-64==9.5.0
 ``` 
 #### xformers efficient attention
 For more efficiency and speed on GPUs, 
