@@ -22,6 +22,15 @@ import argparse
 
 # local imports
 import util
+import os
+import re
+import shutil
+import pathlib
+import asyncio
+import logging
+import tempfile
+import argparse
+import options
 import sdapi
 import options
 
@@ -304,7 +313,7 @@ def prepare_options():
         log.info('train using lora style training')
         options.lora.output_dir = args.lora_dir
         options.lora.in_json = os.path.join(args.process_dir, args.name + '.json')
-    if args.type == 'lyco':
+    elif args.type == 'lora':
         log.info('train using lycoris network')
         options.lora.output_dir = args.lora_dir
         options.lora.network_module = 'lycoris.kohya'
