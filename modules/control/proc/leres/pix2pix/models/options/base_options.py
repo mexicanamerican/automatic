@@ -1,7 +1,7 @@
 from .test_options import TestOptions
 
 
-class BaseOptions:
+class BaseOptions(TestOptions):
     def __init__(self):
         # Initialize the options here
 
