@@ -3,7 +3,7 @@ import os
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 
-import torch
+import torch, os
 
 from modules.control.util import torch_gc
 from . import networks
