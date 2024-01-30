@@ -2,7 +2,7 @@ import os
 import torch
 
 class BaseModelHG():
-    from .custom_options import CustomOptions
+    from .custom_options import CustomOptions, TestOptions
 import os
 import torch
 class BaseModelHG():
@@ -51,8 +51,6 @@ class BaseModelHG():
     def load_network(self, network, network_label, epoch_label):
         save_filename = '%s_net_%s.pth' % (epoch_label, network_label)
         save_path = os.path.join(self.save_dir, save_filename)
-        print(save_path)
-        model = torch.load(save_path)
         return model
         # network.load_state_dict(torch.load(save_path))
 
