@@ -1,0 +1,31 @@
+import yaml
+import os
+
+# Read the contents of the existing ".github/workflows/main.yml" file
+with open(".github/workflows/main.yml", "r") as file:
+    config = yaml.safe_load(file)
+
+# Modify the YAML configuration to include the necessary steps for running the tests
+config["jobs"]["test"]["steps"].append(
+    {
+        "name": "Run Tests",
+        "runs-on": "ubuntu-latest",
+        "steps": [
+            {
+                "uses": "actions/setup-python@v2",
+                "with": {
+                    "python-version": "3.x"
+                }
+            },
+            {
+                "name": "Run Test Command",
+                "working-directory": "${{ github.workspace }}",
+                "run": "python test.py"
+            }
+        ]
+    }
+)
+
+# Write the modified YAML configuration back to the ".github/workflows/main.yml" file
+with open(".github/workflows/main.yml", "w") as file:
+    yaml.dump(config, file)
