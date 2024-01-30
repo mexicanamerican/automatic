@@ -29,6 +29,7 @@ class AutoencoderKL(pl.LightningModule):
         self.encoder = Encoder(**ddconfig)
         self.decoder = Decoder(**ddconfig)
         self.loss = instantiate_from_config(lossconfig)
+        self.learning_rate = 0.0002
         assert ddconfig["double_z"]
         self.quant_conv = torch.nn.Conv2d(2*ddconfig["z_channels"], 2*embed_dim, 1)
         self.post_quant_conv = torch.nn.Conv2d(embed_dim, ddconfig["z_channels"], 1)
@@ -77,13 +78,16 @@ class AutoencoderKL(pl.LightningModule):
 
     def on_train_batch_end(self, *args, **kwargs):
         if self.use_ema:
-            self.model_ema(self)
+            self.model_ema.update(self)
 
-    def encode(self, x):
+    def encode(self, x, return_prior=False):
         h = self.encoder(x)
         moments = self.quant_conv(h)
         posterior = DiagonalGaussianDistribution(moments)
-        return posterior
+        if return_prior:
+            return posterior
+        else:
+            return posterior.sample()
 
     def decode(self, z):
         z = self.post_quant_conv(z)
