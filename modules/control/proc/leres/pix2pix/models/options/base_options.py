@@ -12,3 +12,4 @@ class BaseOptions(TestOptions):
         # Initialize the options here
 
     # Rest of the code...
+TestOptions.modify_commandline_options(parser, True)
