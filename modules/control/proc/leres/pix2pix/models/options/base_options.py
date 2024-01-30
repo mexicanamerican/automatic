@@ -6,6 +6,7 @@ class BaseOptions(TestOptions):
         # Initialize the options here
 
     def initialize(self):
+        TestOptions.modify_commandline_options(parser)
         TestOptions.modify_commandline_options(parser, False)
         TestOptions.modify_commandline_options(parser, True)
         # Initialize the options here
