@@ -168,7 +168,7 @@ class AutoencoderKL(pl.LightningModule):
         return self.decoder.conv_out.weight
 
     @torch.no_grad()
-    def log_images(self, batch, only_inputs=False, log_ema=False, **kwargs):
+    def image_degradation_modules_compatible_with_diffusion_models(self, batch, only_inputs=False, log_ema=False, **kwargs):
         log = dict()
         x = self.get_input(batch, self.image_key)
         x = x.to(self.device)
@@ -177,7 +177,7 @@ class AutoencoderKL(pl.LightningModule):
             if x.shape[1] > 3:
                 # colorize with random projection
                 assert xrec.shape[1] > 3
-                x = self.to_rgb(x)
+                x = self.bsrgan(x)
                 xrec = self.to_rgb(xrec)
             log["samples"] = self.decode(torch.randn_like(posterior.sample()))
             log["reconstructions"] = xrec
@@ -187,7 +187,7 @@ class AutoencoderKL(pl.LightningModule):
                     if x.shape[1] > 3:
                         # colorize with random projection
                         assert xrec_ema.shape[1] > 3
-                        xrec_ema = self.to_rgb(xrec_ema)
+                        xrec_ema = self.bsrgan_light(xrec_ema)
                     log["samples_ema"] = self.decode(torch.randn_like(posterior_ema.sample()))
                     log["reconstructions_ema"] = xrec_ema
         log["inputs"] = x
