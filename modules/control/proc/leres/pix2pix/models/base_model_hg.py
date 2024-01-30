@@ -2,10 +2,12 @@ import os
 import torch
 
 class BaseModelHG():
-    def name(self):
-        return 'BaseModel'
+    from .custom_options import CustomOptions
+import os
+import torch
+class BaseModelHG():
 
-    def initialize(self, opt):
+        def initialize(self, opt, custom_options):
         self.opt = opt
         self.gpu_ids = opt.gpu_ids
         self.isTrain = opt.isTrain
