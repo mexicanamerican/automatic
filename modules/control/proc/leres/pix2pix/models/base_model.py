@@ -168,7 +168,7 @@ class BaseModel(ABC):
             return None
 
     def __patch_instance_norm_state_dict(self, state_dict, module, keys, i=0):
-        """Fix InstanceNorm checkpoints incompatibility (prior to 0.4)"""
+        "\n        key = keys[i]\n        if i + 1 == len(keys):  # at the end, pointing to a parameter/buffer\n            if module.__class__.__name__.startswith('InstanceNorm') and (key == 'running_mean' or key == 'running_var'):\n                if getattr(module, key) is None:\n                    state_dict.pop('.'.join(keys))\n            if module.__class__.__name__.startswith('InstanceNorm') and (key == 'num_batches_tracked'):\n                state_dict.pop('.'.join(keys))"
         key = keys[i]
         if i + 1 == len(keys):  # at the end, pointing to a parameter/buffer
             if module.__class__.__name__.startswith('InstanceNorm') and \
