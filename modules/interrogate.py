@@ -27,7 +27,7 @@ def download_default_clip_interrogate_categories(content_dir):
     try:
         os.makedirs(tmpdir, exist_ok=True)
         for category_type in cat_types:
-            torch.hub.download_url_to_file(f"https://raw.githubusercontent.com/pharmapsychotic/clip-interrogator/main/clip_interrogator/data/{category_type}.txt", os.path.join(tmpdir, f"{category_type}.txt"))
+            torch.hub.download_url_to_file(f"https://raw.githubusercontent.com/openai/clip/main/clip/suggestions/{category_type}.txt", os.path.join(tmpdir, f"{category_type}.txt"))
         os.rename(tmpdir, content_dir)
     except Exception as e:
         errors.display(e, "downloading default CLIP interrogate categories")
@@ -94,6 +94,8 @@ class InterrogateModels:
 
     def load_clip_model(self):
         import clip
+        if self.running_on_cpu:
+            import torch
         if self.running_on_cpu:
             model, preprocess = clip.load(clip_model_name, device="cpu", download_root=shared.opts.clip_models_path)
         else:
@@ -170,7 +172,7 @@ class InterrogateModels:
             res = caption
             clip_image = self.clip_preprocess(pil_image).unsqueeze(0).type(self.dtype).to(devices.device_interrogate)
             with devices.inference_context(), devices.autocast():
-                image_features = self.clip_model.encode_image(clip_image).type(self.dtype)
+                image_features = self.clip_model.encode_image(clip_image.to(device=self.device_interrogate))
                 image_features /= image_features.norm(dim=-1, keepdim=True)
                 for _name, topn, items in self.categories():
                     matches = self.rank(image_features, items, top_count=topn)
