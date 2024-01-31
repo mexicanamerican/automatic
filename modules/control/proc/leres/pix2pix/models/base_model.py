@@ -20,13 +20,13 @@ class CustomBaseModel(ABC):
     """
 
     def __init__(self, opt):
-        """Initialize the BaseModel class.
+        """Initialize the CustomBaseModel class.
 
         Parameters:
             opt (Option class)-- stores all the experiment flags; needs to be a subclass of BaseOptions
 
         When creating your custom class, you need to implement your own initialization.
-        In this function, you should first call <BaseModel.__init__(self, opt)>
+        In this function, you should first call <CustomBaseModel.__init__(self, opt)>
         Then, you need to define four lists:
             -- self.loss_names (str list):          specify the training losses that you want to plot and save.
             -- self.model_names (str list):         define networks used in our training.
@@ -65,6 +65,9 @@ class CustomBaseModel(ABC):
         """Unpack input data from the dataloader and perform necessary pre-processing steps.
 
         Parameters:
+            input (dict): includes the data itself and its metadata information.
+        """
+        pass
             input (dict): includes the data itself and its metadata information.
         """
         pass
