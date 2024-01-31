@@ -1,1 +1,5 @@
-Since we are not creating a new file, this section is not applicable.
+- name: Build and Test
+  run: |
+    python3 -m pip install --upgrade pip
+    pip install -r requirements.txt
+    pytest
