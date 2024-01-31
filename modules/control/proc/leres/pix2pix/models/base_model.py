@@ -1,4 +1,4 @@
-import gc
+import torch_gc as gc
 import os
 from abc import ABC, abstractmethod
 from collections import OrderedDict
