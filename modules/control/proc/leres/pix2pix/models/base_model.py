@@ -9,7 +9,7 @@ from modules.control.util import torch_gc
 from . import networks
 
 
-class BaseModel(ABC):
+class CustomBaseModel(ABC):
     """This class is an abstract base class (ABC) for models.
     To create a subclass, you need to implement the following five functions:
         -- <__init__>:                      initialize the class; first call BaseModel.__init__(self, opt).
@@ -127,7 +127,7 @@ class BaseModel(ABC):
         lr = self.optimizers[0].param_groups[0]['lr']
         print('learning rate %.7f -> %.7f' % (old_lr, lr))
 
-    def get_current_visuals(self):
+    def retrieve_visuals(self):
         """Return visualization images. train.py will display these images with visdom, and save the images to a HTML"""
         visual_ret = OrderedDict()
         for name in self.visual_names:
