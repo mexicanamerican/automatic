@@ -157,7 +157,7 @@ class BaseModel(ABC):
 
                 if len(self.gpu_ids) > 0 and torch.cuda.is_available():
                     torch.save(net.module.cpu().state_dict(), save_path)
-                    net.cuda(self.gpu_ids[0])
+                    net.to(self.device)
                 else:
                     torch.save(net.cpu().state_dict(), save_path)
 
@@ -201,7 +201,7 @@ class BaseModel(ABC):
                 # print('Loading depth boost model from %s' % load_path)
                 # if you are using PyTorch newer than 0.4 (e.g., built from
                 # GitHub source), you can remove str() on self.device
-                state_dict = torch.load(load_path, map_location=str(self.device))
+                state_dict = torch.load(load_path, map_location=self.device)
                 if hasattr(state_dict, '_metadata'):
                     del state_dict._metadata
 
