@@ -105,6 +105,15 @@ class Pix2Pix4DepthModel(BaseModel):
         inner = self.normalize(inner)
         outer = self.normalize(outer)
 
+        outer = torch.from_numpy(outer).unsqueeze(0).unsqueeze(0)
+        inner = torch.from_numpy(inner).unsqueeze(0).unsqueeze(0)
+
+        inner = (inner - torch.min(inner))/(torch.max(inner)-torch.min(inner))
+        outer = (outer - torch.min(outer))/(torch.max(outer)-torch.min(outer))
+
+        inner = self.normalize(inner)
+        outer = self.normalize(outer)
+
         self.real_A = torch.cat((outer, inner), 1).to(self.device)
 
 
