@@ -1,5 +1,7 @@
 import torch
 from .base_model import BaseModel
+import os
+import torch
 from . import networks
 
 
@@ -72,8 +74,8 @@ class Pix2Pix4DepthModel(BaseModel):
             self.criterionGAN = networks.GANLoss(opt.gan_mode).to(self.device)
             self.criterionL1 = torch.nn.L1Loss()
             # initialize optimizers; schedulers will be automatically created by function <BaseModel.setup>.
-            self.optimizer_G = torch.optim.Adam(self.netG.parameters(), lr=1e-4, betas=(opt.beta1, 0.999))
-            self.optimizer_D = torch.optim.Adam(self.netD.parameters(), lr=2e-06, betas=(opt.beta1, 0.999))
+            self.optimizer_G = torch.optim.Adam(self.netG.parameters(), lr=0.0001, betas=(0.5, 0.999))
+            self.optimizer_D = torch.optim.Adam(self.netD.parameters(), lr=0.000002, betas=(0.5, 0.999))
             self.optimizers.append(self.optimizer_G)
             self.optimizers.append(self.optimizer_D)
 
@@ -96,6 +98,15 @@ class Pix2Pix4DepthModel(BaseModel):
     def set_input(self, outer, inner):
         inner = torch.from_numpy(inner).unsqueeze(0).unsqueeze(0)
         outer = torch.from_numpy(outer).unsqueeze(0).unsqueeze(0)
+
+        inner = (inner - torch.min(inner))/(torch.max(inner)-torch.min(inner))
+        outer = (outer - torch.min(outer))/(torch.max(outer)-torch.min(outer))
+
+        inner = self.normalize(inner)
+        outer = self.normalize(outer)
+
+        outer = torch.from_numpy(outer).unsqueeze(0).unsqueeze(0)
+        inner = torch.from_numpy(inner).unsqueeze(0).unsqueeze(0)
 
         inner = (inner - torch.min(inner))/(torch.max(inner)-torch.min(inner))
         outer = (outer - torch.min(outer))/(torch.max(outer)-torch.min(outer))
@@ -134,11 +145,11 @@ class Pix2Pix4DepthModel(BaseModel):
         # First, G(A) should fake the discriminator
         fake_AB = torch.cat((self.real_A, self.fake_B), 1)
         pred_fake = self.netD(fake_AB)
-        self.loss_G_GAN = self.criterionGAN(pred_fake, True)
+        self.loss_G_GAN = self.criterionGAN(pred_fake, False)
         # Second, G(A) = B
         self.loss_G_L1 = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1
         # combine loss and calculate gradients
-        self.loss_G = self.loss_G_L1 + self.loss_G_GAN
+        self.loss_G = self.loss_G_GAN + self.loss_G_L1
         self.loss_G.backward()
 
     def optimize_parameters(self):
