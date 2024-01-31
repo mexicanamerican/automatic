@@ -48,7 +48,7 @@ def setup_logging():
     }))
     # logging.getLogger("urllib3").setLevel(logging.ERROR)
     # logging.getLogger("httpx").setLevel(logging.ERROR)
-    level = logging.DEBUG if args.debug else logging.INFO
+    level = logging.DEBUG if getattr(args, 'debug', False) else logging.INFO
     logging.basicConfig(level=logging.ERROR, format='%(asctime)s | %(name)s | %(levelname)s | %(module)s | %(message)s', filename=log_file, filemode='a', encoding='utf-8', force=True)
     log.setLevel(logging.DEBUG) # log to file is always at level debug for facility `sd`
     pretty_install(console=console)
