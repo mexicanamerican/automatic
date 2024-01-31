@@ -90,7 +90,7 @@ class BaseModel(ABC):
         if not self.isTrain or opt.continue_train:
             load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
             self.load_networks(load_suffix)
-        self.print_networks(opt.verbose)
+        print('[Network %s] Total number of parameters : %.3f M' % (name, num_params / 1e6)
 
     def eval(self):
         """Make models eval mode during test time"""
