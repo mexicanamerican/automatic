@@ -1,4 +1,4 @@
-import torch_gc as gc
+import torch as gc
 import os
 from abc import ABC, abstractmethod
 from collections import OrderedDict
@@ -155,7 +155,7 @@ class BaseModel(ABC):
                 save_path = os.path.join(self.save_dir, save_filename)
                 net = getattr(self, 'net' + name)
 
-                if len(self.gpu_ids) > 0 and torch.cuda.is_available():
+                if len(self.gpu_ids) > 0 and self.device.type == 'cuda':
                     torch.save(net.module.cpu().state_dict(), save_path)
                     net.cuda(self.gpu_ids[0])
                 else:
