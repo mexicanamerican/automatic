@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+          - name: Update dependencies
+            run: pip install --upgrade -r requirements.txt
+          - name: Update dependencies
+            run: pip install --upgrade -r requirements.txt
+
+      - name: Build
+        run: |
+          echo "Error occurred during the build step"
+          # Add build commands here
+
+      - name: Run tests
+        run: |
+          echo "Error occurred during the test step"
+          # Add test commands here
