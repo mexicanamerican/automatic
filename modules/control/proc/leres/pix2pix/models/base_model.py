@@ -9,7 +9,9 @@ import torch
 
 from modules.control.util import torch_gc
 import modules
+import logging, subprocess, pkg_resources, sys, torch
 import modules.other_dependency
+import subprocess
 from . import networks
 
 
@@ -257,7 +259,12 @@ class BaseModel(ABC):
         Parameters:
             verbose (bool) -- if verbose: print the network architecture
         """
-        print('---------- Networks initialized -------------')
+        logger = logging.getLogger(__name__)
+        try:
+            print('---------- Networks initialized -------------')
+        except Exception as e:
+            logger.exception('An error occurred during network initialization')
+            raise e
         for name in self.model_names:
             if isinstance(name, str):
                 net = getattr(self, 'net' + name)
