@@ -183,22 +183,6 @@ class BaseModel(ABC):
                (key == 'num_batches_tracked'):
                 state_dict.pop('.'.join(keys))
         else:
-            self.__patch_instance_norm_state_dict(state_dict, getattr(module, key), keys, i + 1)
-
-    load_filename = '%s_net_%s.pth' % (epoch, name)
-    load_path = os.path.join(self.save_dir, load_filename)
-    net = getattr(self, 'net' + name)
-    if isinstance(net, torch.nn.DataParallel):
-        net = net.module
-    state_dict = torch.load(load_path, map_location=str(self.device))
-    if hasattr(state_dict, '_metadata'):
-        del state_dict._metadata
-    net.load_state_dict(state_dict)
-        """Set requies_grad=Fasle for all the networks to avoid unnecessary computations
-        Parameters:
-            nets (network list)   -- a list of networks
-            requires_grad (bool)  -- whether the networks require gradients or not
-        """
         if not isinstance(nets, list):
             nets = [nets]
         for net in nets:
