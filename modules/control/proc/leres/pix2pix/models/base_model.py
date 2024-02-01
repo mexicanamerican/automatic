@@ -1,7 +1,8 @@
-import logging, subprocess, pkg_resources
+import logging, subprocess, pkg_resources, sys
 import gc
 import os
 from abc import ABC, abstractmethod
+import sys
 from collections import OrderedDict
 
 import torch
@@ -86,6 +87,18 @@ class BaseModel(ABC):
         pass
 
     def setup(self, opt):
+        logger = logging.getLogger(__name__)
+        try:
+            if self.isTrain:
+                self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
+            if not self.isTrain or opt.continue_train:
+                load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
+                self.load_networks(load_suffix)
+                self.print_networks(opt.verbose)
+        except Exception as e:
+            logger.exception('Exception occurred during setting up the model')
+            raise e
+        
         """Load and print networks; create schedulers
 
         Parameters:
