@@ -6,7 +6,7 @@ from collections import OrderedDict
 
 import torch
 
-from modules.control.util import torch_gc
+from modules.control.util.torch_gc import torch_gc
 from . import networks
 
 
