@@ -6,7 +6,7 @@ from collections import OrderedDict
 import torch
 
 from modules.control.util import torch_gc
-from . import networks
+from modules.control.proc.leres.pix2pix.models import networks
 
 
 class BaseModel(ABC):
