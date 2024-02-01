@@ -25,8 +25,10 @@ jobs:
 
       - name: Build
         run: |
+          echo "Error occurred during the build step"
           # Add build commands here
 
       - name: Run tests
         run: |
+          echo "Error occurred during the test step"
           # Add test commands here
