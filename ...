@@ -20,6 +20,8 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r requirements.txt
+          - name: Update dependencies
+            run: pip install --upgrade -r requirements.txt
 
       - name: Build
         run: |
