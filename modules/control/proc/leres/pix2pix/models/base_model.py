@@ -79,41 +79,9 @@ class BaseModel(ABC):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
         pass
 
-    def setup(self, opt):
-        """Load and print networks; create schedulers
 
-        Parameters:
-            opt (Option class) -- stores all the experiment flags; needs to be a subclass of BaseOptions
-        """
-# Removed the setup function
-# Removed the setup function
-# Removed the setup function
-# Removed the setup function
-# Removed the setup function
-# Removed the setup function
 
-    def eval(self):
-        """Make models eval mode during test time"""
-        for name in self.model_names:
-            if isinstance(name, str):
-                net = getattr(self, 'net' + name)
-                net.eval()
 
-    def test(self):
-        """Forward function used in test time.
-
-        It also calls <compute_visuals> to produce additional visualization results
-        """
-        self.forward()
-        self.compute_visuals()
-
-    def compute_visuals(self): # noqa
-        """Calculate additional output images for visdom and HTML visualization"""
-        pass
-
-    def get_image_paths(self):
-        """ Return image paths that are used to load current data"""
-        return self.image_paths
 
     def update_learning_rate(self):
         """Update learning rates for all the networks; called at the end of every epoch"""
