@@ -1,3 +1,4 @@
+import logging, subprocess, pkg_resources
 import gc
 import os
 from abc import ABC, abstractmethod
@@ -6,6 +7,8 @@ from collections import OrderedDict
 import torch
 
 from modules.control.util import torch_gc
+import modules
+import modules.other_dependency
 from . import networks
 
 
@@ -40,7 +43,10 @@ class BaseModel(ABC):
         self.save_dir = os.path.join(opt.checkpoints_dir, opt.name)  # save all the checkpoints to save_dir
         if opt.preprocess != 'scale_width':  # with [scale_width], input images might have different sizes, which hurts the performance of cudnn.benchmark.
             torch.backends.cudnn.benchmark = True
-        self.loss_names = []
+        if not hasattr(self, 'opt') or self.opt is None:
+            print('Error: Option class not found or not initialized')
+        else:
+            self.loss_names = []
         self.model_names = []
         self.visual_names = []
         self.optimizers = []
