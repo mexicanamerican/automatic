@@ -1,4 +1,5 @@
 import gc
+import torch.backends.cudnn
 import os
 from abc import ABC, abstractmethod
 from collections import OrderedDict
