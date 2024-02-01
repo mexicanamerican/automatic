@@ -195,10 +195,10 @@ class BaseModel(ABC):
         del state_dict._metadata
     net.load_state_dict(state_dict)
         """Set requies_grad=Fasle for all the networks to avoid unnecessary computations
-        Parameters:
-            nets (network list)   -- a list of networks
-            requires_grad (bool)  -- whether the networks require gradients or not
-        """
+            Parameters:
+                nets (network list)   -- a list of networks
+                requires_grad (bool)  -- whether the networks require gradients or not
+            """
         if not isinstance(nets, list):
             nets = [nets]
         for net in nets:
