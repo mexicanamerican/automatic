@@ -120,6 +120,17 @@ class GridAnnotation:
         self.size = None
 
 
+def get_font(fontsize):
+    try:
+        return ImageFont.truetype(
+            shared.opts.font or "javascript/notosans-nerdfont-regular.ttf", fontsize
+        )
+    except Exception:
+        return ImageFont.truetype(
+            "javascript/notosans-nerdfont-regular.ttf", fontsize
+        )
+
+
 def draw_grid_annotations(im, width, height, hor_texts, ver_texts, margin=0, title=None):
     def wrap(drawing, text, font, line_length):
         lines = ['']
@@ -131,17 +142,11 @@ def draw_grid_annotations(im, width, height, hor_texts, ver_texts, margin=0, tit
                 lines.append(word)
         return lines
 
-    def get_font(fontsize):
-        try:
-            return ImageFont.truetype(shared.opts.font or 'javascript/roboto.ttf', fontsize)
-        except Exception:
-            return ImageFont.truetype('javascript/roboto.ttf', fontsize)
-
     def draw_texts(drawing: ImageDraw, draw_x, draw_y, lines, initial_fnt, initial_fontsize):
         for line in lines:
             font = initial_fnt
             fontsize = initial_fontsize
-            while drawing.multiline_textbbox((0,0), text=line.text, font=font)[0] > line.allowed_width and fontsize > 0:
+            while drawing.multiline_textbbox((0,0), text=line.text, font=font)[2] > line.allowed_width and fontsize > 0:
                 fontsize -= 1
                 font = get_font(fontsize)
             drawing.multiline_text((draw_x, draw_y + line.size[1] / 2), line.text, font=font, fill=shared.opts.font_color if line.is_active else color_inactive, anchor="mm", align="center")
@@ -210,7 +215,7 @@ def draw_prompt_matrix(im, width, height, all_prompts, margin=0):
 
 
 def resize_image(resize_mode, im, width, height, upscaler_name=None, output_type='image'):
-    shared.log.debug(f'Image resize: mode={resize_mode} resolution={width}x{height} upscaler={upscaler_name} function={sys._getframe(1).f_code.co_name}') # pylint: disable=protected-access
+    shared.log.debug(f'Image resize: input={im} mode={resize_mode} target={width}x{height} upscaler={upscaler_name} function={sys._getframe(1).f_code.co_name}') # pylint: disable=protected-access
     """
     Resizes an image with the specified resize_mode, width, and height.
     Args:
@@ -226,18 +231,29 @@ def resize_image(resize_mode, im, width, height, upscaler_name=None, output_type
     """
     upscaler_name = upscaler_name or shared.opts.upscaler_for_img2img
 
+    def latent(im, w, h, upscaler):
+        from modules.processing_vae import vae_encode, vae_decode
+        import torch
+        latents = vae_encode(im, shared.sd_model, full_quality=False) # TODO enable full VAE mode
+        latents = torch.nn.functional.interpolate(latents, size=(h // 8, w // 8), mode=upscaler["mode"], antialias=upscaler["antialias"])
+        im = vae_decode(latents, shared.sd_model, output_type='pil', full_quality=False)[0]
+        return im
+
     def resize(im, w, h):
         if upscaler_name is None or upscaler_name == "None" or im.mode == 'L':
             return im.resize((w, h), resample=Image.Resampling.LANCZOS)
         scale = max(w / im.width, h / im.height)
         if scale > 1.0:
             upscalers = [x for x in shared.sd_upscalers if x.name == upscaler_name]
-            if len(upscalers) == 0:
-                upscaler = shared.sd_upscalers[0]
-                shared.log.warning(f"Could not find upscaler: {upscaler_name or '<empty string>'} using fallback: {upscaler.name}")
-            else:
+            if len(upscalers) > 0:
                 upscaler = upscalers[0]
-            im = upscaler.scaler.upscale(im, scale, upscaler.data_path)
+                im = upscaler.scaler.upscale(im, scale, upscaler.data_path)
+            else:
+                upscaler = shared.latent_upscale_modes.get(upscaler_name, None)
+                if upscaler is not None:
+                    im = latent(im, w, h, upscaler)
+                else:
+                    shared.log.warning(f"Resize upscaler: invalid={upscaler_name} fallback={upscaler.name}")
         if im.width != w or im.height != h:
             im = im.resize((w, h), resample=Image.Resampling.LANCZOS)
         return im
@@ -255,8 +271,8 @@ def resize_image(resize_mode, im, width, height, upscaler_name=None, output_type
         res = Image.new(im.mode, (width, height))
         res.paste(resized, box=(width // 2 - src_w // 2, height // 2 - src_h // 2))
     else:
-        ratio = width / height
-        src_ratio = im.width / im.height
+        ratio = round(width / height, 1)
+        src_ratio = round(im.width / im.height, 1)
         src_w = width if ratio < src_ratio else im.width * height // im.height
         src_h = height if ratio >= src_ratio else im.height * width // im.width
         resized = resize(im, src_w, src_h)
@@ -264,12 +280,14 @@ def resize_image(resize_mode, im, width, height, upscaler_name=None, output_type
         res.paste(resized, box=(width // 2 - src_w // 2, height // 2 - src_h // 2))
         if ratio < src_ratio:
             fill_height = height // 2 - src_h // 2
-            res.paste(resized.resize((width, fill_height), box=(0, 0, width, 0)), box=(0, 0))
-            res.paste(resized.resize((width, fill_height), box=(0, resized.height, width, resized.height)), box=(0, fill_height + src_h))
+            if width > 0 and fill_height > 0:
+                res.paste(resized.resize((width, fill_height), box=(0, 0, width, 0)), box=(0, 0))
+                res.paste(resized.resize((width, fill_height), box=(0, resized.height, width, resized.height)), box=(0, fill_height + src_h))
         elif ratio > src_ratio:
             fill_width = width // 2 - src_w // 2
-            res.paste(resized.resize((fill_width, height), box=(0, 0, 0, height)), box=(0, 0))
-            res.paste(resized.resize((fill_width, height), box=(resized.width, 0, resized.width, height)), box=(fill_width + src_w, 0))
+            if height > 0 and fill_width > 0:
+                res.paste(resized.resize((fill_width, height), box=(0, 0, 0, height)), box=(0, 0))
+                res.paste(resized.resize((fill_width, height), box=(resized.width, 0, resized.width, height)), box=(fill_width + src_w, 0))
     if output_type == 'np':
         return np.array(res)
     return res
@@ -521,13 +539,13 @@ def atomically_save_image():
         if shared.opts.image_watermark_enabled:
             image = set_watermark(image, shared.opts.image_watermark)
         size = os.path.getsize(fn) if os.path.exists(fn) else 0
-        shared.log.debug(f'Saving: image="{fn}" type={image_format} resolution={image.width}x{image.height} size={size}')
+        shared.log.info(f'Saving: image="{fn}" type={image_format} resolution={image.width}x{image.height} size={size}')
         # additional metadata saved in files
         if shared.opts.save_txt and len(exifinfo) > 0:
             try:
                 with open(filename_txt, "w", encoding="utf8") as file:
                     file.write(f"{exifinfo}\n")
-                shared.log.debug(f'Saving: text="{filename_txt}" len={len(exifinfo)}')
+                shared.log.info(f'Saving: text="{filename_txt}" len={len(exifinfo)}')
             except Exception as e:
                 shared.log.warning(f'Image description save failed: {filename_txt} {e}')
         # actual save
@@ -576,7 +594,7 @@ def atomically_save_image():
             entry = { 'id': idx, 'filename': filename, 'time': datetime.datetime.now().isoformat(), 'info': exifinfo }
             entries.append(entry)
             shared.writefile(entries, fn, mode='w', silent=True)
-            shared.log.debug(f'Saving: json="{fn}" records={len(entries)}')
+            shared.log.info(f'Saving: json="{fn}" records={len(entries)}')
         save_queue.task_done()
 
 
@@ -592,7 +610,7 @@ def save_image(image, path, basename='', seed=None, prompt=None, extension=share
         return None, None
     if not check_grid_size([image]):
         return None, None
-    if path is None or len(path) == 0: # set default path to avoid errors when functions are triggered manually or via api and param is not set
+    if path is None or path == '': # set default path to avoid errors when functions are triggered manually or via api and param is not set
         path = shared.opts.outdir_save
     namegen = FilenameGenerator(p, seed, prompt, image, grid=grid)
     suffix = suffix if suffix is not None else ''
@@ -792,18 +810,18 @@ def image_data(data):
     err2 = None
     try:
         image = Image.open(io.BytesIO(data))
-        errors.log.debug(f'Decoded object: image={image}')
-        textinfo, _ = read_info_from_image(image)
-        return textinfo, None
+        info, _ = read_info_from_image(image)
+        errors.log.debug(f'Decoded object: image={image} metadata={info}')
+        return info, None
     except Exception as e:
         err1 = e
     try:
         if len(data) > 1024 * 10:
             errors.log.warning(f'Error decoding object: data too long: {len(data)}')
             return gr.update(), None
-        text = data.decode('utf8')
-        errors.log.debug(f'Decoded object: size={len(text)}')
-        return text, None
+        info = data.decode('utf8')
+        errors.log.debug(f'Decoded object: data={len(data)} metadata={info}')
+        return info, None
     except Exception as e:
         err2 = e
     errors.log.error(f'Error decoding object: {err1 or err2}')

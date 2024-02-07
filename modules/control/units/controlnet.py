@@ -2,7 +2,8 @@ import os
 import time
 from typing import Union
 from diffusers import StableDiffusionPipeline, StableDiffusionXLPipeline, ControlNetModel, StableDiffusionControlNetPipeline, StableDiffusionXLControlNetPipeline
-from modules.shared import log, opts
+from modules.control.units import detect
+from modules.shared import log, opts, listdir
 from modules import errors
 
 
@@ -10,21 +11,37 @@ what = 'ControlNet'
 debug = log.trace if os.environ.get('SD_CONTROL_DEBUG', None) is not None else lambda *args, **kwargs: None
 debug('Trace: CONTROL')
 predefined_sd15 = {
-    'OpenPose': "lllyasviel/control_v11p_sd15_openpose",
     'Canny': "lllyasviel/control_v11p_sd15_canny",
-    'MLDS': "lllyasviel/control_v11p_sd15_mlsd",
-    'Scribble': "lllyasviel/control_v11p_sd15_scribble",
-    'SoftEdge': "lllyasviel/control_v11p_sd15_softedge",
-    'Segment': "lllyasviel/control_v11p_sd15_seg",
     'Depth': "lllyasviel/control_v11f1p_sd15_depth",
-    'NormalBae': "lllyasviel/control_v11p_sd15_normalbae",
+    'HED': "lllyasviel/sd-controlnet-hed",
+    'IP2P': "lllyasviel/control_v11e_sd15_ip2p",
     'LineArt': "lllyasviel/control_v11p_sd15_lineart",
     'LineArt Anime': "lllyasviel/control_v11p_sd15s2_lineart_anime",
+    'MLDS': "lllyasviel/control_v11p_sd15_mlsd",
+    'NormalBae': "lllyasviel/control_v11p_sd15_normalbae",
+    'OpenPose': "lllyasviel/control_v11p_sd15_openpose",
+    'Scribble': "lllyasviel/control_v11p_sd15_scribble",
+    'Segment': "lllyasviel/control_v11p_sd15_seg",
     'Shuffle': "lllyasviel/control_v11e_sd15_shuffle",
-    'IP2P': "lllyasviel/control_v11e_sd15_ip2p",
-    'HED': "lllyasviel/sd-controlnet-hed",
+    'SoftEdge': "lllyasviel/control_v11p_sd15_softedge",
     'Tile': "lllyasviel/control_v11f1e_sd15_tile",
-    'TemporalNet': "CiaraRowles/TemporalNet",
+    'Depth Anything': 'vladmandic/depth-anything',
+    'Canny FP16': 'Aptronym/SDNext/ControlNet11/controlnet11Models_canny.safetensors',
+    'Inpaint FP16': 'Aptronym/SDNext/ControlNet11/controlnet11Models_inpaint.safetensors',
+    'LineArt Anime FP16': 'Aptronym/SDNext/ControlNet11/controlnet11Models_animeline.safetensors',
+    'LineArt FP16': 'Aptronym/SDNext/ControlNet11/controlnet11Models_lineart.safetensors',
+    'MLSD FP16': 'Aptronym/SDNext/ControlNet11/controlnet11Models_mlsd.safetensors',
+    'NormalBae FP16': 'Aptronym/SDNext/ControlNet11/controlnet11Models_normal.safetensors',
+    'OpenPose FP16': 'Aptronym/SDNext/ControlNet11/controlnet11Models_openpose.safetensors',
+    'Pix2Pix FP16': 'Aptronym/SDNext/ControlNet11/controlnet11Models_pix2pix.safetensors',
+    'Scribble FP16': 'Aptronym/SDNext/ControlNet11/controlnet11Models_scribble.safetensors',
+    'Segment FP16': 'Aptronym/SDNext/ControlNet11/controlnet11Models_seg.safetensors',
+    'Shuffle FP16': 'Aptronym/SDNext/ControlNet11/controlnet11Models_shuffle.safetensors',
+    'SoftEdge FP16': 'Aptronym/SDNext/ControlNet11/controlnet11Models_softedge.safetensors',
+    'Tile FP16': 'Aptronym/SDNext/ControlNet11/controlnet11Models_tileE.safetensors',
+    'CiaraRowles TemporalNet': "CiaraRowles/TemporalNet",
+    'Ciaochaos Recolor': 'ioclab/control_v1p_sd15_brightness',
+    'Ciaochaos Illumination': 'ioclab/control_v1u_sd15_illumination/illumination20000.safetensors',
 }
 predefined_sdxl = {
     'Canny Small XL': 'diffusers/controlnet-canny-sdxl-1.0-small',
@@ -32,6 +49,15 @@ predefined_sdxl = {
     'Canny XL': 'diffusers/controlnet-canny-sdxl-1.0',
     'Depth Zoe XL': 'diffusers/controlnet-zoe-depth-sdxl-1.0',
     'Depth Mid XL': 'diffusers/controlnet-depth-sdxl-1.0-mid',
+    'OpenPose XL': 'thibaud/controlnet-openpose-sdxl-1.0',
+    # 'StabilityAI Canny R128': 'stabilityai/control-lora/control-LoRAs-rank128/control-lora-canny-rank128.safetensors',
+    # 'StabilityAI Depth R128': 'stabilityai/control-lora/control-LoRAs-rank128/control-lora-depth-rank128.safetensors',
+    # 'StabilityAI Recolor R128': 'stabilityai/control-lora/control-LoRAs-rank128/control-lora-recolor-rank128.safetensors',
+    # 'StabilityAI Sketch R128': 'stabilityai/control-lora/control-LoRAs-rank128/control-lora-sketch-rank128-metadata.safetensors',
+    # 'StabilityAI Canny R256': 'stabilityai/control-lora/control-LoRAs-rank256/control-lora-canny-rank256.safetensors',
+    # 'StabilityAI Depth R256': 'stabilityai/control-lora/control-LoRAs-rank256/control-lora-depth-rank256.safetensors',
+    # 'StabilityAI Recolor R256': 'stabilityai/control-lora/control-LoRAs-rank256/control-lora-recolor-rank256.safetensors',
+    # 'StabilityAI Sketch R256': 'stabilityai/control-lora/control-LoRAs-rank256/control-lora-sketch-rank256.safetensors',
 }
 models = {}
 all_models = {}
@@ -42,11 +68,11 @@ cache_dir = 'models/control/controlnet'
 
 def find_models():
     path = os.path.join(opts.control_dir, 'controlnet')
-    files = os.listdir(path)
+    files = listdir(path)
     files = [f for f in files if f.endswith('.safetensors')]
     downloaded_models = {}
     for f in files:
-        basename = os.path.splitext(f)[0]
+        basename = os.path.splitext(os.path.relpath(f, path))[0]
         downloaded_models[basename] = os.path.join(path, f)
     all_models.update(downloaded_models)
     return downloaded_models
@@ -61,9 +87,9 @@ def list_models(refresh=False):
     if modules.shared.sd_model_type == 'none':
         models = ['None']
     elif modules.shared.sd_model_type == 'sdxl':
-        models = ['None'] + sorted(predefined_sdxl) + sorted(find_models())
+        models = ['None'] + list(predefined_sdxl) + sorted(find_models())
     elif modules.shared.sd_model_type == 'sd':
-        models = ['None'] + sorted(predefined_sd15) + sorted(find_models())
+        models = ['None'] + list(predefined_sd15) + sorted(find_models())
     else:
         log.warning(f'Control {what} model list failed: unknown model type')
         models = ['None'] + sorted(predefined_sd15) + sorted(predefined_sdxl) + sorted(find_models())
@@ -85,9 +111,36 @@ class ControlNet():
 
     def reset(self):
         if self.model is not None:
-            log.debug(f'Control {what} model unloaded')
+            debug(f'Control {what} model unloaded')
         self.model = None
         self.model_id = None
+
+    def load_safetensors(self, model_path):
+        name = os.path.splitext(model_path)[0]
+        config_path = None
+        if not os.path.exists(model_path):
+            import huggingface_hub as hf
+            parts = model_path.split('/')
+            repo_id = f'{parts[0]}/{parts[1]}'
+            filename = os.path.splitext('/'.join(parts[2:]))[0]
+            model_path = hf.hf_hub_download(repo_id=repo_id, filename=f'{filename}.safetensors', cache_dir=cache_dir)
+            if config_path is None:
+                try:
+                    config_path = hf.hf_hub_download(repo_id=repo_id, filename=f'{filename}.yaml', cache_dir=cache_dir)
+                except Exception:
+                    pass # no yaml file
+            if config_path is None:
+                try:
+                    config_path = hf.hf_hub_download(repo_id=repo_id, filename=f'{filename}.json', cache_dir=cache_dir)
+                except Exception:
+                    pass # no yaml file
+        elif os.path.exists(name + '.yaml'):
+            config_path = f'{name}.yaml'
+        elif os.path.exists(name + '.json'):
+            config_path = f'{name}.json'
+        if config_path is not None:
+            self.load_config['original_config_file '] = config_path
+        self.model = ControlNetModel.from_single_file(model_path, **self.load_config)
 
     def load(self, model_id: str = None) -> str:
         try:
@@ -104,7 +157,7 @@ class ControlNet():
                 return
             log.debug(f'Control {what} model loading: id="{model_id}" path="{model_path}"')
             if model_path.endswith('.safetensors'):
-                self.model = ControlNetModel.from_single_file(model_path, **self.load_config)
+                self.load_safetensors(model_path)
             else:
                 self.model = ControlNetModel.from_pretrained(model_path, **self.load_config)
             if self.device is not None:
@@ -129,7 +182,7 @@ class ControlNetPipeline():
         if pipeline is None:
             log.error('Control model pipeline: model not loaded')
             return
-        elif isinstance(pipeline, StableDiffusionXLPipeline):
+        elif detect.is_sdxl(pipeline):
             self.pipeline = StableDiffusionXLControlNetPipeline(
                 vae=pipeline.vae,
                 text_encoder=pipeline.text_encoder,
@@ -141,7 +194,7 @@ class ControlNetPipeline():
                 feature_extractor=getattr(pipeline, 'feature_extractor', None),
                 controlnet=controlnet, # can be a list
             ).to(pipeline.device)
-        elif isinstance(pipeline, StableDiffusionPipeline):
+        elif detect.is_sd15(pipeline):
             self.pipeline = StableDiffusionControlNetPipeline(
                 vae=pipeline.vae,
                 text_encoder=pipeline.text_encoder,
