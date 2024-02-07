@@ -1,5 +1,4 @@
 import os
-import collections
 import glob
 from copy import deepcopy
 import torch
@@ -12,7 +11,6 @@ base_vae = None
 loaded_vae_file = None
 checkpoint_info = None
 vae_path = os.path.abspath(os.path.join(paths.models_path, 'VAE'))
-checkpoints_loaded = collections.OrderedDict()
 
 
 def get_base_vae(model):
@@ -145,31 +143,17 @@ def load_vae_dict(filename):
 
 def load_vae(model, vae_file=None, vae_source="unknown-source"):
     global loaded_vae_file # pylint: disable=global-statement
-    cache_enabled = shared.opts.sd_vae_checkpoint_cache > 0
     if vae_file:
         try:
-            if cache_enabled and vae_file in checkpoints_loaded:
-                # use vae checkpoint cache
-                shared.log.info(f"Loading VAE: model={get_filename(vae_file)} source={vae_source} cached=True")
-                store_base_vae(model)
-                _load_vae_dict(model, checkpoints_loaded[vae_file])
-            else:
-                if not os.path.isfile(vae_file):
-                    shared.log.error(f"VAE not found: model={vae_file} source={vae_source}")
-                    return
-                store_base_vae(model)
-                vae_dict_1 = load_vae_dict(vae_file)
-                _load_vae_dict(model, vae_dict_1)
-                if cache_enabled:
-                    # cache newly loaded vae
-                    checkpoints_loaded[vae_file] = vae_dict_1.copy()
+            if not os.path.isfile(vae_file):
+                shared.log.error(f"VAE not found: model={vae_file} source={vae_source}")
+                return
+            store_base_vae(model)
+            vae_dict_1 = load_vae_dict(vae_file)
+            _load_vae_dict(model, vae_dict_1)
         except Exception as e:
             shared.log.error(f"Loading VAE failed: model={vae_file} source={vae_source} {e}")
             restore_base_vae(model)
-        # clean up cache if limit is reached
-        if cache_enabled:
-            while len(checkpoints_loaded) > shared.opts.sd_vae_checkpoint_cache + 1: # we need to count the current model
-                checkpoints_loaded.popitem(last=False)  # LRU
         # If vae used is not in dict, update it
         # It will be removed on refresh though
         vae_opt = get_filename(vae_file)
@@ -255,11 +239,10 @@ def reload_vae_weights(sd_model=None, vae_file=unspecified):
         vae_source = "function-argument"
     if loaded_vae_file == vae_file:
         return None
-    if not getattr(sd_model, 'has_accelerate', False):
-        if shared.cmd_opts.lowvram or shared.cmd_opts.medvram:
-            lowvram.send_everything_to_cpu()
-        else:
-            sd_model.to(devices.cpu)
+    if shared.backend == shared.Backend.ORIGINAL and (shared.cmd_opts.lowvram or shared.cmd_opts.medvram):
+        lowvram.send_everything_to_cpu()
+    # else:
+    #    sd_models.move_model(sd_model, devices.cpu)
 
     if shared.backend == shared.Backend.ORIGINAL:
         sd_hijack.model_hijack.undo_hijack(sd_model)
@@ -276,6 +259,6 @@ def reload_vae_weights(sd_model=None, vae_file=unspecified):
             if vae is not None:
                 sd_models.set_diffuser_options(sd_model, vae=vae, op='vae')
 
-    if not shared.cmd_opts.lowvram and not shared.cmd_opts.medvram and not getattr(sd_model, 'has_accelerate', False):
-        sd_model.to(devices.device)
+    if not shared.cmd_opts.lowvram and not shared.cmd_opts.medvram:
+        sd_models.move_model(sd_model, devices.device)
     return sd_model

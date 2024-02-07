@@ -1,7 +1,7 @@
 """
 Lightweight AnimateDiff implementation in Diffusers
 Docs: <https://huggingface.co/docs/diffusers/api/pipelines/animatediff>
-TODO:
+TODO animatediff items:
 - SDXL
 - Custom models
 - Custom LORAs
@@ -72,7 +72,7 @@ def set_adapter(adapter_name: str = 'None'):
     if getattr(shared.sd_model, 'image_encoder', None) is not None:
         shared.log.debug('AnimateDiff: unloading IP adapter')
         # shared.sd_model.image_encoder = None
-        shared.sd_model.unet.set_default_attn_processor()
+        # shared.sd_model.unet.set_default_attn_processor()
         shared.sd_model.unet.config.encoder_hid_dim_type = None
     if adapter_name.endswith('.ckpt') or adapter_name.endswith('.safetensors'):
         import huggingface_hub as hf
@@ -97,8 +97,7 @@ def set_adapter(adapter_name: str = 'None'):
         )
         orig_pipe = shared.sd_model
         shared.sd_model = new_pipe
-        if not ((shared.opts.diffusers_model_cpu_offload or shared.cmd_opts.medvram) or (shared.opts.diffusers_seq_cpu_offload or shared.cmd_opts.lowvram)):
-            shared.sd_model.to(shared.device)
+        sd_models.move_model(shared.sd_model, devices.device) # move pipeline to device
         sd_models.copy_diffuser_options(new_pipe, orig_pipe)
         sd_models.set_diffuser_options(shared.sd_model, vae=None, op='model')
         shared.log.debug(f'AnimateDiff create pipeline: adapter="{loaded_adapter}"')
@@ -139,14 +138,24 @@ class Script(scripts.Script):
             with gr.Row():
                 video_type = gr.Dropdown(label='Video file', choices=['None', 'GIF', 'PNG', 'MP4'], value='None')
                 duration = gr.Slider(label='Duration', minimum=0.25, maximum=10, step=0.25, value=2, visible=False)
+            with gr.Accordion('FreeInit', open=False):
+                with gr.Row():
+                    fi_method = gr.Dropdown(label='Method', choices=['none', 'butterworth', 'ideal', 'gaussian'], value='none')
+                with gr.Row():
+                    # fi_fast = gr.Checkbox(label='Fast sampling', value=False)
+                    fi_iters = gr.Slider(label='Iterations', minimum=1, maximum=10, step=1, value=3)
+                    fi_order = gr.Slider(label='Order', minimum=1, maximum=10, step=1, value=4)
+                with gr.Row():
+                    fi_spatial = gr.Slider(label='Spatial frequency', minimum=0.0, maximum=1.0, step=0.05, value=0.25)
+                    fi_temporal = gr.Slider(label='Temporal frequency', minimum=0.0, maximum=1.0, step=0.05, value=0.25)
             with gr.Row():
                 gif_loop = gr.Checkbox(label='Loop', value=True, visible=False)
                 mp4_pad = gr.Slider(label='Pad frames', minimum=0, maximum=24, step=1, value=1, visible=False)
                 mp4_interpolate = gr.Slider(label='Interpolate frames', minimum=0, maximum=24, step=1, value=0, visible=False)
             video_type.change(fn=video_type_change, inputs=[video_type], outputs=[duration, gif_loop, mp4_pad, mp4_interpolate])
-        return [adapter_index, frames, lora_index, strength, latent_mode, video_type, duration, gif_loop, mp4_pad, mp4_interpolate, override_scheduler]
+        return [adapter_index, frames, lora_index, strength, latent_mode, video_type, duration, gif_loop, mp4_pad, mp4_interpolate, override_scheduler, fi_method, fi_iters, fi_order, fi_spatial, fi_temporal]
 
-    def process(self, p: processing.StableDiffusionProcessing, adapter_index, frames, lora_index, strength, latent_mode, video_type, duration, gif_loop, mp4_pad, mp4_interpolate, override_scheduler): # pylint: disable=arguments-differ, unused-argument
+    def process(self, p: processing.StableDiffusionProcessing, adapter_index, frames, lora_index, strength, latent_mode, video_type, duration, gif_loop, mp4_pad, mp4_interpolate, override_scheduler, fi_method, fi_iters, fi_order, fi_spatial, fi_temporal): # pylint: disable=arguments-differ, unused-argument
         adapter = ADAPTERS[adapter_index]
         lora = LORAS[lora_index]
         set_adapter(adapter)
@@ -171,6 +180,15 @@ class Script(scripts.Script):
             shared.sd_model.load_lora_weights(lora, adapter_name=lora)
             shared.sd_model.set_adapters([lora], adapter_weights=[strength])
             p.extra_generation_params['AnimateDiff Lora'] = f'{lora}:{strength}'
+        if hasattr(shared.sd_model, 'enable_free_init') and fi_method != 'none':
+            shared.sd_model.enable_free_init(
+                num_iters=fi_iters,
+                use_fast_sampling=False,
+                method=fi_method,
+                order=fi_order,
+                spatial_stop_frequency=fi_spatial,
+                temporal_stop_frequency=fi_temporal,
+            )
         p.extra_generation_params['AnimateDiff'] = loaded_adapter
         p.do_not_save_grid = True
         if 'animatediff' not in p.ops:
@@ -180,7 +198,7 @@ class Script(scripts.Script):
         if not latent_mode:
             p.task_args['output_type'] = 'np'
 
-    def postprocess(self, p: processing.StableDiffusionProcessing, processed: processing.Processed, adapter_index, frames, lora_index, strength, latent_mode, video_type, duration, gif_loop, mp4_pad, mp4_interpolate, override_scheduler): # pylint: disable=arguments-differ, unused-argument
+    def postprocess(self, p: processing.StableDiffusionProcessing, processed: processing.Processed, adapter_index, frames, lora_index, strength, latent_mode, video_type, duration, gif_loop, mp4_pad, mp4_interpolate, override_scheduler, fi_method, fi_iters, fi_order, fi_spatial, fi_temporal): # pylint: disable=arguments-differ, unused-argument
         from modules.images import save_video
         if video_type != 'None':
             save_video(p, filename=None, images=processed.images, video_type=video_type, duration=duration, loop=gif_loop, pad=mp4_pad, interpolate=mp4_interpolate)

@@ -22,6 +22,7 @@ try:
     errors.log.debug(f'Load IPEX=={ipex.__version__}')
 except Exception:
     pass
+
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 warnings.filterwarnings(action="ignore", category=UserWarning, module="torchvision")
 import torchvision # pylint: disable=W0611,C0411
@@ -36,14 +37,29 @@ if ".dev" in torch.__version__ or "+git" in torch.__version__:
     torch.__version__ = re.search(r'[\d.]+[\d]', torch.__version__).group(0)
 timer.startup.record("torch")
 
+from modules.onnx_impl import initialize_olive # pylint: disable=ungrouped-imports
+initialize_olive()
+timer.startup.record("olive")
+
 from fastapi import FastAPI # pylint: disable=W0611,C0411
 import gradio # pylint: disable=W0611,C0411
 timer.startup.record("gradio")
 errors.install([gradio])
 
+import pydantic # pylint: disable=W0611,C0411
+timer.startup.record("pydantic")
+
 import diffusers # pylint: disable=W0611,C0411
 timer.startup.record("diffusers")
-errors.log.info(f'Load packages: torch={getattr(torch, "__long_version__", torch.__version__)} diffusers={diffusers.__version__} gradio={gradio.__version__}')
+
+def get_packages():
+    return {
+        "torch": getattr(torch, "__long_version__", torch.__version__),
+        "diffusers": diffusers.__version__,
+        "gradio": gradio.__version__,
+    }
+
+errors.log.info(f'Load packages: {get_packages()}')
 
 try:
     import os
