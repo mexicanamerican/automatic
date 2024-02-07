@@ -18,10 +18,9 @@ from types import MappingProxyType
 from hashlib import sha256
 import functools
 
-from modules import shared, devices
+from modules import shared, devices, sd_models
 
-NNCFNodeName = str
-def get_node_by_name(self, name: NNCFNodeName) ->  nncf.common.graph.NNCFNode:
+def get_node_by_name(self, name: str) ->  nncf.common.graph.NNCFNode:
     node_ids = self._node_name_to_node_id_map.get(name, None)
     if node_ids is None:
         raise RuntimeError("Could not find a node {} in NNCFGraph!".format(name))
@@ -70,19 +69,22 @@ class OpenVINOGraphModule(torch.nn.Module):
         result = openvino_execute(self.gm, *args, executor_parameters=self.executor_parameters, partition_id=self.partition_id, file_name=self.file_name)
         return result
 
-def get_device():
+def get_device_list():
     core = Core()
-    if os.getenv("OPENVINO_TORCH_BACKEND_DEVICE") is not None:
-        device = os.getenv("OPENVINO_TORCH_BACKEND_DEVICE")
-    elif shared.opts.openvino_hetero_gpu:
+    return core.available_devices
+
+def get_device():
+    if hasattr(shared, "opts") and len(shared.opts.openvino_devices) == 1:
+        return shared.opts.openvino_devices[0]
+
+    core = Core()
+    if hasattr(shared, "opts") and len(shared.opts.openvino_devices) > 1:
         device = ""
-        available_devices = core.available_devices
+        available_devices = shared.opts.openvino_devices.copy()
         available_devices.remove("CPU")
-        if shared.opts.openvino_remove_igpu_from_hetero and "GPU.0" in available_devices:
-            available_devices.remove("GPU.0")
-        for gpu in available_devices:
-            device = f"{device},{gpu}"
-        if not shared.opts.openvino_remove_cpu_from_hetero:
+        for hetero_device in available_devices:
+            device = f"{device},{hetero_device}"
+        if "CPU" in shared.opts.openvino_devices:
             device = f"{device},CPU"
         device = f"HETERO:{device[1:]}"
     elif any(openvino_cpu in cpu_module.lower() for cpu_module in shared.cmd_opts.use_cpu for openvino_cpu in ["openvino", "all"]):
@@ -96,9 +98,8 @@ def get_device():
     elif "GPU.0" in core.available_devices:
         device = "GPU.0"
     else:
-        device = "CPU"
-        shared.log.warning("OpenVINO: No compatible GPU detected!")
-    os.environ.setdefault('OPENVINO_TORCH_BACKEND_DEVICE', device)
+        device = core.available_devices[-1]
+        shared.log.warning(f"OpenVINO: No compatible GPU detected! Using {device}")
     return device
 
 def get_openvino_device():
@@ -134,7 +135,7 @@ def cached_model_name(model_hash_str, device, args, cache_root, reversed = False
             else:
                 inputs_str += "_" + str(input_data.type()) + str(input_data.size())[11:-1].replace(" ", "")
     inputs_str = sha256(inputs_str.encode('utf-8')).hexdigest()
-    file_name += inputs_str
+    file_name += "_" + inputs_str
 
     return file_name
 
@@ -177,11 +178,14 @@ def execute_cached(compiled_model, *args):
     result = [torch.from_numpy(res[out]) for out in compiled_model.outputs]
     return result
 
-def openvino_compile(gm: GraphModule, *args, model_hash_str: str = None, file_name=""):
+def openvino_compile(gm: GraphModule, *example_inputs, model_hash_str: str = None, file_name=""):
     core = Core()
 
     device = get_device()
     cache_root = shared.opts.openvino_cache_path
+    global dont_use_4bit_nncf
+    global dont_use_nncf
+    global dont_use_quant
 
     if file_name is not None and os.path.isfile(file_name + ".xml") and os.path.isfile(file_name + ".bin"):
         om = core.read_model(file_name + ".xml")
@@ -191,7 +195,7 @@ def openvino_compile(gm: GraphModule, *args, model_hash_str: str = None, file_na
 
         input_shapes = []
         input_types = []
-        for input_data in args:
+        for input_data in example_inputs:
             if isinstance(input_data, torch.SymInt):
                 input_types.append(torch.SymInt)
                 input_shapes.append(1)
@@ -209,38 +213,10 @@ def openvino_compile(gm: GraphModule, *args, model_hash_str: str = None, file_na
             serialize(om, file_name + ".xml", file_name + ".bin")
             if (shared.compiled_model_state.cn_model != []):
                 f = open(file_name + ".txt", "w")
-                for input_data in args:
+                for input_data in example_inputs:
                     f.write(str(input_data.size()))
                     f.write("\n")
                 f.close()
-
-    dtype_mapping = {
-        torch.float32: Type.f32,
-        torch.float64: Type.f64,
-        torch.float16: Type.f16,
-        torch.int64: Type.i64,
-        torch.int32: Type.i32,
-        torch.uint8: Type.u8,
-        torch.int8: Type.i8,
-        torch.bool: Type.boolean
-    }
-
-    for idx, input_data in enumerate(args):
-        om.inputs[idx].get_node().set_element_type(dtype_mapping[input_data.dtype])
-        om.inputs[idx].get_node().set_partial_shape(PartialShape(list(input_data.shape)))
-    om.validate_nodes_and_infer_types()
-    if shared.opts.nncf_compress_weights:
-        om = nncf.compress_weights(om)
-
-    if model_hash_str is not None:
-        core.set_property({'CACHE_DIR': cache_root + '/blob'})
-
-    compiled_model = core.compile_model(om, device)
-    return compiled_model
-
-def openvino_compile_cached_model(cached_model_path, *example_inputs):
-    core = Core()
-    om = core.read_model(cached_model_path + ".xml")
 
     dtype_mapping = {
         torch.float32: Type.f32,
@@ -257,13 +233,83 @@ def openvino_compile_cached_model(cached_model_path, *example_inputs):
         om.inputs[idx].get_node().set_element_type(dtype_mapping[input_data.dtype])
         om.inputs[idx].get_node().set_partial_shape(PartialShape(list(input_data.shape)))
     om.validate_nodes_and_infer_types()
-    if shared.opts.nncf_compress_weights:
-        om = nncf.compress_weights(om)
+
+    if shared.opts.nncf_quantize and not dont_use_quant:
+        new_inputs = []
+        for idx, _ in enumerate(example_inputs):
+            new_inputs.append(example_inputs[idx].detach().cpu().numpy())
+        new_inputs = [new_inputs]
+        if shared.opts.nncf_quant_mode == "INT8":
+            nncf.quantize(om, nncf.Dataset(new_inputs))
+        else:
+            nncf.quantize(om, nncf.Dataset(new_inputs), mode=getattr(nncf.QuantizationMode, shared.opts.nncf_quant_mode),
+                advanced_parameters=nncf.quantization.advanced_parameters.AdvancedQuantizationParameters(
+                overflow_fix=nncf.quantization.advanced_parameters.OverflowFix.DISABLE, backend_params=None))
+
+    if shared.opts.nncf_compress_weights and not dont_use_nncf:
+        if dont_use_4bit_nncf or shared.opts.nncf_compress_weights_mode == "INT8":
+            om = nncf.compress_weights(om)
+        else:
+            om = nncf.compress_weights(om, mode=getattr(nncf.CompressWeightsMode, shared.opts.nncf_compress_weights_mode), group_size=8, ratio=shared.opts.nncf_compress_weights_raito)
+
+
+    if model_hash_str is not None:
+        core.set_property({'CACHE_DIR': cache_root + '/blob'})
+    dont_use_nncf = False
+    dont_use_quant = False
+    dont_use_4bit_nncf = False
+
+    compiled_model = core.compile_model(om, device)
+    return compiled_model
+
+def openvino_compile_cached_model(cached_model_path, *example_inputs):
+    core = Core()
+    om = core.read_model(cached_model_path + ".xml")
+
+    global dont_use_4bit_nncf
+    global dont_use_nncf
+    global dont_use_quant
+
+    dtype_mapping = {
+        torch.float32: Type.f32,
+        torch.float64: Type.f64,
+        torch.float16: Type.f16,
+        torch.int64: Type.i64,
+        torch.int32: Type.i32,
+        torch.uint8: Type.u8,
+        torch.int8: Type.i8,
+        torch.bool: Type.boolean
+    }
+
+    for idx, input_data in enumerate(example_inputs):
+        om.inputs[idx].get_node().set_element_type(dtype_mapping[input_data.dtype])
+        om.inputs[idx].get_node().set_partial_shape(PartialShape(list(input_data.shape)))
+    om.validate_nodes_and_infer_types()
+
+    if shared.opts.nncf_quantize and not dont_use_quant:
+        new_inputs = []
+        for idx, _ in enumerate(example_inputs):
+            new_inputs.append(example_inputs[idx].detach().cpu().numpy())
+        new_inputs = [new_inputs]
+        if shared.opts.nncf_quant_mode == "INT8":
+            nncf.quantize(om, nncf.Dataset(new_inputs))
+        else:
+            nncf.quantize(om, nncf.Dataset(new_inputs), mode=getattr(nncf.QuantizationMode, shared.opts.nncf_quant_mode),
+                advanced_parameters=nncf.quantization.advanced_parameters.AdvancedQuantizationParameters(
+                overflow_fix=nncf.quantization.advanced_parameters.OverflowFix.DISABLE, backend_params=None))
+
+    if shared.opts.nncf_compress_weights and not dont_use_nncf:
+        if dont_use_4bit_nncf or shared.opts.nncf_compress_weights_mode == "INT8":
+            om = nncf.compress_weights(om)
+        else:
+            om = nncf.compress_weights(om, mode=getattr(nncf.CompressWeightsMode, shared.opts.nncf_compress_weights_mode), group_size=8, ratio=shared.opts.nncf_compress_weights_raito)
 
     core.set_property({'CACHE_DIR': shared.opts.openvino_cache_path + '/blob'})
+    dont_use_nncf = False
+    dont_use_quant = False
+    dont_use_4bit_nncf = False
 
     compiled_model = core.compile_model(om, get_device())
-
     return compiled_model
 
 def openvino_execute(gm: GraphModule, *args, executor_parameters=None, partition_id, file_name=""):
@@ -335,27 +381,68 @@ def partition_graph(gm: GraphModule, use_python_fusion_cache: bool, model_hash_s
 
     return gm
 
+def generate_subgraph_str(tensor):
+    if hasattr(tensor, "weight"):
+        shared.compiled_model_state.model_hash_str = shared.compiled_model_state.model_hash_str + sha256(str(tensor.weight).encode('utf-8')).hexdigest()
+    return tensor
+
+def get_subgraph_type(tensor):
+    global subgraph_type
+    subgraph_type.append(type(tensor))
+    return tensor
+
 @register_backend
 @fake_tensor_unsupported
 def openvino_fx(subgraph, example_inputs):
+    global dont_use_4bit_nncf
+    global dont_use_nncf
+    global dont_use_quant
+    global subgraph_type
+
+    dont_use_4bit_nncf = False
+    dont_use_nncf = False
+    dont_use_quant = False
+    dont_use_faketensors = False
     executor_parameters = None
     inputs_reversed = False
     maybe_fs_cached_name = None
+
+    subgraph_type = []
+    subgraph.apply(get_subgraph_type)
+
+    # SD 1.5 / SDXL VAE
+    if (subgraph_type[0] is torch.nn.modules.conv.Conv2d and
+        subgraph_type[1] is torch.nn.modules.conv.Conv2d and
+        subgraph_type[2] is torch.nn.modules.normalization.GroupNorm and
+        subgraph_type[3] is torch.nn.modules.activation.SiLU):
+
+        dont_use_4bit_nncf = True
+        dont_use_nncf = bool("VAE" not in shared.opts.nncf_compress_weights)
+        dont_use_quant = bool("VAE" not in shared.opts.nncf_quantize)
+
+    # SD 1.5 / SDXL Text Encoder
+    elif (subgraph_type[0] is torch.nn.modules.sparse.Embedding and
+        subgraph_type[1] is torch.nn.modules.sparse.Embedding and
+        subgraph_type[2] is torch.nn.modules.normalization.LayerNorm and
+        subgraph_type[3] is torch.nn.modules.linear.Linear):
+
+        dont_use_faketensors = True
+        dont_use_nncf = bool("Text Encoder" not in shared.opts.nncf_compress_weights)
+        dont_use_quant = bool("Text Encoder" not in shared.opts.nncf_quantize)
+
     if not shared.opts.openvino_disable_model_caching:
         os.environ.setdefault('OPENVINO_TORCH_MODEL_CACHING', "1")
+
         # Create a hash to be used for caching
-        model_hash_str = sha256(subgraph.code.encode('utf-8')).hexdigest()
-        if (shared.compiled_model_state.cn_model != [] and shared.compiled_model_state.partition_id == 0):
-            model_hash_str = model_hash_str + str(shared.compiled_model_state.cn_model)
+        subgraph.apply(generate_subgraph_str)
+        shared.compiled_model_state.model_hash_str = shared.compiled_model_state.model_hash_str + sha256(subgraph.code.encode('utf-8')).hexdigest()
+        shared.compiled_model_state.model_hash_str = sha256(shared.compiled_model_state.model_hash_str.encode('utf-8')).hexdigest()
 
-        if (shared.compiled_model_state.lora_model != []):
-            model_hash_str = model_hash_str + str(shared.compiled_model_state.lora_model)
-
-        executor_parameters = {"model_hash_str": model_hash_str}
+        executor_parameters = {"model_hash_str": shared.compiled_model_state.model_hash_str}
         # Check if the model was fully supported and already cached
         example_inputs.reverse()
         inputs_reversed = True
-        maybe_fs_cached_name = cached_model_name(model_hash_str + "_fs", get_device(), example_inputs, shared.opts.openvino_cache_path)
+        maybe_fs_cached_name = cached_model_name(shared.compiled_model_state.model_hash_str + "_fs", get_device(), example_inputs, shared.opts.openvino_cache_path)
 
         if os.path.isfile(maybe_fs_cached_name + ".xml") and os.path.isfile(maybe_fs_cached_name + ".bin"):
             example_inputs_reordered = []
@@ -369,9 +456,12 @@ def openvino_fx(subgraph, example_inputs):
                                 example_inputs_reordered.append(example_inputs[idx1])
                 example_inputs = example_inputs_reordered
 
-            # Deleting unused subgraphs doesn't do anything, so we cast it down to fp8
-            subgraph = subgraph.to(dtype=torch.float8_e4m3fn)
-            devices.torch_gc(force=True)
+            if dont_use_faketensors:
+                pass
+            else:
+                # Delete unused subgraphs
+                subgraph = subgraph.apply(sd_models.convert_to_faketensors)
+                devices.torch_gc(force=True)
 
             # Model is fully supported and already cached. Run the cached OV model directly.
             compiled_model = openvino_compile_cached_model(maybe_fs_cached_name, *example_inputs)

@@ -26,16 +26,15 @@ from diffusers.models.attention_processor import USE_PEFT_BACKEND, AttentionProc
 from diffusers.models.autoencoders import AutoencoderKL
 from diffusers.models.lora import LoRACompatibleConv
 from diffusers.models.modeling_utils import ModelMixin
-from diffusers.models.unet_2d_blocks import (
-    CrossAttnDownBlock2D,
-    CrossAttnUpBlock2D,
-    DownBlock2D,
-    Downsample2D,
-    ResnetBlock2D,
-    Transformer2DModel,
-    UpBlock2D,
-    Upsample2D,
-)
+try:
+    from diffusers.models.unet_2d_blocks import CrossAttnDownBlock2D, CrossAttnUpBlock2D, DownBlock2D, Downsample2D, ResnetBlock2D, Transformer2DModel, UpBlock2D, Upsample2D
+except Exception:
+    pass
+try:
+    from diffusers.models.unets.unet_2d_blocks import CrossAttnDownBlock2D, CrossAttnUpBlock2D, DownBlock2D, Downsample2D, ResnetBlock2D, Transformer2DModel, UpBlock2D, Upsample2D
+except Exception:
+    pass
+
 from diffusers.models.unet_2d_condition import UNet2DConditionModel
 from diffusers.utils import BaseOutput, logging
 
@@ -227,11 +226,11 @@ class ControlNetXSModel(ModelMixin, ConfigMixin):
         self,
         conditioning_channels: int = 3,
         conditioning_embedding_out_channels: Tuple[int] = (16, 32, 96, 256),
-        controlnet_conditioning_channel_order: str = "rgb",
+        controlnet_conditioning_channel_order: str = "rgb", # pylint: disable=unused-argument
         time_embedding_input_dim: int = 320,
         time_embedding_dim: int = 1280,
-        time_embedding_mix: float = 1.0,
-        learn_embedding: bool = False,
+        time_embedding_mix: float = 1.0, # pylint: disable=unused-argument
+        learn_embedding: bool = False, # pylint: disable=unused-argument
         base_model_channel_sizes: Dict[str, List[Tuple[int]]] = {
             "down": [
                 (4, 320),
@@ -406,10 +405,8 @@ class ControlNetXSModel(ModelMixin, ConfigMixin):
         # Check input
         fixed_size = block_out_channels is not None
         relative_size = size_ratio is not None
-        if not (fixed_size ^ relative_size):
-            raise ValueError(
-                "Pass exactly one of `block_out_channels` (for absolute sizing) or `control_model_ratio` (for relative sizing)."
-            )
+        if not fixed_size ^ relative_size:
+            raise ValueError("Pass exactly one of `block_out_channels` (for absolute sizing) or `control_model_ratio` (for relative sizing).")
 
         # Create model
         if block_out_channels is None:
@@ -594,7 +591,7 @@ class ControlNetXSModel(ModelMixin, ConfigMixin):
                 tuple is returned where the first element is the sample tensor.
         """
         # check channel order
-        channel_order = self.config.controlnet_conditioning_channel_order
+        channel_order = self.config.controlnet_conditioning_channel_order # pylint: disable=no-member
 
         if channel_order == "rgb":
             # in rgb order by default
@@ -616,7 +613,6 @@ class ControlNetXSModel(ModelMixin, ConfigMixin):
         # 1. time
         timesteps = timestep
         if not torch.is_tensor(timesteps):
-            # TODO: this requires sync between CPU and GPU. So try to pass timesteps as tensors if you can
             # This would be a good case for the `match` statement (Python 3.10+)
             is_mps = sample.device.type == "mps"
             if isinstance(timestep, float):
@@ -637,10 +633,10 @@ class ControlNetXSModel(ModelMixin, ConfigMixin):
         # there might be better ways to encapsulate this.
         t_emb = t_emb.to(dtype=sample.dtype)
 
-        if self.config.learn_embedding:
+        if self.config.learn_embedding: # pylint: disable=no-member
             ctrl_temb = self.control_model.time_embedding(t_emb, timestep_cond)
             base_temb = base_model.time_embedding(t_emb, timestep_cond)
-            interpolation_param = self.config.time_embedding_mix**0.3
+            interpolation_param = self.config.time_embedding_mix**0.3 # pylint: disable=no-member
 
             temb = ctrl_temb * interpolation_param + base_temb * (1 - interpolation_param)
         else:
@@ -696,7 +692,7 @@ class ControlNetXSModel(ModelMixin, ConfigMixin):
 
         h_ctrl = h_base = sample
         hs_base, hs_ctrl = [], []
-        it_down_convs_in, it_down_convs_out, it_dec_convs_in, it_up_convs_out = map(
+        it_down_convs_in, it_down_convs_out, _it_dec_convs_in, it_up_convs_out = map(
             iter, (self.down_zero_convs_in, self.down_zero_convs_out, self.up_zero_convs_in, self.up_zero_convs_out)
         )
         scales = iter(scale_list)
@@ -735,7 +731,7 @@ class ControlNetXSModel(ModelMixin, ConfigMixin):
         h_base = h_base + self.middle_block_out(h_ctrl) * next(scales)  # D - add ctrl -> base
 
         # 3 - up
-        for i, m_base in enumerate(base_up_subblocks):
+        for _i, m_base in enumerate(base_up_subblocks):
             h_base = h_base + next(it_up_convs_out)(hs_ctrl.pop()) * next(scales)  # add info from ctrl encoder
             h_base = torch.cat([h_base, hs_base.pop()], dim=1)  # concat info from base encoder+ctrl encoder
             h_base = m_base(h_base, temb, cemb, attention_mask, cross_attention_kwargs)
@@ -758,7 +754,7 @@ class ControlNetXSModel(ModelMixin, ConfigMixin):
 
     @torch.no_grad()
     def _check_if_vae_compatible(self, vae: AutoencoderKL):
-        condition_downscale_factor = 2 ** (len(self.config.conditioning_embedding_out_channels) - 1)
+        condition_downscale_factor = 2 ** (len(self.config.conditioning_embedding_out_channels) - 1) # pylint: disable=no-member
         vae_downscale_factor = 2 ** (len(vae.config.block_out_channels) - 1)
         compatible = condition_downscale_factor == vae_downscale_factor
         return compatible, condition_downscale_factor, vae_downscale_factor

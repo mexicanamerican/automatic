@@ -4,56 +4,15 @@ import shutil
 import importlib
 from typing import Dict
 from urllib.parse import urlparse
-import PIL.Image as Image
+from PIL import Image
 import rich.progress as p
-from modules import shared, errors
+from modules import shared, errors, files_cache
 from modules.upscaler import Upscaler, UpscalerLanczos, UpscalerNearest, UpscalerNone
 from modules.paths import script_path, models_path
 
-diffuser_repos = []
 
-def walk(top, onerror:callable=None):
-    # A near-exact copy of `os.path.walk()`, trimmed slightly. Probably not nessesary for most people's collections, but makes a difference on really large datasets.
-    nondirs = []
-    walk_dirs = []
-    try:
-        scandir_it = os.scandir(top)
-    except OSError as error:
-        if onerror is not None:
-            onerror(error, top)
-        return
-    with scandir_it:
-        while True:
-            try:
-                try:
-                    entry = next(scandir_it)
-                except StopIteration:
-                    break
-            except OSError as error:
-                if onerror is not None:
-                    onerror(error, top)
-                return
-            try:
-                is_dir = entry.is_dir()
-            except OSError:
-                is_dir = False
-            if not is_dir:
-                nondirs.append(entry.name)
-            else:
-                try:
-                    if entry.is_symlink() and not os.path.exists(entry.path):
-                        raise NotADirectoryError('Broken Symlink')
-                    walk_dirs.append(entry.path)
-                except OSError as error:
-                    if onerror is not None:
-                        onerror(error, entry.path)
-    # Recurse into sub-directories
-    for new_path in walk_dirs:
-        if os.path.basename(new_path).startswith('models--'):
-            continue
-        yield from walk(new_path, onerror)
-    # Yield after recursion if going bottom up
-    yield top, nondirs
+diffuser_repos = []
+debug = shared.log.trace if os.environ.get('SD_DOWNLOAD_DEBUG', None) is not None else lambda *args, **kwargs: None
 
 
 def download_civit_meta(model_path: str, model_id):
@@ -121,11 +80,14 @@ def download_civit_model_thread(model_name, model_url, model_path, model_type, p
     if model_type == 'LoRA':
         model_file = os.path.join(shared.opts.lora_dir, model_path, model_name)
         temp_file = os.path.join(shared.opts.lora_dir, model_path, temp_file)
+    elif model_type == 'Embedding':
+        model_file = os.path.join(shared.opts.embeddings_dir, model_path, model_name)
+        temp_file = os.path.join(shared.opts.embeddings_dir, model_path, temp_file)
     else:
         model_file = os.path.join(shared.opts.ckpt_dir, model_path, model_name)
         temp_file = os.path.join(shared.opts.ckpt_dir, model_path, temp_file)
 
-    res = f'CivitAI download: name={model_name} url={model_url} path={model_path} temp={temp_file}'
+    res = f'CivitAI download: name="{model_name}" url="{model_url}" path="{model_path}" temp="{temp_file}"'
     if os.path.isfile(model_file):
         res += ' already exists'
         shared.log.warning(res)
@@ -142,7 +104,7 @@ def download_civit_model_thread(model_name, model_url, model_path, model_type, p
 
     r = shared.req(model_url, headers=headers, stream=True)
     total_size = int(r.headers.get('content-length', 0))
-    res += f' size={round((starting_pos + total_size)/1024/1024)}Mb'
+    res += f' size={round((starting_pos + total_size)/1024/1024, 2)}Mb'
     shared.log.info(res)
     shared.state.begin('civitai')
     block_size = 16384 # 16KB blocks
@@ -158,7 +120,7 @@ def download_civit_model_thread(model_name, model_url, model_path, model_type, p
                     written = written + len(data)
                     f.write(data)
                     download_pbar.update(task, description="Download", completed=written)
-            if written < 1024 * 1024: # min threshold
+            if written < 1024: # min threshold
                 os.remove(temp_file)
                 raise ValueError(f'removed invalid download: bytes={written}')
             if preview is not None:
@@ -208,31 +170,35 @@ def download_diffusers_model(hub_id: str, cache_dir: str = None, download_config
         download_config["mirror"] = mirror
     if custom_pipeline is not None and len(custom_pipeline) > 0:
         download_config["custom_pipeline"] = custom_pipeline
-    shared.log.debug(f"Diffusers downloading: {hub_id} args={download_config}")
+    shared.log.debug(f'Diffusers downloading: id="{hub_id}" args={download_config}')
+    token = token or shared.opts.huggingface_token
     if token is not None and len(token) > 2:
         shared.log.debug(f"Diffusers authentication: {token}")
         hf.login(token)
     pipeline_dir = None
 
-    ok = True
+    ok = False
     err = None
-    try:
-        pipeline_dir = DiffusionPipeline.download(hub_id, **download_config)
-    except Exception as e:
-        err = e
-        ok = False
-        # shared.log.warning(f"Diffusers download error: {hub_id} {e}")
+    if not ok:
+        try:
+            pipeline_dir = DiffusionPipeline.download(hub_id, **download_config)
+            ok = True
+        except Exception as e:
+            err = e
+            ok = False
+            debug(f"Diffusers download error: {hub_id} {e}")
     if not ok and 'Repository Not Found' not in str(err):
         try:
-            download_config.pop('load_connected_pipeline')
-            download_config.pop('variant')
+            download_config.pop('load_connected_pipeline', None)
+            download_config.pop('variant', None)
             pipeline_dir = hf.snapshot_download(hub_id, **download_config)
-        except Exception:
-            # shared.log.warning(f"Diffusers download error: {hub_id} {e}")
-            pass
-
+        except Exception as e:
+            debug(f"Diffusers download error: {hub_id} {e}")
+            if 'gated' in str(e):
+                shared.log.error(f'Diffusers download error: id="{hub_id}" model access requires login')
+                return None
     if pipeline_dir is None:
-        shared.log.error(f"Diffusers download error: {hub_id} {err}")
+        shared.log.error(f'Diffusers download error: id="{hub_id}" {err}')
         return None
     try:
         model_info_dict = hf.model_info(hub_id).cardData if pipeline_dir is not None else None
@@ -250,6 +216,9 @@ def download_diffusers_model(hub_id: str, cache_dir: str = None, download_config
 
 
 def load_diffusers_models(model_path: str, command_path: str = None, clear=True):
+    excluded_models = [
+        'PhotoMaker', 'inswapper_128', 'IP-Adapter'
+    ]
     t0 = time.time()
     places = []
     places.append(model_path)
@@ -273,6 +242,8 @@ def load_diffusers_models(model_path: str, command_path: str = None, clear=True)
             """
             for folder in os.listdir(place):
                 try:
+                    if any([x in folder for x in excluded_models]): # noqa:C419
+                        continue
                     if "--" not in folder:
                         continue
                     if folder.endswith("-prior"):
@@ -305,8 +276,6 @@ def find_diffuser(name: str):
     repo = [r for r in diffuser_repos if name == r['name'] or name == r['friendly'] or name == r['path']]
     if len(repo) > 0:
         return repo['name']
-    if shared.cmd_opts.no_download:
-        return None
     import huggingface_hub as hf
     hf_api = hf.HfApi()
     hf_filter = hf.ModelFilter(
@@ -327,7 +296,20 @@ def load_reference(name: str):
         shared.log.debug(f'Reference model: {found[0]}')
         return True
     shared.log.debug(f'Reference download: {name}')
-    model_dir = download_diffusers_model(name, shared.opts.diffusers_dir)
+    reference_models = shared.readfile(os.path.join('html', 'reference.json'), silent=False)
+    model_opts = {}
+    for v in reference_models.values():
+        if v.get('path', '') == name:
+            model_opts = v
+            break
+    model_dir = download_diffusers_model(
+        hub_id=name,
+        cache_dir=shared.opts.diffusers_dir,
+        variant=model_opts.get('variant', None),
+        revision=model_opts.get('revision', None),
+        mirror=model_opts.get('mirror', None),
+        custom_pipeline=model_opts.get('custom_pipeline', None)
+    )
     if model_dir is None:
         shared.log.debug(f'Reference download failed: {name}')
         return False
@@ -357,93 +339,6 @@ def load_civitai(model: str, url: str):
         else:
             shared.log.debug(f'Reference model: {name} not found')
             return None
-
-
-cache_folders = {}
-cache_last = 0
-cache_time = 1
-
-
-def directory_updated(path:str, *, recursive:bool=True) -> bool: # pylint: disable=redefined-builtin
-    try:
-        path = os.path.abspath(path)
-        if path not in cache_folders:
-            return True
-        if cache_last > (time.time() - cache_time):
-            return False
-        if not (os.path.exists(path) and os.path.isdir(path) and os.path.getmtime(path) == cache_folders[path][0]):
-            return True
-        if recursive:
-            for folder in cache_folders:
-                if folder.startswith(path) and folder != path and not (os.path.exists(folder) and os.path.isdir(folder) and os.path.getmtime(folder) == cache_folders[folder][0]):
-                    return True
-    except Exception as e:
-        shared.log.error(f"Filesystem Error: {e.__class__.__name__}({e})")
-        return True
-    return False
-
-
-def directory_list(path:str, *, recursive:bool=True) -> dict[str,tuple[float,list[str]]]: # pylint: disable=redefined-builtin
-    path = os.path.abspath(path)
-    res = {}
-    if not os.path.exists(path):
-        return res
-    if directory_updated(path, recursive=recursive):
-        for folder in list(cache_folders):
-            del cache_folders[folder]
-            if os.path.exists(folder) or os.path.isdir(folder):
-                continue
-        for folder, files in walk(path, lambda e, path: shared.log.debug(f"FS walk error: {e} {path}")):
-            if not os.path.exists(folder):
-                continue
-            try:
-                mtime = os.path.getmtime(folder)
-                if folder not in cache_folders or mtime != cache_folders[folder][0]:
-                    cache_folders[folder] = (mtime, [os.path.join(folder, fn) for fn in files])
-            except Exception as e:
-                shared.log.error(f"Filesystem Error: {e.__class__.__name__}({e})")
-                del cache_folders[folder]
-    for folder in cache_folders:
-        if folder == path or (recursive and folder.startswith(path)):
-            res[folder] = cache_folders[folder]
-            if not recursive:
-                break
-    return res
-
-
-def directory_mtime(path:str, *, recursive:bool=True) -> float: # pylint: disable=redefined-builtin
-    return float(max(0, *[mtime for mtime, _ in directory_list(path, recursive=recursive).values()]))
-
-
-def directories_file_paths(directories:dict) -> list[str]:
-    return sum([dat[1] for dat in directories.values()],[])
-
-
-def directories_unique(directories:list[str], *, recursive:bool=True) -> list[str]:
-    '''Ensure no empty, or duplicates'''
-    directories = { os.path.abspath(path): True for path in directories if path }.keys()
-    if recursive:
-        '''If we are going recursive, then directories that are children of other directories are redundant'''
-        directories = [path for path in directories if not any(d != path and path.startswith(os.path.join(d,'')) for d in directories)]
-    return directories
-
-
-def unique_paths(paths:list[str]) -> list[str]:
-    return { fp: True for fp in paths }.keys()
-
-
-def directory_files(*directories:list[str], recursive:bool=True) -> list[str]:
-    return unique_paths(sum([[*directories_file_paths(directory_list(d, recursive=recursive))] for d in directories_unique(directories, recursive=recursive)],[]))
-
-
-def extension_filter(ext_filter=None, ext_blacklist=None):
-    if ext_filter:
-        ext_filter = [*map(str.upper, ext_filter)]
-    if ext_blacklist:
-        ext_blacklist = [*map(str.upper, ext_blacklist)]
-    def filter(fp:str): # pylint: disable=redefined-builtin
-        return (not ext_filter or any(fp.upper().endswith(ew) for ew in ext_filter)) and (not ext_blacklist or not any(fp.upper().endswith(ew) for ew in ext_blacklist))
-    return filter
 
 
 def download_url_to_file(url: str, dst: str):
@@ -514,10 +409,10 @@ def load_models(model_path: str, model_url: str = None, command_path: str = None
     @param ext_filter: An optional list of filename extensions to filter by
     @return: A list of paths containing the desired model(s)
     """
-    places = directories_unique([model_path, command_path])
+    places = list(set([model_path, command_path])) # noqa:C405
     output = []
     try:
-        output:list = [*filter(extension_filter(ext_filter, ext_blacklist), directory_files(*places))]
+        output:list = [*files_cache.list_files(*places, ext_filter=ext_filter, ext_blacklist=ext_blacklist)]
         if model_url is not None and len(output) == 0:
             if download_name is not None:
                 dl = load_file_from_url(model_url, model_dir=places[0], progress=True, file_name=download_name)
@@ -525,7 +420,7 @@ def load_models(model_path: str, model_url: str = None, command_path: str = None
             else:
                 output.append(model_url)
     except Exception as e:
-        shared.log.error(f"Error listing models: {places} {e}")
+        errors.display(e,f"Error listing models: {files_cache.unique_directories(places)}")
     return output
 
 

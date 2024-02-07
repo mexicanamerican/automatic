@@ -14,7 +14,7 @@ from diffusers.schedulers import KarrasDiffusionSchedulers
 from diffusers.utils import is_accelerate_available, is_accelerate_version
 from diffusers.utils.torch_utils import randn_tensor
 from diffusers.pipelines.pipeline_utils import DiffusionPipeline, ImagePipelineOutput
-from modules import scripts, processing, shared, sd_models
+from modules import scripts, processing, shared, sd_models, devices
 
 
 ### Class definition
@@ -781,7 +781,7 @@ class DemoFusionSDXLPipeline(DiffusionPipeline, FromSingleFileMixin, LoraLoaderM
             latents,
         )
 
-        # 6. Prepare extra step kwargs. TODO: Logic should ideally just be moved out of the pipeline
+        # 6. Prepare extra step kwargs. Logic should ideally just be moved out of the pipeline
         extra_step_kwargs = self.prepare_extra_step_kwargs(generator, eta)
 
         # 7. Prepare added time ids & embeddings
@@ -1268,8 +1268,7 @@ class Script(scripts.Script):
             force_zeros_for_empty_prompt=shared.opts.diffusers_force_zeros,
         )
         shared.sd_model = new_pipe
-        if not ((shared.opts.diffusers_model_cpu_offload or shared.cmd_opts.medvram) or (shared.opts.diffusers_seq_cpu_offload or shared.cmd_opts.lowvram)):
-            shared.sd_model.to(shared.device)
+        sd_models.move_model(shared.sd_model, devices.device) # move pipeline to device
         sd_models.set_diffuser_options(shared.sd_model, vae=None, op='model')
         shared.log.debug(f'DemoFusion create: pipeline={shared.sd_model.__class__.__name__}')
         processed = processing.process_images(p)
