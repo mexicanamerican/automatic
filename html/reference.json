@@ -44,18 +44,22 @@
   },
   "StabilityAI SD-XL 1.0 Base": {
     "path": "stabilityai/stable-diffusion-xl-base-1.0",
+    "variant": "fp16",
     "desc": "Stable Diffusion XL (SDXL) is the latest AI image generation model that is tailored towards more photorealistic outputs with more detailed imagery and composition compared to previous SD models, including SD 2.1. It can make realistic faces, legible text within the images, and better image composition, all while using shorter and simpler prompts at a greatly increased base resolution of 1024x1024. Just like its predecessors, SDXL has the ability to generate image variations using image-to-image prompting, inpainting (reimagining of the selected parts of an image), and outpainting (creating new parts that lie outside the image borders).",
     "preview": "stabilityai--stable-diffusion-xl-base-1.0.jpg"
   },
   "StabilityAI SD 2.1 Turbo": {
-    "path": "stabilityai/sd-turbo",
-    "alt": "sd_turbo.safetensors@https://huggingface.co/stabilityai/sd-turbo/resolve/main/sd_turbo.safetensors?download=true",
+    "_path": "stabilityai/sd-turbo",
+    "path": "sd_turbo.safetensors@https://huggingface.co/stabilityai/sd-turbo/resolve/main/sd_turbo.safetensors?download=true",
+    "variant": "fp16",
     "desc": "SD-Turbo is a distilled version of Stable Diffusion 2.1, trained for real-time synthesis. SD-Turbo is based on a novel training method called Adversarial Diffusion Distillation (ADD) (see the technical report), which allows sampling large-scale foundational image diffusion models in 1 to 4 steps at high image quality. This approach uses score distillation to leverage large-scale off-the-shelf image diffusion models as a teacher signal and combines this with an adversarial loss to ensure high image fidelity even in the low-step regime of one or two sampling steps.",
     "preview": "stabilityai--sd-turbo.jpg",
     "original": true
   },
   "StabilityAI SD-XL Turbo": {
-    "path": "stabilityai/sdxl-turbo",
+    "_path": "stabilityai/sdxl-turbo",
+    "path": "sdxl_turbo.safetensors@https://huggingface.co/stabilityai/sdxl-turbo/resolve/main/sd_xl_turbo_1.0_fp16.safetensors?download=true",
+    "variant": "fp16",
     "desc": "SDXL-Turbo is a distilled version of SDXL 1.0, trained for real-time synthesis. SDXL-Turbo is based on a novel training method called Adversarial Diffusion Distillation (ADD) (see the technical report), which allows sampling large-scale foundational image diffusion models in 1 to 4 steps at high image quality. This approach uses score distillation to leverage large-scale off-the-shelf image diffusion models as a teacher signal and combines this with an adversarial loss to ensure high image fidelity even in the low-step regime of one or two sampling steps.",
     "preview": "stabilityai--sdxl-turbo.jpg"
   },
@@ -84,6 +88,21 @@
     "desc": "Segmind's Tiny-SD offers a compact, efficient, and distilled version of Realistic Vision 4.0 and is up to 80% faster than SD1.5",
     "preview": "segmind--tiny-sd.jpg"
   },
+  "Segmind SegMoE SD 4x2": {
+    "path": "segmind/SegMoE-SD-4x2-v0",
+    "desc": "SegMoE-SD-4x2-v0 is an untrained Segmind Mixture of Diffusion Experts Model generated using segmoe from 4 Expert SD1.5 models. SegMoE is a powerful framework for dynamically combining Stable Diffusion Models into a Mixture of Experts within minutes without training",
+    "preview": "segmind--SegMoE-SD-4x2-v0.jpg"
+  },
+  "Segmind SegMoE XL 2x1": {
+    "path": "segmind/SegMoE-2x1-v0",
+    "desc": "SegMoE-2x1-v0 is an untrained Segmind Mixture of Diffusion Experts Model generated using segmoe from 2 Expert SDXL models. SegMoE is a powerful framework for dynamically combining Stable Diffusion Models into a Mixture of Experts within minutes without training",
+    "preview": "segmind--SegMoE-2x1-v0.jpg"
+  },
+  "Segmind SegMoE XL 4x2": {
+    "path": "segmind/SegMoE-4x2-v0",
+    "desc": "SegMoE-4x2-v0 is an untrained Segmind Mixture of Diffusion Experts Model generated using segmoe from 4 Expert SDXL models. SegMoE is a powerful framework for dynamically combining Stable Diffusion Models into a Mixture of Experts within minutes without training",
+    "preview": "segmind--SegMoE-4x2-v0.jpg"
+  },
   "LCM SD-1.5 Dreamshaper 7": {
     "path": "SimianLuo/LCM_Dreamshaper_v7",
     "desc": "Latent Consistencey Models enable swift inference with minimal steps on any pre-trained LDMs, including Stable Diffusion. By distilling classifier-free guidance into the model's input, LCM can generate high-quality images in very short inference time. LCM can generate quality images in as few as 3-4 steps, making it blazingly fast.",
@@ -97,6 +116,11 @@
   "Pixart-α XL 2 Large 1024": {
     "path": "PixArt-alpha/PixArt-XL-2-1024-MS",
     "desc": "PixArt-α is a Transformer-based T2I diffusion model whose image generation quality is competitive with state-of-the-art image generators (e.g., Imagen, SDXL, and even Midjourney), and the training speed markedly surpasses existing large-scale T2I models. Extensive experiments demonstrate that PIXART-α excels in image quality, artistry, and semantic control. It can directly generate 1024px images from text prompts within a single sampling process.",
+    "preview": "PixArt-alpha--PixArt-XL-2-1024-MS.jpg"
+  },
+  "Pixart-α XL 2 Large LCM": {
+    "path": "PixArt-alpha/PixArt-LCM-XL-2-1024-MS",
+    "desc": "Pixart-α consists of pure transformer blocks for latent diffusion: It can directly generate 1024px images from text prompts within a single sampling process. LCMs is a diffusion distillation method which predict PF-ODE's solution directly in latent space, achieving super fast inference with few steps. Following LCM LoRA, we illustrative of the generation speed we achieve on various computers. Let us stress again how liberating it is to explore image generation so easily with PixArt-LCM.",
     "preview": "PixArt-alpha--PixArt-XL-2-1024-MS.jpg"
   },
   "Warp Wuerstchen": {
@@ -163,5 +187,10 @@
     "path": "salesforce/blipdiffusion",
     "desc": "BLIP-Diffusion, a new subject-driven image generation model that supports multimodal control which consumes inputs of subject images and text prompts. Unlike other subject-driven generation models, BLIP-Diffusion introduces a new multimodal encoder which is pre-trained to provide subject representation.",
     "preview": "salesforce--blipdiffusion.jpg"
+  },
+  "InstaFlow 0.9B": {
+    "path": "XCLiu/instaflow_0_9B_from_sd_1_5",
+    "desc": "InstaFlow is an ultra-fast, one-step image generator that achieves image quality close to Stable Diffusion. This efficiency is made possible through a recent Rectified Flow technique, which trains probability flows with straight trajectories, hence inherently requiring only a single step for fast inference.",
+    "preview": "XCLiu--instaflow_0_9B_from_sd_1_5.jpg"
   }
 }

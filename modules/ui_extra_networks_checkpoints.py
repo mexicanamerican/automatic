@@ -30,7 +30,6 @@ class ExtraNetworksPageCheckpoints(ui_extra_networks.ExtraNetworksPage):
                 "name": name,
                 "title": name,
                 "filename": url,
-                "search_term": self.search_terms_from_path(name),
                 "preview": self.find_preview(os.path.join(reference_dir, preview)),
                 "local_preview": self.find_preview_file(os.path.join(reference_dir, preview)),
                 "onclick": '"' + html.escape(f"""return selectReference({json.dumps(url)})""") + '"',
@@ -53,9 +52,6 @@ class ExtraNetworksPageCheckpoints(ui_extra_networks.ExtraNetworksPage):
                 "title": checkpoint.title,
                 "filename": checkpoint.filename,
                 "hash": checkpoint.shorthash,
-                "search_term": self.search_terms_from_path(checkpoint.title),
-                "preview": self.find_preview(checkpoint.filename),
-                "local_preview": f"{os.path.splitext(checkpoint.filename)[0]}.{shared.opts.samples_format}",
                 "metadata": checkpoint.metadata,
                 "onclick": '"' + html.escape(f"""return selectCheckpoint({json.dumps(name)})""") + '"',
                 "mtime": os.path.getmtime(checkpoint.filename) if exists else 0,
@@ -68,14 +64,20 @@ class ExtraNetworksPageCheckpoints(ui_extra_networks.ExtraNetworksPage):
         return record
 
     def list_items(self):
+        import sys
+        shared.log.debug(f'List items: function={sys._getframe(1).f_code.co_name}') # pylint: disable=protected-access
+        # items = [self.create_item(cp) for cp in list(sd_models.checkpoints_list)] + list(self.list_reference())
+        items = []
         with concurrent.futures.ThreadPoolExecutor(max_workers=shared.max_workers) as executor:
             future_items = {executor.submit(self.create_item, cp): cp for cp in list(sd_models.checkpoints_list.copy())}
             for future in concurrent.futures.as_completed(future_items):
                 item = future.result()
                 if item is not None:
-                    yield item
+                    items.append(item)
         for record in self.list_reference():
-            yield record
+            items.append(record)
+        self.update_all_previews(items)
+        return items
 
     def allowed_directories_for_previews(self):
         if shared.backend == shared.Backend.DIFFUSERS:

@@ -4,7 +4,7 @@ from typing import Union
 import numpy as np
 from PIL import Image
 from diffusers import StableDiffusionPipeline, StableDiffusionXLPipeline
-from modules.shared import log, opts
+from modules.shared import log, opts, listdir
 from modules import errors
 from modules.control.units.lite_model import ControlNetLLLite
 
@@ -31,11 +31,11 @@ cache_dir = 'models/control/lite'
 
 def find_models():
     path = os.path.join(opts.control_dir, 'lite')
-    files = os.listdir(path)
+    files = listdir(path)
     files = [f for f in files if f.endswith('.safetensors')]
     downloaded_models = {}
     for f in files:
-        basename = os.path.splitext(f)[0]
+        basename = os.path.splitext(os.path.relpath(f, path))[0]
         downloaded_models[basename] = os.path.join(path, f)
     all_models.update(downloaded_models)
     return downloaded_models
@@ -74,7 +74,7 @@ class ControlLLLite():
 
     def reset(self):
         if self.model is not None:
-            log.debug(f'Control {what} model unloaded')
+            debug(f'Control {what} model unloaded')
         self.model = None
         self.model_id = None
 
