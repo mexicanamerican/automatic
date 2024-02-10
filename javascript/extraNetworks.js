@@ -61,15 +61,23 @@ function getCardDetails(...args) {
 }
 
 function readCardTags(el, tags) {
+  const replaceOutsideBrackets = (input, target, replacement) => input.split(/(<[^>]*>|\{[^}]*\})/g).map((part, i) => {
+    if (i % 2 === 0) return part.split(target).join(replacement); // Only replace in the parts that are not inside brackets (which are at even indices)
+    return part;
+  }).join('');
+
   const clickTag = (e, tag) => {
     e.preventDefault();
     e.stopPropagation();
     const textarea = activePromptTextarea[getENActiveTab()];
-    if (textarea.value.indexOf(` ${tag}`) !== -1) textarea.value = textarea.value.replace(` ${tag}`, '');
-    else if (textarea.value.indexOf(`${tag} `) !== -1) textarea.value = textarea.value.replace(` ${tag} `, '');
-    else textarea.value += ` ${tag}`;
+    let new_prompt = textarea.value;
+    new_prompt = replaceOutsideBrackets(new_prompt, ` ${tag}`, ''); // try to remove tag
+    new_prompt = replaceOutsideBrackets(new_prompt, `${tag} `, '');
+    if (new_prompt === textarea.value) new_prompt += ` ${tag}`; // if not removed, then append it
+    textarea.value = new_prompt;
     updateInput(textarea);
   };
+
   if (tags.length === 0) return;
   const cardTags = tags.split('|');
   if (!cardTags || cardTags.length === 0) return;
@@ -114,24 +122,72 @@ async function filterExtraNetworksForTab(searchTerm) {
   const pages = allPages.filter((el) => el.id.toLowerCase().includes(pagename.toLowerCase()));
   for (const pg of pages) {
     const cards = Array.from(pg.querySelectorAll('.card') || []);
-    cards.forEach((elem) => {
-      items += 1;
-      if (searchTerm === '') {
+
+    // We will always have as many items as cards
+    items += cards.length;
+
+    // Reset the results to show all cards if the search term is empty
+    if (searchTerm === '') {
+      cards.forEach((elem) => {
         elem.style.display = '';
+      });
+    } else {
+      // Do not account for case or whitespace
+      searchTerm = searchTerm.toLowerCase().trim();
+
+      // If the searchTerm starts with "r#", then we are using regex search
+      if (searchTerm.startsWith('r#')) {
+        searchTerm = searchTerm.substring(2);
+
+        // Insensitive regex search based on the searchTerm
+
+        // The regex can be invalid -> then it will error out of this function, so the timing log will be missing, instead the error will be logged to console
+        const re = new RegExp(searchTerm, 'i');
+
+        cards.forEach((elem) => {
+          // Construct the search text, which is the concatenation of all data elements with a prefix to make it unique
+          // This combined text allows to exclude search terms for example by using negative lookahead
+          if (re.test(`filename: ${elem.dataset.filename}|name: ${elem.dataset.name}|tags: ${elem.dataset.tags}`)) {
+            elem.style.display = '';
+            found += 1;
+          } else {
+            elem.style.display = 'none';
+          }
+        });
       } else {
-        let text = elem.dataset.search.toLowerCase();
-        text = text.toLowerCase().replace('models--', 'Diffusers').replace('\\', '/');
-        if (text.indexOf(searchTerm) === -1) {
-          elem.style.display = 'none';
-        } else {
-          elem.style.display = '';
-          found += 1;
-        }
+        // If we are not using regex search, we still use an extended syntax to allow for searching for multiple keywords, or also excluding keywords
+        // Keywords are separated by |, and keywords that should be excluded are prefixed with -
+        const searchList = searchTerm.split('|').filter((s) => s !== '' && !s.startsWith('-')).map((s) => s.trim());
+        const excludeList = searchTerm.split('|').filter((s) => s !== '' && s.trim().startsWith('-')).map((s) => s.trim().substring(1).trim());
+        // In addition, both the searchList, and exclude List can be separated by &, which means that all keywords in the searchList must be present, and none of the excludeList
+        // So we construct an array of arrays, which we will then use to filter the cards
+        const searchListAll = searchList.map((s) => s.split('&').map((t) => t.trim()));
+        const excludeListAll = excludeList.map((s) => s.split('&').map((t) => t.trim()));
+
+        cards.forEach((elem) => {
+          let text = '';
+          if (elem.dataset.filename) text += `${elem.dataset.filename} `;
+          if (elem.dataset.name) text += `${elem.dataset.name} `;
+          if (elem.dataset.tags) text += `${elem.dataset.tags} `;
+          text = text.toLowerCase().replace('models--', 'diffusers').replaceAll('\\', '/');
+          if (
+            // In searchListAll we have a list of lists, in the sublist, every keyword must be present
+            // In the top level list, at least one sublist must be present
+            // In excludeListAll we have a list of lists, in the sublist, the keywords may not appear together
+            // In the top level list, none of the sublists must be present
+            searchListAll.some((sl) => sl.every((st) => text.includes(st))) && !excludeListAll.some((el) => el.every((et) => text.includes(et)))
+          ) {
+            elem.style.display = '';
+            found += 1;
+          } else {
+            elem.style.display = 'none';
+          }
+        });
       }
-    });
+    }
   }
   const t1 = performance.now();
-  if (found > 0) log(`filterExtraNetworks: text=${searchTerm} items=${items} match=${found} time=${Math.round(1000 * (t1 - t0)) / 1000000}`);
+  if (searchTerm !== '') log(`filterExtraNetworks: text=${searchTerm} items=${items} match=${found} time=${Math.round(1000 * (t1 - t0)) / 1000000}`);
   else log(`filterExtraNetworks: text=all items=${items} time=${Math.round(1000 * (t1 - t0)) / 1000000}`);
 }
 
@@ -180,8 +236,8 @@ function sortExtraNetworks() {
     if (num === 0) return 'sort: no cards';
     cards.sort((a, b) => { // eslint-disable-line no-loop-func
       switch (sortVal) {
-        case 0: return a.dataset.search ? a.dataset.search.localeCompare(b.dataset.search) : 0;
-        case 1: return b.dataset.search ? b.dataset.search.localeCompare(a.dataset.search) : 0;
+        case 0: return a.dataset.name ? a.dataset.name.localeCompare(b.dataset.name) : 0;
+        case 1: return b.dataset.name ? b.dataset.name.localeCompare(a.dataset.name) : 0;
         case 2: return a.dataset.mtime && !isNaN(a.dataset.mtime) ? parseFloat(b.dataset.mtime) - parseFloat(a.dataset.mtime) : 0;
         case 3: return b.dataset.mtime && !isNaN(b.dataset.mtime) ? parseFloat(a.dataset.mtime) - parseFloat(b.dataset.mtime) : 0;
         case 4: return a.dataset.size && !isNaN(a.dataset.size) ? parseFloat(b.dataset.size) - parseFloat(a.dataset.size) : 0;
@@ -214,8 +270,12 @@ function extraNetworksSearchButton(event) {
   const tabname = getENActiveTab();
   const searchTextarea = gradioApp().querySelector(`#${tabname}_extra_search textarea`);
   const button = event.target;
-  const text = button.classList.contains('search-all') ? '' : `${button.textContent.trim()}/`;
-  searchTextarea.value = text;
+
+  if (button.classList.contains('search-all')) {
+    searchTextarea.value = '';
+  } else {
+    searchTextarea.value = `${button.textContent.trim()}/`;
+  }
   updateInput(searchTextarea);
 }
 
@@ -331,10 +391,10 @@ function setupExtraNetworksForTab(tabname) {
   let searchTimer = null;
   txtSearchValue.addEventListener('input', (evt) => {
     if (searchTimer) clearTimeout(searchTimer);
-    searchTimer = setTimeout(() => {
-      filterExtraNetworksForTab(txtSearchValue.value.toLowerCase());
+    searchTimer = setTimeout(async () => {
+      await filterExtraNetworksForTab(txtSearchValue.value.toLowerCase());
       searchTimer = null;
-    }, 150);
+    }, 100);
   });
 
   // card hover
@@ -368,22 +428,25 @@ function setupExtraNetworksForTab(tabname) {
       if (window.opts.extra_networks_card_cover === 'cover') {
         en.style.transition = '';
         en.style.zIndex = 100;
+        en.style.top = '13em';
         en.style.position = 'absolute';
         en.style.right = 'unset';
         en.style.width = 'unset';
         en.style.height = 'unset';
         gradioApp().getElementById(`${tabname}_settings`).parentNode.style.width = 'unset';
       } else if (window.opts.extra_networks_card_cover === 'sidebar') {
-        en.style.transition = 'width 0.2s ease';
         en.style.zIndex = 100;
         en.style.position = 'absolute';
         en.style.right = '0';
-        en.style.width = `${window.opts.extra_networks_sidebar_width}vw`;
+        en.style.top = '13em';
         en.style.height = '-webkit-fill-available';
+        en.style.transition = 'width 0.3s ease';
+        en.style.width = `${window.opts.extra_networks_sidebar_width}vw`;
         gradioApp().getElementById(`${tabname}_settings`).parentNode.style.width = `${100 - 2 - window.opts.extra_networks_sidebar_width}vw`;
       } else {
         en.style.transition = '';
         en.style.zIndex = 0;
+        en.style.top = 0;
         en.style.position = 'relative';
         en.style.right = 'unset';
         en.style.width = 'unset';
@@ -391,14 +454,14 @@ function setupExtraNetworksForTab(tabname) {
         gradioApp().getElementById(`${tabname}_settings`).parentNode.style.width = 'unset';
       }
     } else {
-      en.style.width = 0;
+      if (window.opts.extra_networks_card_cover === 'sidebar') en.style.width = 0;
       gradioApp().getElementById(`${tabname}_settings`).parentNode.style.width = 'unset';
     }
   });
   intersectionObserver.observe(en); // monitor visibility of
 }
 
-function setupExtraNetworks() {
+async function setupExtraNetworks() {
   setupExtraNetworksForTab('txt2img');
   setupExtraNetworksForTab('img2img');
   setupExtraNetworksForTab('control');

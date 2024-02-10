@@ -2,8 +2,7 @@ import os
 import time
 import torch
 import torchvision.transforms.functional as TF
-from modules import shared, devices, sd_vae
-import modules.taesd.sd_vae_taesd as sd_vae_taesd
+from modules import shared, devices, sd_models, sd_vae, sd_vae_taesd
 
 
 debug = shared.log.trace if os.environ.get('SD_VAE_DEBUG', None) is not None else lambda *args, **kwargs: None
@@ -37,10 +36,9 @@ def full_vae_decode(latents, model):
     if shared.opts.diffusers_move_unet and not getattr(model, 'has_accelerate', False) and hasattr(model, 'unet'):
         shared.log.debug('Moving to CPU: model=UNet')
         unet_device = model.unet.device
-        model.unet.to(devices.cpu)
-        devices.torch_gc()
+        sd_models.move_model(model.unet, devices.cpu)
     if not shared.cmd_opts.lowvram and not shared.opts.diffusers_seq_cpu_offload and hasattr(model, 'vae'):
-        model.vae.to(devices.device)
+        sd_models.move_model(model.vae, devices.device)
     latents.to(model.vae.device)
 
     upcast = (model.vae.dtype == torch.float16) and getattr(model.vae.config, 'force_upcast', False) and hasattr(model, 'upcast_vae')
@@ -50,15 +48,15 @@ def full_vae_decode(latents, model):
 
     decoded = model.vae.decode(latents / model.vae.config.scaling_factor, return_dict=False)[0]
 
-    # Downcast VAE after OpenVINO compile
+    # Delete PyTorch VAE after OpenVINO compile
     if shared.opts.cuda_compile and shared.opts.cuda_compile_backend == "openvino_fx" and shared.compiled_model_state.first_pass_vae:
         shared.compiled_model_state.first_pass_vae = False
         if hasattr(shared.sd_model, "vae"):
-            model.vae.to(dtype=torch.float8_e4m3fn)
+            model.vae.apply(sd_models.convert_to_faketensors)
             devices.torch_gc(force=True)
 
     if shared.opts.diffusers_move_unet and not getattr(model, 'has_accelerate', False) and hasattr(model, 'unet'):
-        model.unet.to(unet_device)
+        sd_models.move_model(model.unet, unet_device)
     t1 = time.time()
     debug(f'VAE decode: name={sd_vae.loaded_vae_file if sd_vae.loaded_vae_file is not None else "baked"} dtype={model.vae.dtype} upcast={upcast} images={latents.shape[0]} latents={latents.shape} time={round(t1-t0, 3)}')
     return decoded
@@ -69,23 +67,25 @@ def full_vae_encode(image, model):
     if shared.opts.diffusers_move_unet and not getattr(model, 'has_accelerate', False) and hasattr(model, 'unet'):
         debug('Moving to CPU: model=UNet')
         unet_device = model.unet.device
-        model.unet.to(devices.cpu)
-        devices.torch_gc()
+        sd_models.move_model(model.unet, devices.cpu)
     if not shared.cmd_opts.lowvram and not shared.opts.diffusers_seq_cpu_offload and hasattr(model, 'vae'):
-        model.vae.to(devices.device)
+        sd_models.move_model(model.vae, devices.device)
     encoded = model.vae.encode(image.to(model.vae.device, model.vae.dtype)).latent_dist.sample()
     if shared.opts.diffusers_move_unet and not getattr(model, 'has_accelerate', False) and hasattr(model, 'unet'):
-        model.unet.to(unet_device)
+        sd_models.move_model(model.unet, unet_device)
     return encoded
 
 
 def taesd_vae_decode(latents):
-    debug(f'VAE decode: name=TAESD images={len(latents)} latents={latents.shape}')
+    debug(f'VAE decode: name=TAESD images={len(latents)} latents={latents.shape} slicing={shared.opts.diffusers_vae_slicing}')
     if len(latents) == 0:
         return []
-    decoded = torch.zeros((len(latents), 3, latents.shape[2] * 8, latents.shape[3] * 8), dtype=devices.dtype_vae, device=devices.device)
-    for i in range(latents.shape[0]):
-        decoded[i] = sd_vae_taesd.decode(latents[i])
+    if shared.opts.diffusers_vae_slicing:
+        decoded = torch.zeros((len(latents), 3, latents.shape[2] * 8, latents.shape[3] * 8), dtype=devices.dtype_vae, device=devices.device)
+        for i in range(latents.shape[0]):
+            decoded[i] = sd_vae_taesd.decode(latents[i])
+    else:
+        decoded = sd_vae_taesd.decode(latents)
     return decoded
 
 

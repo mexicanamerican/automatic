@@ -5,9 +5,10 @@ from pathlib import Path
 import re
 import torch
 import torch.hub # pylint: disable=ungrouped-imports
+from PIL import Image
 from torchvision import transforms
 from torchvision.transforms.functional import InterpolationMode
-from modules import devices, paths, shared, lowvram, modelloader, errors
+from modules import devices, paths, shared, lowvram, errors
 
 
 blip_image_eval_size = 384
@@ -79,13 +80,15 @@ class InterrogateModels:
     def load_blip_model(self):
         self.create_fake_fairscale()
         import models.blip # pylint: disable=no-name-in-module
+        import modules.modelloader as modelloader
         model_path = os.path.join(paths.models_path, "BLIP")
-        shared.log.debug(f'Loading interrogate model: type=BLIP folder={model_path}')
+        download_name='model_base_caption_capfilt_large.pth',
+        shared.log.debug(f'Model interrogate load: type=BLiP model={download_name} path={model_path}')
         files = modelloader.load_models(
             model_path=model_path,
             model_url='https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_caption_capfilt_large.pth',
             ext_filter=[".pth"],
-            download_name='model_base_caption_capfilt_large.pth',
+            download_name=download_name,
         )
         blip_model = models.blip.blip_decoder(pretrained=files[0], image_size=blip_image_eval_size, vit='base', med_config=os.path.join(paths.paths["BLIP"], "configs", "med_config.json")) # pylint: disable=c-extension-no-member
         blip_model.eval()
@@ -93,6 +96,7 @@ class InterrogateModels:
         return blip_model
 
     def load_clip_model(self):
+        shared.log.debug(f'Model interrogate load: type=CLiP model={clip_model_name} path={shared.opts.clip_models_path}')
         import clip
         if self.running_on_cpu:
             model, preprocess = clip.load(clip_model_name, device="cpu", download_root=shared.opts.clip_models_path)
@@ -160,10 +164,15 @@ class InterrogateModels:
         res = ""
         shared.state.begin('interrogate')
         try:
-            if shared.cmd_opts.lowvram or shared.cmd_opts.medvram:
+            if shared.backend == shared.Backend.ORIGINAL and (shared.cmd_opts.lowvram or shared.cmd_opts.medvram):
                 lowvram.send_everything_to_cpu()
                 devices.torch_gc()
             self.load()
+            if isinstance(pil_image, list):
+                pil_image = pil_image[0]
+            if isinstance(pil_image, dict) and 'name' in pil_image:
+                pil_image = Image.open(pil_image['name'])
+            pil_image = pil_image.convert("RGB")
             caption = self.generate_caption(pil_image)
             self.send_blip_to_ram()
             devices.torch_gc()

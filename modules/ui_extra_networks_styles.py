@@ -1,7 +1,6 @@
 import os
 import html
 import json
-import concurrent
 from modules import shared, extra_networks, ui_extra_networks, styles
 
 
@@ -53,7 +52,6 @@ class ExtraNetworksPageStyles(ui_extra_networks.ExtraNetworksPage):
             "name": name,
             "title": name,
             "filename": fn,
-            "search_term": f'{self.search_terms_from_path(fn)} {params.get("Prompt", "")}',
             "preview": self.find_preview(name),
             "description": '',
             "prompt": params.get('Prompt', ''),
@@ -79,8 +77,7 @@ class ExtraNetworksPageStyles(ui_extra_networks.ExtraNetworksPage):
                 "name": name,
                 "title": k,
                 "filename": style.filename,
-                "search_term": f'{self.search_terms_from_path(name)} {txt}',
-                "preview": style.preview if getattr(style, 'preview', None) is not None and style.preview.startswith('data:') else self.find_preview(fn),
+                "preview": style.preview if getattr(style, 'preview', None) is not None and style.preview.startswith('data:') else None,
                 "description": style.description if getattr(style, 'description', None) is not None and len(style.description) > 0 else txt,
                 "prompt": getattr(style, 'prompt', ''),
                 "negative": getattr(style, 'negative_prompt', ''),
@@ -95,12 +92,9 @@ class ExtraNetworksPageStyles(ui_extra_networks.ExtraNetworksPage):
         return item
 
     def list_items(self):
-        with concurrent.futures.ThreadPoolExecutor(max_workers=shared.max_workers) as executor:
-            future_items = {executor.submit(self.create_item, style): style for style in list(shared.prompt_styles.styles)}
-            for future in concurrent.futures.as_completed(future_items):
-                item = future.result()
-                if item is not None:
-                    yield item
+        items = [self.create_item(k) for k in list(shared.prompt_styles.styles)]
+        self.update_all_previews(items)
+        return items
 
     def allowed_directories_for_previews(self):
         return [v for v in [shared.opts.styles_dir] if v is not None] + ['html']
