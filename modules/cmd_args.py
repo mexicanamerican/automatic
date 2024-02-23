@@ -25,7 +25,7 @@ group.add_argument("--freeze", default=os.environ.get("SD_FREEZE", False), actio
 group.add_argument("--auth", type=str, default=os.environ.get("SD_AUTH", None), help='Set access authentication like "user:pwd,user:pwd""')
 group.add_argument("--auth-file", type=str, default=os.environ.get("SD_AUTHFILE", None), help='Set access authentication using file, default: %(default)s')
 group.add_argument("--autolaunch", default=os.environ.get("SD_AUTOLAUNCH", False), action='store_true', help="Open the UI URL in the system's default browser upon launch")
-group.add_argument('--docs', default=os.environ.get("SD_DOCS", False), action='store_true', help = "Mount Gradio docs at /docs, default: %(default)s")
+group.add_argument('--docs', default=os.environ.get("SD_DOCS", False), action='store_true', help = "Mount API docs, default: %(default)s")
 group.add_argument('--api-only', default=os.environ.get("SD_APIONLY", False), action='store_true', help = "Run in API only mode without starting UI")
 group.add_argument("--api-log", default=os.environ.get("SD_APILOG", False), action='store_true', help="Enable logging of all API requests, default: %(default)s")
 group.add_argument("--device-id", type=str, default=os.environ.get("SD_DEVICEID", None), help="Select the default CUDA device to use, default: %(default)s")
@@ -47,6 +47,7 @@ group.add_argument("--use-cuda", default=os.environ.get("SD_USECUDA", False), ac
 group.add_argument("--use-rocm", default=os.environ.get("SD_USEROCM", False), action='store_true', help="Force use AMD ROCm backend, default: %(default)s")
 group.add_argument('--subpath', type=str, default=os.environ.get("SD_SUBPATH", None), help='Customize the URL subpath for usage with reverse proxy')
 group.add_argument('--backend', type=str, default=os.environ.get("SD_BACKEND", None), choices=['original', 'diffusers'], required=False, help='force model pipeline type')
+group.add_argument('--theme', type=str, default=os.environ.get("SD_THEME", None), help='Override UI theme')
 
 
 # removed args are added here as hidden in fixed format for compatbility reasons
@@ -59,6 +60,7 @@ group.add_argument("--disable-console-progressbars", action='store_true', help=a
 group.add_argument("--disable-safe-unpickle", action='store_true', help=argparse.SUPPRESS, default=True)
 group.add_argument("--lowram", action='store_true', help=argparse.SUPPRESS)
 group.add_argument("--disable-extension-access", default=False, action='store_true', help=argparse.SUPPRESS)
+group.add_argument("--allowed-paths", nargs='+', default=[], type=str, required=False, help="add additional paths to paths allowed for web access")
 group.add_argument("--api", help=argparse.SUPPRESS, default=True)
 group.add_argument("--api-auth", type=str, help=argparse.SUPPRESS, default=None)
 
