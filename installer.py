@@ -405,9 +405,13 @@ def check_torch():
     log.debug(f'Torch allowed: cuda={allow_cuda} rocm={allow_rocm} ipex={allow_ipex} diml={allow_directml} openvino={allow_openvino}')
     torch_command = os.environ.get('TORCH_COMMAND', '')
     xformers_package = os.environ.get('XFORMERS_PACKAGE', 'none')
+    zluda_need_dll_patch = False
 
     def is_rocm_available():
         if not allow_rocm:
+            return False
+        if installed('torch-directml'):
+            log.debug('DirectML installation is detected. Skipping HIP SDK check.')
             return False
         if platform.system() == 'Windows':
             hip_path = os.environ.get('HIP_PATH', None)
@@ -426,7 +430,7 @@ def check_torch():
         xformers_package = os.environ.get('XFORMERS_PACKAGE', '--pre xformers' if opts.get('cross_attention_optimization', '') == 'xFormers' else 'none')
         install('onnxruntime-gpu', 'onnxruntime-gpu', ignore=True)
     elif is_rocm_available():
-        is_windows = platform.system() == 'Windows' # provides more better logs for ZLUDA users and ROCm for Windows users in future.
+        is_windows = platform.system() == 'Windows'
         log.info('AMD ROCm toolkit detected')
         os.environ.setdefault('PYTORCH_HIP_ALLOC_CONF', 'garbage_collection_threshold:0.8,max_split_size_mb:512')
         if not is_windows:
@@ -474,19 +478,24 @@ def check_torch():
         except Exception as e:
             log.debug(f'ROCm hipconfig failed: {e}')
             rocm_ver = None
-        if not is_windows: # remove after PyTorch built with ROCm for Windows is launched
+        if args.use_zluda:
+            torch_command = os.environ.get('TORCH_COMMAND', 'torch==2.2.0 torchvision --index-url https://download.pytorch.org/whl/cu118')
+            log.warning("ZLUDA support: experimental")
+            zluda_need_dll_patch = is_windows and not installed('torch')
+        elif is_windows: # TODO TBD after ROCm for Windows is released
+            log.warning("HIP SDK is detected, but no Torch release for Windows available")
+            log.info("For ZLUDA support specify '--use-zluda'")
+            log.info('Using CPU-only torch')
+            torch_command = os.environ.get('TORCH_COMMAND', 'torch torchvision')
+        else:
             if rocm_ver in {"5.7"}:
                 torch_command = os.environ.get('TORCH_COMMAND', f'torch torchvision --pre --index-url https://download.pytorch.org/whl/nightly/rocm{rocm_ver}')
             elif rocm_ver in {"5.5", "5.6"}:
                 torch_command = os.environ.get('TORCH_COMMAND', f'torch torchvision --index-url https://download.pytorch.org/whl/nightly/rocm{rocm_ver}')
             else:
-                # ROCm 5.5 is oldest for PyTorch 2.1
-                torch_command = os.environ.get('TORCH_COMMAND', 'torch torchvision --index-url https://download.pytorch.org/whl/rocm5.5')
+                torch_command = os.environ.get('TORCH_COMMAND', 'torch torchvision --index-url https://download.pytorch.org/whl/rocm5.5') # ROCm 5.5 is oldest for PyTorch 2.1
             if rocm_ver is not None:
                 install(os.environ.get('ONNXRUNTIME_PACKAGE', get_onnxruntime_source_for_rocm(arr)), "onnxruntime-training built with ROCm", ignore=True)
-        else:
-            log.info('Using CPU-only Torch')
-            torch_command = os.environ.get('TORCH_COMMAND', 'torch torchvision')
         xformers_package = os.environ.get('XFORMERS_PACKAGE', 'none')
     elif allow_ipex and (args.use_ipex or shutil.which('sycl-ls') is not None or shutil.which('sycl-ls.exe') is not None or os.environ.get('ONEAPI_ROOT') is not None or os.path.exists('/opt/intel/oneapi') or os.path.exists("C:/Program Files (x86)/Intel/oneAPI") or os.path.exists("C:/oneAPI")):
         args.use_ipex = True # pylint: disable=attribute-defined-outside-init
@@ -539,11 +548,15 @@ def check_torch():
                 install(torch_command, 'torch torchvision')
             install('onnxruntime-directml', 'onnxruntime-directml', ignore=True)
         else:
+            if args.use_zluda:
+                log.warning("ZLUDA failed to initialize: no HIP SDK found")
             log.info('Using CPU-only Torch')
             torch_command = os.environ.get('TORCH_COMMAND', 'torch torchvision')
     if 'torch' in torch_command and not args.version:
         log.debug(f'Installing torch: {torch_command}')
         install(torch_command, 'torch torchvision')
+        if zluda_need_dll_patch:
+            patch_zluda()
     else:
         try:
             import torch
@@ -894,6 +907,31 @@ def get_onnxruntime_source_for_rocm(rocm_ver):
         return f"https://download.onnxruntime.ai/onnxruntime_training-{ort_version}%2Brocm{rocm_ver[0]}{rocm_ver[1]}-cp{cp_str}-cp{cp_str}-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
     else:
         return 'onnxruntime-gpu'
+
+
+def patch_zluda():
+    zluda_path = os.environ.get('ZLUDA', None)
+    if zluda_path is None:
+        paths = os.environ.get('PATH', '').split(';')
+        for path in paths:
+            if os.path.exists(os.path.join(path, 'zluda_redirect.dll')):
+                zluda_path = path
+                break
+    if zluda_path is None:
+        log.warning('Failed to automatically patch torch with ZLUDA. Could not find ZLUDA from PATH.')
+        return
+    venv_dir = os.environ.get('VENV_DIR', os.path.dirname(shutil.which('python')))
+    dlls_to_patch = {
+        'cublas.dll': 'cublas64_11.dll',
+        #'cudnn.dll': 'cudnn64_8.dll',
+        'cusparse.dll': 'cusparse64_11.dll',
+        'nvrtc.dll': 'nvrtc64_112_0.dll',
+    }
+    try:
+        for k, v in dlls_to_patch.items():
+            shutil.copyfile(os.path.join(zluda_path, k), os.path.join(venv_dir, 'Lib', 'site-packages', 'torch', 'lib', v))
+    except Exception as e:
+        log.warning(f'ZLUDA: failed to automatically patch torch: {e}')
 
 
 # check version of the main repo and optionally upgrade it
