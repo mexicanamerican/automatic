@@ -80,6 +80,12 @@ class BaseModel(ABC):
         pass
 
     def setup(self, opt):
+        if self.isTrain:
+            self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
+        if not self.isTrain or opt.continue_train:
+            load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
+            self.load_networks(load_suffix)
+        self.print_networks(opt.verbose)
         """Load and print networks; create schedulers
 
         Parameters:
@@ -100,6 +106,8 @@ class BaseModel(ABC):
                 net.eval()
 
     def test(self):
+        self.forward()
+        self.compute_visuals()
         """Forward function used in test time.
 
         It also calls <compute_visuals> to produce additional visualization results
@@ -117,18 +125,27 @@ class BaseModel(ABC):
 
     def update_learning_rate(self):
         """Update learning rates for all the networks; called at the end of every epoch"""
-        old_lr = self.optimizers[0].param_groups[0]['lr']
+        old_lr = []
+        for optimizer in self.optimizers:
+            old_lr.append(optimizer.param_groups[0]['lr'])
         for scheduler in self.schedulers:
             if self.opt.lr_policy == 'plateau':
                 scheduler.step(self.metric)
-            else:
+            elif self.opt.lr_policy == 'step':
                 scheduler.step()
-
-        lr = self.optimizers[0].param_groups[0]['lr']
-        print('learning rate %.7f -> %.7f' % (old_lr, lr))
+            elif self.opt.lr_policy == 'cosine':
+                scheduler.step()
+        for i, optimizer in enumerate(self.optimizers):
+            lr = optimizer.param_groups[0]['lr']
+            print('learning rate %.7f -> %.7f' % (old_lr[i], lr))
 
     def get_current_visuals(self):
-        """Return visualization images. train.py will display these images with visdom, and save the images to a HTML"""
+        """Return visualization images."""
+        visual_ret = OrderedDict()
+        for name in self.visual_names:
+            if isinstance(name, str):
+                visual_ret[name] = getattr(self, name)
+        return visual_ret
         visual_ret = OrderedDict()
         for name in self.visual_names:
             if isinstance(name, str):
@@ -142,8 +159,27 @@ class BaseModel(ABC):
             if isinstance(name, str):
                 errors_ret[name] = float(getattr(self, 'loss_' + name))  # float(...) works for both scalar tensor and float number
         return errors_ret
+        """Return traning losses / errors. train.py will print out these errors on console, and save them to a file"""
+        errors_ret = OrderedDict()
+        for name in self.loss_names:
+            if isinstance(name, str):
+                errors_ret[name] = float(getattr(self, 'loss_' + name))  # float(...) works for both scalar tensor and float number
+        return errors_ret
 
     def save_networks(self, epoch):
+        """Save all the networks to the disk."""
+        for name in self.model_names:
+            if isinstance(name, str):
+                save_filename = f'{epoch}_net_{name}.pth'
+                save_path = os.path.join(self.save_dir, save_filename)
+                net = getattr(self, 'net' + name)
+
+                if len(self.gpu_ids) > 0 and torch.cuda.is_available():
+                    torch.save(net.module.cpu().state_dict(), save_path)
+                    net.cuda(self.gpu_ids[0])
+                else:
+                    torch.save(net.cpu().state_dict(), save_path)
+                print(f'Saved network {name} in epoch {epoch}')
         """Save all the networks to the disk.
 
         Parameters:
