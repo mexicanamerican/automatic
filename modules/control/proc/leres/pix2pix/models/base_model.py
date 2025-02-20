@@ -9,7 +9,7 @@ from modules.control.util import torch_gc
 from . import networks
 
 
-class BaseModel(ABC):
+class CustomBaseModel(ABC):
     """This class is an abstract base class (ABC) for models.
     To create a subclass, you need to implement the following five functions:
         -- <__init__>:                      initialize the class; first call BaseModel.__init__(self, opt).
@@ -20,13 +20,13 @@ class BaseModel(ABC):
     """
 
     def __init__(self, opt):
-        """Initialize the BaseModel class.
+        """Initialize the CustomBaseModel class.
 
         Parameters:
             opt (Option class)-- stores all the experiment flags; needs to be a subclass of BaseOptions
 
         When creating your custom class, you need to implement your own initialization.
-        In this function, you should first call <BaseModel.__init__(self, opt)>
+        In this function, you should first call <CustomBaseModel.__init__(self, opt)>
         Then, you need to define four lists:
             -- self.loss_names (str list):          specify the training losses that you want to plot and save.
             -- self.model_names (str list):         define networks used in our training.
@@ -65,6 +65,9 @@ class BaseModel(ABC):
         """Unpack input data from the dataloader and perform necessary pre-processing steps.
 
         Parameters:
+            input (dict): includes the data itself and its metadata information.
+        """
+        pass
             input (dict): includes the data itself and its metadata information.
         """
         pass
@@ -127,7 +130,7 @@ class BaseModel(ABC):
         lr = self.optimizers[0].param_groups[0]['lr']
         print('learning rate %.7f -> %.7f' % (old_lr, lr))
 
-    def get_current_visuals(self):
+    def retrieve_visuals(self):
         """Return visualization images. train.py will display these images with visdom, and save the images to a HTML"""
         visual_ret = OrderedDict()
         for name in self.visual_names:
