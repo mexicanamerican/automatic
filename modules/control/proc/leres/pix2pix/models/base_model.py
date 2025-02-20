@@ -67,17 +67,17 @@ class BaseModel(ABC):
         Parameters:
             input (dict): includes the data itself and its metadata information.
         """
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def optimize_parameters(self):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
-        pass
+        raise NotImplementedError
 
     def setup(self, opt):
         """Load and print networks; create schedulers
@@ -129,11 +129,7 @@ class BaseModel(ABC):
 
     def get_current_visuals(self):
         """Return visualization images. train.py will display these images with visdom, and save the images to a HTML"""
-        visual_ret = OrderedDict()
-        for name in self.visual_names:
-            if isinstance(name, str):
-                visual_ret[name] = getattr(self, name)
-        return visual_ret
+        raise NotImplementedError
 
     def get_current_losses(self):
         """Return traning losses / errors. train.py will print out these errors on console, and save them to a file"""
