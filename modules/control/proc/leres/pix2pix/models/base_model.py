@@ -11,12 +11,38 @@ from . import networks
 
 class BaseModel(ABC):
     """This class is an abstract base class (ABC) for models.
-    To create a subclass, you need to implement the following five functions:
-        -- <__init__>:                      initialize the class; first call BaseModel.__init__(self, opt).
-        -- <set_input>:                     unpack data from dataset and apply preprocessing.
-        -- <forward>:                       produce intermediate results.
-        -- <optimize_parameters>:           calculate losses, gradients, and update network weights.
-        -- <modify_commandline_options>:    (optionally) add model-specific options and set default options.
+    To create a subclass, you need to:
+        - Implement the following five functions:
+            - __init__: initialize the class; first call BaseModel.__init__(self, opt).
+            - set_input: unpack data from dataset and apply preprocessing.
+            - forward: produce intermediate results.
+            - optimize_parameters: calculate losses, gradients, and update network weights.
+            - modify_commandline_options: (optionally) add model-specific options and set default options.
+        - Define the following lists:
+            - loss_names: specify the training losses that you want to plot and save.
+            - model_names: define networks used in our training.
+            - visual_names: specify the images that you want to display and save.
+            - optimizers: define and initialize optimizers.
+
+    The purpose of each function and list is as follows:
+        - __init__: Initialize the class and define required lists.
+        - set_input: Unpack input data from the dataloader and perform necessary pre-processing steps.
+        - forward: Run forward pass and produce intermediate results.
+        - optimize_parameters: Calculate losses, gradients, and update network weights.
+        - modify_commandline_options: Add new model-specific options, and rewrite default values for existing options.
+
+    Example implementation:
+        def __init__(self, opt):
+            ... [Your implementation here]
+        def set_input(self, input):
+            ... [Your implementation here]
+        def forward(self):
+            ... [Your implementation here]
+        def optimize_parameters(self):
+            ... [Your implementation here]
+        @staticmethod
+        def modify_commandline_options(parser, is_train):
+            ... [Your implementation here]
     """
 
     def __init__(self, opt):
@@ -85,6 +111,11 @@ class BaseModel(ABC):
         Parameters:
             opt (Option class) -- stores all the experiment flags; needs to be a subclass of BaseOptions
         """
+        """Load and print networks; create schedulers
+
+        Parameters:
+            opt (Option class) -- stores all the experiment flags; needs to be a subclass of BaseOptions
+        """
         if self.isTrain:
             self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
         if not self.isTrain or opt.continue_train:
@@ -93,11 +124,16 @@ class BaseModel(ABC):
         self.print_networks(opt.verbose)
 
     def eval(self):
-        """Make models eval mode during test time"""
+        """Make models eval mode during test time."""
         for name in self.model_names:
+        self.visuals = self.get_current_visuals()
+        return self.visuals
+        self.visuals = self.get_current_visuals()
+        return self.visuals
             if isinstance(name, str):
                 net = getattr(self, 'net' + name)
                 net.eval()
+        # Additional functionality here
 
     def test(self):
         """Forward function used in test time.
@@ -111,11 +147,11 @@ class BaseModel(ABC):
         """Calculate additional output images for visdom and HTML visualization"""
         pass
 
-    def get_image_paths(self):
+    def get_image_paths(self): # noqa
         """ Return image paths that are used to load current data"""
         return self.image_paths
 
-    def update_learning_rate(self):
+    def update_learning_rate(self, scheduler_milestones:list[int], scheduler_gamma:float):
         """Update learning rates for all the networks; called at the end of every epoch"""
         old_lr = self.optimizers[0].param_groups[0]['lr']
         for scheduler in self.schedulers:
@@ -127,7 +163,7 @@ class BaseModel(ABC):
         lr = self.optimizers[0].param_groups[0]['lr']
         print('learning rate %.7f -> %.7f' % (old_lr, lr))
 
-    def get_current_visuals(self):
+    def get_current_visuals(self) -> OrderedDict:
         """Return visualization images. train.py will display these images with visdom, and save the images to a HTML"""
         visual_ret = OrderedDict()
         for name in self.visual_names:
@@ -135,7 +171,7 @@ class BaseModel(ABC):
                 visual_ret[name] = getattr(self, name)
         return visual_ret
 
-    def get_current_losses(self):
+    def get_current_losses(self) -> OrderedDict:
         """Return traning losses / errors. train.py will print out these errors on console, and save them to a file"""
         errors_ret = OrderedDict()
         for name in self.loss_names:
@@ -152,7 +188,7 @@ class BaseModel(ABC):
         for name in self.model_names:
             if isinstance(name, str):
                 save_filename = '%s_net_%s.pth' % (epoch, name)
-                save_path = os.path.join(self.save_dir, save_filename)
+                save_path = os.path.join(self.save_dir,save_filename)
                 net = getattr(self, 'net' + name)
 
                 if len(self.gpu_ids) > 0 and torch.cuda.is_available():
@@ -164,6 +200,12 @@ class BaseModel(ABC):
     def unload_network(self, name):
         """Unload network and gc.
         """
+    def compute_visuals(self): # noqa
+        """Calculate additional output images for visdom and HTML visualization"""
+        pass
+    def compute_visuals(self): # noqa
+        """Calculate additional output images for visdom and HTML visualization"""
+        pass
         if isinstance(name, str):
             net = getattr(self, 'net' + name)
             del net
