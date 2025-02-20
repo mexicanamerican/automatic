@@ -61,8 +61,8 @@ ________________________________
 You can update an existing [latent diffusion](https://github.com/CompVis/latent-diffusion) environment by running
 
 ```
-conda install pytorch==1.12.1 torchvision==0.13.1 -c pytorch
-pip install transformers==4.19.2 diffusers invisible-watermark
+conda install pytorch torchvision -c pytorch
+pip install transformers diffusers invisible-watermark
 pip install -e .
 ``` 
 #### xformers efficient attention
@@ -73,10 +73,10 @@ library.
 Tested on A100 with CUDA 11.4.
 Installation needs a somewhat recent version of nvcc and gcc/g++, obtain those, e.g., via 
 ```commandline
-export CUDA_HOME=/usr/local/cuda-11.4
-conda install -c nvidia/label/cuda-11.4.0 cuda-nvcc
-conda install -c conda-forge gcc
-conda install -c conda-forge gxx_linux-64==9.5.0
+export CUDA_HOME=/usr/local/cuda-11.0
+
+
+
 ```
 
 Then, run the following (compiling takes up to 30 min).
