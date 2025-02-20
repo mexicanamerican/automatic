@@ -12,7 +12,7 @@ from . import networks
 class BaseModel(ABC):
     """This class is an abstract base class (ABC) for models.
     To create a subclass, you need to implement the following five functions:
-        -- <__init__>:                      initialize the class; first call BaseModel.__init__(self, opt).
+        -- <__init__>:                      initialize the class; first call super().__init__(opt).
         -- <set_input>:                     unpack data from dataset and apply preprocessing.
         -- <forward>:                       produce intermediate results.
         -- <optimize_parameters>:           calculate losses, gradients, and update network weights.
@@ -27,7 +27,7 @@ class BaseModel(ABC):
 
         When creating your custom class, you need to implement your own initialization.
         In this function, you should first call <BaseModel.__init__(self, opt)>
-        Then, you need to define four lists:
+        Then, you need to define four lists in the __init__ method:
             -- self.loss_names (str list):          specify the training losses that you want to plot and save.
             -- self.model_names (str list):         define networks used in our training.
             -- self.visual_names (str list):        specify the images that you want to display and save.
