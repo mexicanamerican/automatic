@@ -19,18 +19,18 @@ class BaseModel(ABC):
         -- <modify_commandline_options>:    (optionally) add model-specific options and set default options.
     """
 
-    def __init__(self, opt):
-        """Initialize the BaseModel class.
+    @staticmethod
+    def modify_commandline_options(parser, is_train):
+        """Add new model-specific options, and rewrite default values for existing options.
 
         Parameters:
-            opt (Option class)-- stores all the experiment flags; needs to be a subclass of BaseOptions
+            parser          -- original option parser
+            is_train (bool) -- whether training phase or test phase. You can use this flag to add training-specific or test-specific options.
 
-        When creating your custom class, you need to implement your own initialization.
-        In this function, you should first call <BaseModel.__init__(self, opt)>
-        Then, you need to define four lists:
-            -- self.loss_names (str list):          specify the training losses that you want to plot and save.
-            -- self.model_names (str list):         define networks used in our training.
-            -- self.visual_names (str list):        specify the images that you want to display and save.
+        Returns:
+            the modified parser.
+        """
+        return parser
             -- self.optimizers (optimizer list):    define and initialize optimizers. You can define one optimizer for each network. If two networks are updated at the same time, you can use itertools.chain to group them. See cycle_gan_model.py for an example.
         """
         self.opt = opt
