@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from collections import OrderedDict
 
 import torch
+import itertools
 
 from modules.control.util import torch_gc
 from . import networks
@@ -71,11 +72,13 @@ class BaseModel(ABC):
 
     @abstractmethod
     def forward(self):
+        print("Running forward pass for BaseModel")
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
         pass
 
     @abstractmethod
     def optimize_parameters(self):
+        print("Optimizing parameters for BaseModel")
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
         pass
 
@@ -93,6 +96,7 @@ class BaseModel(ABC):
         self.print_networks(opt.verbose)
 
     def eval(self):
+        print("Evaluating BaseModel")
         """Make models eval mode during test time"""
         for name in self.model_names:
             if isinstance(name, str):
@@ -100,6 +104,7 @@ class BaseModel(ABC):
                 net.eval()
 
     def test(self):
+        print("Testing BaseModel")
         """Forward function used in test time.
 
         It also calls <compute_visuals> to produce additional visualization results
@@ -107,7 +112,8 @@ class BaseModel(ABC):
         self.forward()
         self.compute_visuals()
 
-    def compute_visuals(self): # noqa
+    def compute_visuals(self):
+        print("Computing visuals for BaseModel")
         """Calculate additional output images for visdom and HTML visualization"""
         pass
 
