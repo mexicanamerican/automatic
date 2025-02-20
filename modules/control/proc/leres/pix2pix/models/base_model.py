@@ -7,6 +7,7 @@ import torch
 
 from modules.control.util import torch_gc
 from . import networks
+from collections import OrderedDict
 
 
 class BaseModel(ABC):
@@ -80,6 +81,12 @@ class BaseModel(ABC):
         pass
 
     def setup(self, opt):
+        if self.isTrain:
+            self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
+        if not self.isTrain or opt.continue_train:
+            load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
+            self.load_networks(load_suffix)
+        self.print_networks(opt.verbose)
         """Load and print networks; create schedulers
 
         Parameters:
@@ -109,7 +116,8 @@ class BaseModel(ABC):
 
     def compute_visuals(self): # noqa
         """Calculate additional output images for visdom and HTML visualization"""
-        pass
+        # Calculate additional output images for visdom and HTML visualization
+        # Add logic to calculate additional output images
 
     def get_image_paths(self):
         """ Return image paths that are used to load current data"""
@@ -183,7 +191,7 @@ class BaseModel(ABC):
                (key == 'num_batches_tracked'):
                 state_dict.pop('.'.join(keys))
         else:
-            self.__patch_instance_norm_state_dict(state_dict, getattr(module, key), keys, i + 1)
+            self.__patch_instance_norm_state_dict(state_dict, getattr(net, key), keys, i + 1)
 
     def load_networks(self, epoch):
         """Load all the networks from the disk.
@@ -204,6 +212,13 @@ class BaseModel(ABC):
                 state_dict = torch.load(load_path, map_location=str(self.device))
                 if hasattr(state_dict, '_metadata'):
                     del state_dict._metadata
+    def test(self):
+        """Forward function used in test time.
+
+        It also calls <compute_visuals> to produce additional visualization results
+        """
+        self.forward()
+        self.compute_visuals()
 
                 # patch InstanceNorm checkpoints prior to 0.4
                 for key in list(state_dict.keys()):  # need to copy keys here because we mutate in loop
@@ -223,17 +238,23 @@ class BaseModel(ABC):
                 num_params = 0
                 for param in net.parameters():
                     num_params += param.numel()
+                print('[Network %s] Total number of parameters : %.3f M' % (name, num_params / 1e6))
                 if verbose:
                     print(net)
-                print('[Network %s] Total number of parameters : %.3f M' % (name, num_params / 1e6))
         print('-----------------------------------------------')
 
     def set_requires_grad(self, nets, requires_grad=False):
-        """Set requies_grad=Fasle for all the networks to avoid unnecessary computations
+        """Set requires_grad=False for all the networks to avoid unnecessary computations
         Parameters:
             nets (network list)   -- a list of networks
             requires_grad (bool)  -- whether the networks require gradients or not
         """
+        if not isinstance(nets, list):
+            nets = [nets]
+        for net in nets:
+            if net is not None:
+                for param in net.parameters():
+                    param.requires_grad = requires_grad
         if not isinstance(nets, list):
             nets = [nets]
         for net in nets:
