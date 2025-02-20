@@ -193,7 +193,7 @@ class BaseModel(ABC):
         """
         for name in self.model_names:
             if isinstance(name, str):
-                load_filename = '%s_net_%s.pth' % (epoch, name)
+                load_filename = f'{epoch}_net_{name}.pth'
                 load_path = os.path.join(self.save_dir, load_filename)
                 net = getattr(self, 'net' + name)
                 if isinstance(net, torch.nn.DataParallel):
@@ -205,10 +205,13 @@ class BaseModel(ABC):
                 if hasattr(state_dict, '_metadata'):
                     del state_dict._metadata
 
-                # patch InstanceNorm checkpoints prior to 0.4
+                
                 for key in list(state_dict.keys()):  # need to copy keys here because we mutate in loop
                     self.__patch_instance_norm_state_dict(state_dict, net, key.split('.'))
-                net.load_state_dict(state_dict)
+                try:
+                    net.load_state_dict(state_dict)
+                except Exception as e:
+                    print(f'Error loading network {name}: {e}')
 
     def print_networks(self, verbose):
         """Print the total number of parameters in the network and (if verbose) network architecture
