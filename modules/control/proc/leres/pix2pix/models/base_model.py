@@ -81,6 +81,8 @@ class BaseModel(ABC):
 
     def setup(self, opt):
         """Load and print networks; create schedulers
+    parser.add_argument('--new_option', type=int, default=0, help='Description of the new option')
+    return parser
 
         Parameters:
             opt (Option class) -- stores all the experiment flags; needs to be a subclass of BaseOptions
@@ -148,6 +150,12 @@ class BaseModel(ABC):
 
         Parameters:
             epoch (int) -- current epoch; used in the file name '%s_net_%s.pth' % (epoch, name)
+    def eval(self):
+        """Make models eval mode during test time"""
+        for name in self.model_names:
+            if isinstance(name, str):
+                net = getattr(self, 'net' + name)
+                net.eval()
         """
         for name in self.model_names:
             if isinstance(name, str):
@@ -158,6 +166,12 @@ class BaseModel(ABC):
                 if len(self.gpu_ids) > 0 and torch.cuda.is_available():
                     torch.save(net.module.cpu().state_dict(), save_path)
                     net.cuda(self.gpu_ids[0])
+    def eval(self):
+        """Make models eval mode during test time"""
+        for name in self.model_names:
+            if isinstance(name, str):
+                net = getattr(self, 'net' + name)
+                net.eval()
                 else:
                     torch.save(net.cpu().state_dict(), save_path)
 
