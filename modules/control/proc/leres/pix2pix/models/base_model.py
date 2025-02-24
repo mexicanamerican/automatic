@@ -85,12 +85,17 @@ class BaseModel(ABC):
         Parameters:
             opt (Option class) -- stores all the experiment flags; needs to be a subclass of BaseOptions
         """
+        """Load and print networks; create schedulers
+
+        Parameters:
+            opt (Option class) -- stores all the experiment flags; needs to be a subclass of BaseOptions
+        """
         if self.isTrain:
             self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
         if not self.isTrain or opt.continue_train:
             load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
             self.load_networks(load_suffix)
-        self.print_networks(opt.verbose)
+        
 
     def eval(self):
         """Make models eval mode during test time"""
@@ -100,12 +105,14 @@ class BaseModel(ABC):
                 net.eval()
 
     def test(self):
+        """Run forward pass during test time."""
+        self.forward()
         """Forward function used in test time.
 
         It also calls <compute_visuals> to produce additional visualization results
         """
         self.forward()
-        self.compute_visuals()
+
 
     def compute_visuals(self): # noqa
         """Calculate additional output images for visdom and HTML visualization"""
@@ -127,7 +134,8 @@ class BaseModel(ABC):
         lr = self.optimizers[0].param_groups[0]['lr']
         print('learning rate %.7f -> %.7f' % (old_lr, lr))
 
-    def get_current_visuals(self):
+    def get_current_visuals(self) -> OrderedDict:
+        """Return visualization images as an ordered dictionary."""
         """Return visualization images. train.py will display these images with visdom, and save the images to a HTML"""
         visual_ret = OrderedDict()
         for name in self.visual_names:
@@ -144,10 +152,11 @@ class BaseModel(ABC):
         return errors_ret
 
     def save_networks(self, epoch):
-        """Save all the networks to the disk.
+        """Save all the networks to the disk. This method saves all networks to the disk in the specified location.
 
         Parameters:
             epoch (int) -- current epoch; used in the file name '%s_net_%s.pth' % (epoch, name)
+        self.logger.info('Learning rate updated: %.7f' % lr)
         """
         for name in self.model_names:
             if isinstance(name, str):
@@ -160,10 +169,12 @@ class BaseModel(ABC):
                     net.cuda(self.gpu_ids[0])
                 else:
                     torch.save(net.cpu().state_dict(), save_path)
+        """Fixes InstanceNorm checkpoints incompatibility by recursively modifying the state_dict based on the module and keys provided. Prior to PyTorch version 0.4,"""
 
-    def unload_network(self, name):
+    def unload_network(self, name) -> None:
         """Unload network and gc.
         """
+        """Unload network and perform garbage collection."""
         if isinstance(name, str):
             net = getattr(self, 'net' + name)
             del net
@@ -172,7 +183,7 @@ class BaseModel(ABC):
             return None
 
     def __patch_instance_norm_state_dict(self, state_dict, module, keys, i=0):
-        """Fix InstanceNorm checkpoints incompatibility (prior to 0.4)"""
+        """Fixes InstanceNorm checkpoints incompatibility by recursively modifying the state_dict based on the module and keys provided. Prior to PyTorch version 0.4,"""
         key = keys[i]
         if i + 1 == len(keys):  # at the end, pointing to a parameter/buffer
             if module.__class__.__name__.startswith('InstanceNorm') and \
