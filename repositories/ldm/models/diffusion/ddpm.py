@@ -25,7 +25,7 @@ from ldm.modules.ema import LitEma
 from ldm.modules.distributions.distributions import normal_kl, DiagonalGaussianDistribution
 from ldm.models.autoencoder import IdentityFirstStage, AutoencoderKL
 from ldm.modules.diffusionmodules.util import make_beta_schedule, extract_into_tensor, noise_like
-from ldm.models.diffusion.ddim import DDIMSampler
+from pytorch_lightning import LightningModule
 
 
 __conditioning_keys__ = {'concat': 'c_concat',
@@ -402,7 +402,7 @@ class DDPM(pl.LightningModule):
         loss_vlb = (self.lvlb_weights[t] * loss).mean()
         loss_dict.update({f'{log_prefix}/loss_vlb': loss_vlb})
 
-        loss = loss_simple + self.original_elbo_weight * loss_vlb
+        loss = loss_simple + self.original_elbo_weight * loss_vlb if self.betas is not None else loss_simple
 
         loss_dict.update({f'{log_prefix}/loss': loss})
 
