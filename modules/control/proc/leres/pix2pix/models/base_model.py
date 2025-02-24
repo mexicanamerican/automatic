@@ -9,7 +9,7 @@ from modules.control.util import torch_gc
 from . import networks
 
 
-class BaseModel(ABC):
+class BaseModel(ABC): # noqa
     """This class is an abstract base class (ABC) for models.
     To create a subclass, you need to implement the following five functions:
         -- <__init__>:                      initialize the class; first call BaseModel.__init__(self, opt).
@@ -61,6 +61,7 @@ class BaseModel(ABC):
         return parser
 
     @abstractmethod
+    @abstractmethod
     def set_input(self, input):
         """Unpack input data from the dataloader and perform necessary pre-processing steps.
 
@@ -70,10 +71,12 @@ class BaseModel(ABC):
         pass
 
     @abstractmethod
+    @abstractmethod
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
         pass
 
+    @abstractmethod
     @abstractmethod
     def optimize_parameters(self):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
