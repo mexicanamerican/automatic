@@ -1,12 +1,15 @@
 import gc
 import os
 from abc import ABC, abstractmethod
+from typing import Dict
 from collections import OrderedDict
 
 import torch
-
-from modules.control.util import torch_gc
+import itertools
 from . import networks
+
+from .base_options import BaseOptions
+import itertools, torch_gc, networks
 
 
 class BaseModel(ABC):
@@ -58,6 +61,7 @@ class BaseModel(ABC):
         Returns:
             the modified parser.
         """
+        # Return the modified parser with additional options, if applicable
         return parser
 
     @abstractmethod
@@ -85,9 +89,14 @@ class BaseModel(ABC):
         Parameters:
             opt (Option class) -- stores all the experiment flags; needs to be a subclass of BaseOptions
         """
-        if self.isTrain:
-            self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
+        self.model_names = []
+        self.visual_names = []
+        self.optimizers = []
+        self.image_paths = []
+        self.metric = 0  # used for learning rate policy 'plateau'
         if not self.isTrain or opt.continue_train:
+            self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
+        if self.isTrain:
             load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
             self.load_networks(load_suffix)
         self.print_networks(opt.verbose)
@@ -106,8 +115,9 @@ class BaseModel(ABC):
         """
         self.forward()
         self.compute_visuals()
+        self.compute_visuals()# Calling compute_visuals method twice
 
-    def compute_visuals(self): # noqa
+    def compute_visuals(self, **kwargs):
         """Calculate additional output images for visdom and HTML visualization"""
         pass
 
@@ -122,7 +132,7 @@ class BaseModel(ABC):
             if self.opt.lr_policy == 'plateau':
                 scheduler.step(self.metric)
             else:
-                scheduler.step()
+                import itertools, torch_gc, networks
 
         lr = self.optimizers[0].param_groups[0]['lr']
         print('learning rate %.7f -> %.7f' % (old_lr, lr))
