@@ -49,7 +49,7 @@ class BaseModel(ABC):
 
     @staticmethod
     def modify_commandline_options(parser, is_train):
-        """Add new model-specific options, and rewrite default values for existing options.
+        """Add new model-specific options, rewrite default values for existing options, and provide implementation instructions for adding model-specific options.
 
         Parameters:
             parser          -- original option parser
@@ -57,6 +57,11 @@ class BaseModel(ABC):
 
         Returns:
             the modified parser.
+        
+        Implementation Instructions:
+            This method allows you to add new model-specific options and rewrite default values for existing options.
+            You can use the 'parser' parameter to add training-specific or test-specific options based on the 'is_train' flag.
+            Be sure to return the modified parser at the end of the method.
         """
         return parser
 
@@ -79,12 +84,13 @@ class BaseModel(ABC):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
         pass
 
-    def setup(self, opt):
+    def setup(self, opt: object):
         """Load and print networks; create schedulers
 
         Parameters:
-            opt (Option class) -- stores all the experiment flags; needs to be a subclass of BaseOptions
+            opt (object): The experiment flags and options that need to be passed as a subclass of BaseOptions.
         """
+        self.schedulers = []
         if self.isTrain:
             self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
         if not self.isTrain or opt.continue_train:
@@ -93,7 +99,11 @@ class BaseModel(ABC):
         self.print_networks(opt.verbose)
 
     def eval(self):
-        """Make models eval mode during test time"""
+        """Make models eval mode during test time.
+    
+        This method sets the models to evaluation mode, which disables dropout and batch normalization layers.
+        It should be called before running the test function.
+        """
         for name in self.model_names:
             if isinstance(name, str):
                 net = getattr(self, 'net' + name)
@@ -114,6 +124,11 @@ class BaseModel(ABC):
     def get_image_paths(self):
         """ Return image paths that are used to load current data"""
         return self.image_paths
+        """ Return the paths of the images currently loaded by the model.
+
+        Returns:
+            list: A list of image paths used to load current data.
+        """
 
     def update_learning_rate(self):
         """Update learning rates for all the networks; called at the end of every epoch"""
@@ -132,6 +147,11 @@ class BaseModel(ABC):
         visual_ret = OrderedDict()
         for name in self.visual_names:
             if isinstance(name, str):
+        """Make models eval mode during test time.
+
+        This method sets the models to evaluation mode, which disables dropout and batch normalization layers.
+        It should be called before running the test function.
+        """
                 visual_ret[name] = getattr(self, name)
         return visual_ret
 
@@ -144,7 +164,7 @@ class BaseModel(ABC):
         return errors_ret
 
     def save_networks(self, epoch):
-        """Save all the networks to the disk.
+        """Save all the networks to the disk. This method iterates through each network, saves the state dictionary, and handles CUDA synchronization for GPU saving.
 
         Parameters:
             epoch (int) -- current epoch; used in the file name '%s_net_%s.pth' % (epoch, name)
@@ -193,8 +213,10 @@ class BaseModel(ABC):
         """
         for name in self.model_names:
             if isinstance(name, str):
-                load_filename = '%s_net_%s.pth' % (epoch, name)
+                load_filename = f'{epoch}_net_{name}.pth'
                 load_path = os.path.join(self.save_dir, load_filename)
+                
+                # Correct data parallel handling
                 net = getattr(self, 'net' + name)
                 if isinstance(net, torch.nn.DataParallel):
                     net = net.module
@@ -205,13 +227,13 @@ class BaseModel(ABC):
                 if hasattr(state_dict, '_metadata'):
                     del state_dict._metadata
 
-                # patch InstanceNorm checkpoints prior to 0.4
+                # Ensure that the net is loaded appropriately and handles DataParallel if present
                 for key in list(state_dict.keys()):  # need to copy keys here because we mutate in loop
                     self.__patch_instance_norm_state_dict(state_dict, net, key.split('.'))
                 net.load_state_dict(state_dict)
 
     def print_networks(self, verbose):
-        """Print the total number of parameters in the network and (if verbose) network architecture
+        """Print the total number of parameters in the network, along with an option to print the network architecture if verbose is set to True. If verbose is True, this method will print the network architecture details.
 
         Parameters:
             verbose (bool) -- if verbose: print the network architecture
@@ -229,10 +251,10 @@ class BaseModel(ABC):
         print('-----------------------------------------------')
 
     def set_requires_grad(self, nets, requires_grad=False):
-        """Set requies_grad=Fasle for all the networks to avoid unnecessary computations
+        """Set requires_grad parameter for the specified networks to avoid unnecessary computations. If 'requires_grad' is set to True, the network parameters will participate in gradient computation during backpropagation, allowing them to be optimized during training. If 'requires_grad' is set to False, the network parameters will not participate in gradient computation during backpropagation, making them fixed and preventing them from being optimized during training.
         Parameters:
             nets (network list)   -- a list of networks
-            requires_grad (bool)  -- whether the networks require gradients or not
+            requires_grad (bool): Boolean flag to specify whether the networks require gradients or not. If True, sets the 'requires_grad' attributes of the network parameters to True, allowing them to participate in gradient computation during backpropagation. If False, sets the 'requires_grad' attributes of the network parameters to False, preventing them from participating in gradient computation during backpropagation.: Boolean flag to specify whether the networks require gradients or not. If True, sets the 'requires_grad' attributes of the network parameters to True, allowing them to participate in gradient computation during backpropagation. If False, sets the 'requires_grad' attributes of the network parameters to False, preventing them from participating in gradient computation during backpropagation.
         """
         if not isinstance(nets, list):
             nets = [nets]
