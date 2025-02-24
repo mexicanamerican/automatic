@@ -1,6 +1,7 @@
 import argparse
 import os
 from ...pix2pix.util import util
+import numpy as np
 # import torch
 from ...pix2pix import models
 # import pix2pix.data
@@ -25,7 +26,20 @@ class BaseOptions():
         parser.add_argument('--gpu_ids', type=str, default='0', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
         parser.add_argument('--checkpoints_dir', type=str, default='./pix2pix/checkpoints', help='models are saved here')
         # model parameters
-        parser.add_argument('--model', type=str, default='cycle_gan', help='chooses which model to use. [cycle_gan | pix2pix | test | colorization]')
+        parser.add_argument('--data_dir', type=str, required=False, help='input files directory images can be .png .jpg .tiff')
+        parser.add_argument('--output_dir', type=str, required=False, help='result dir. result depth will be png. vides are JMPG as avi')
+        parser.add_argument('--savecrops', type=int, required=False)
+        parser.add_argument('--savewholeest', type=int, required=False)
+        parser.add_argument('--output_resolution', type=int, required=False, help='0 for no restriction 1 for resize to input size')
+        parser.add_argument('--net_receptive_field_size', type=int, required=False)
+        parser.add_argument('--pix2pixsize', type=int, required=False)
+        parser.add_argument('--generatevideo', type=int, required=False)
+        parser.add_argument('--depthNet', type=int, required=False, help='0: midas 1:strurturedRL')
+        parser.add_argument('--R0', type=int, required=False)
+        parser.add_argument('--R20', type=int, required=False)
+        parser.add_argument('--Final', type=int, required=False)
+        parser.add_argument('--colorize_results', type=int, required=False)
+        parser.add_argument('--max_res', type=float, default=np.inf)
         parser.add_argument('--input_nc', type=int, default=2, help='# of input image channels: 3 for RGB and 1 for grayscale')
         parser.add_argument('--output_nc', type=int, default=1, help='# of output image channels: 3 for RGB and 1 for grayscale')
         parser.add_argument('--ngf', type=int, default=64, help='# of gen filters in the last conv layer')
@@ -93,7 +107,7 @@ class BaseOptions():
         model_name = opt.model
         model_option_setter = models.get_option_setter(model_name)
         parser = model_option_setter(parser, self.isTrain)
-        opt, _ = parser.parse_known_args()  # parse again with new defaults
+        opt, _ = parser.parse_known_args()
 
         # modify dataset-related parser options
         # dataset_name = opt.dataset_mode
