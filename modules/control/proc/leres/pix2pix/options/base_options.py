@@ -18,6 +18,8 @@ class BaseOptions():
         self.initialized = False
 
     def initialize(self, parser):
+        
+        try:
         """Define the common options that are used in both training and test."""
         # basic parameters
         parser.add_argument('--dataroot', help='path to images (should have subfolders trainA, trainB, valA, valB, etc)')
@@ -66,6 +68,9 @@ class BaseOptions():
         parser.add_argument('--net_receptive_field_size', type=int, required=False)
         parser.add_argument('--pix2pixsize', type=int, required=False)
         parser.add_argument('--generatevideo', type=int, required=False)
+        message += 'Error Logs:\n'
+        message += '<<INSERT ERROR LOGS HERE>>'
+        print(message)
         parser.add_argument('--depthNet', type=int, required=False, help='0: midas 1:strurturedRL')
         parser.add_argument('--R0', action='store_true')
         parser.add_argument('--R20', action='store_true')
@@ -92,7 +97,9 @@ class BaseOptions():
         # modify model-related parser options
         model_name = opt.model
         model_option_setter = models.get_option_setter(model_name)
-        parser = model_option_setter(parser, self.isTrain)
+             except Exception as e:
+        print('Error occurred during option parsing:', str(e)
+            print('Error occurred during option parsing:', str(e))
         opt, _ = parser.parse_known_args()  # parse again with new defaults
 
         # modify dataset-related parser options
@@ -120,6 +127,7 @@ class BaseOptions():
                 comment = '\t[default: %s]' % str(default)
             message += '{:>25}: {:<30}{}\n'.format(str(k), str(v), comment)
         message += '----------------- End -------------------'
+        message += '\n' + 'Error Logs:' + '\n' + '<<INSERT ERROR LOGS HERE>>' + '\n'
         print(message)
 
         # save to the disk
