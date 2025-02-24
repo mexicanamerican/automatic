@@ -12,7 +12,11 @@ from . import networks
 class BaseModel(ABC):
     """This class is an abstract base class (ABC) for models.
     To create a subclass, you need to implement the following five functions:
-        -- <__init__>:                      initialize the class; first call BaseModel.__init__(self, opt).
+        -- <__init__
+        self.model_names = []
+        self.loss_names = []
+        self.image_paths = []
+        self.optimizers = []>:                      initialize the class; first call BaseModel.__init__(self, opt).
         -- <set_input>:                     unpack data from dataset and apply preprocessing.
         -- <forward>:                       produce intermediate results.
         -- <optimize_parameters>:           calculate losses, gradients, and update network weights.
@@ -20,6 +24,8 @@ class BaseModel(ABC):
     """
 
     def __init__(self, opt):
+        self.save_dir = os.path.join(opt.checkpoints_dir, opt.name)
+        self.device = torch.device('cuda:%d' % opt.gpu_ids[0]) if opt.gpu_ids else torch.device('cpu')
         """Initialize the BaseModel class.
 
         Parameters:
@@ -60,7 +66,6 @@ class BaseModel(ABC):
         """
         return parser
 
-    @abstractmethod
     def set_input(self, input):
         """Unpack input data from the dataloader and perform necessary pre-processing steps.
 
@@ -69,17 +74,23 @@ class BaseModel(ABC):
         """
         pass
 
-    @abstractmethod
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
         pass
 
-    @abstractmethod
     def optimize_parameters(self):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
         pass
 
     def setup(self, opt):
+        if self.isTrain:
+            self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
+        if not self.isTrain or opt.continue_train:
+            load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
+            self.load_networks(load_suffix)
+        self.print_networks(opt.verbose)
+        if self.isTrain:
+            self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
         """Load and print networks; create schedulers
 
         Parameters:
@@ -93,6 +104,10 @@ class BaseModel(ABC):
         self.print_networks(opt.verbose)
 
     def eval(self):
+        for name in self.model_names:
+            if isinstance(name, str):
+                net = getattr(self, 'net' + name)
+                net.eval()
         """Make models eval mode during test time"""
         for name in self.model_names:
             if isinstance(name, str):
@@ -102,6 +117,11 @@ class BaseModel(ABC):
     def test(self):
         """Forward function used in test time.
 
+        It also calls <compute_visuals> to produce additional visualization results"""
+        self.forward()
+        self.compute_visuals()
+        """Forward function used in test time.
+
         It also calls <compute_visuals> to produce additional visualization results
         """
         self.forward()
@@ -109,6 +129,7 @@ class BaseModel(ABC):
 
     def compute_visuals(self): # noqa
         """Calculate additional output images for visdom and HTML visualization"""
+        # Add your code here to calculate additional output images for visualization
         pass
 
     def get_image_paths(self):
@@ -159,6 +180,7 @@ class BaseModel(ABC):
                     torch.save(net.module.cpu().state_dict(), save_path)
                     net.cuda(self.gpu_ids[0])
                 else:
+                    torch.save(net.cpu().state_dict(), save_path)
                     torch.save(net.cpu().state_dict(), save_path)
 
     def unload_network(self, name):
@@ -239,4 +261,4 @@ class BaseModel(ABC):
         for net in nets:
             if net is not None:
                 for param in net.parameters():
-                    param.requires_grad = requires_grad
+                    param.requires_grad = requires_grad if param is not None else False
