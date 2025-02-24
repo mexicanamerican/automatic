@@ -71,15 +71,29 @@ class BaseModel(ABC):
 
     @abstractmethod
     def forward(self):
-        """Run forward pass; called by both functions <optimize_parameters> and <test>."""
+        """Run forward pass; called by both functions <optimize_parameters> and <test>.
+
+        """   
         pass
 
     @abstractmethod
     def optimize_parameters(self):
-        """Calculate losses, gradients, and update network weights; called in every training iteration"""
+        """Calculate losses, gradients, and update network weights; called in every training iteration
+        """
         pass
 
     def setup(self, opt):
+        """Load and print networks; create schedulers
+
+        Parameters:
+            opt (Option class) -- stores all the experiment flags; needs to be a subclass of BaseOptions
+        """
+        if self.isTrain:
+            self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
+        if not self.isTrain or opt.continue_train:
+            load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
+            self.load_networks(load_suffix)
+        self.print('-----------------------------------------------')
         """Load and print networks; create schedulers
 
         Parameters:
@@ -105,9 +119,9 @@ class BaseModel(ABC):
         It also calls <compute_visuals> to produce additional visualization results
         """
         self.forward()
-        self.compute_visuals()
+        self._compute_visuals()
 
-    def compute_visuals(self): # noqa
+    def compute_visuals(self):
         """Calculate additional output images for visdom and HTML visualization"""
         pass
 
@@ -128,6 +142,14 @@ class BaseModel(ABC):
         print('learning rate %.7f -> %.7f' % (old_lr, lr))
 
     def get_current_visuals(self):
+        """Return visualization images. train.py will display these images with visdom, and save the images to a HTML"""
+        
+        visual_ret = OrderedDict()
+        for name in self.visual_names:
+            if isinstance(name, str):
+                visual_ret[name] = getattr(self, name)
+        print('-----------------------------------------------')
+        return visual_ret
         """Return visualization images. train.py will display these images with visdom, and save the images to a HTML"""
         visual_ret = OrderedDict()
         for name in self.visual_names:
@@ -160,9 +182,21 @@ class BaseModel(ABC):
                     net.cuda(self.gpu_ids[0])
                 else:
                     torch.save(net.cpu().state_dict(), save_path)
+                save_filename = '%s_net_%s.pth' % (epoch, name)
+                save_path = os.path.join(self.save_dir, save_filename)
+                net = getattr(self, 'net' + name)
+
+                if len(self.gpu_ids) > 0 and torch.cuda.is_available():
+                    torch.save(net.module.cpu().state_dict(), save_path)
+                    net.cuda(self.gpu_ids[0])
+                else:
+                    torch.save(net.cpu().state_dict(), save_path)
 
     def unload_network(self, name):
-        """Unload network and gc.
+        """Unload network and perform garbage collection.
+
+        Parameters:
+            name (str): Name of the network
         """
         if isinstance(name, str):
             net = getattr(self, 'net' + name)
