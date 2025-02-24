@@ -4,6 +4,9 @@ from abc import ABC, abstractmethod
 from collections import OrderedDict
 
 import torch
+import itertools
+import torch.nn
+from modules.networks import get_scheduler
 
 from modules.control.util import torch_gc
 from . import networks
