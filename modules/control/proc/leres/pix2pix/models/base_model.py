@@ -143,7 +143,7 @@ class BaseModel(ABC):
                 errors_ret[name] = float(getattr(self, 'loss_' + name))  # float(...) works for both scalar tensor and float number
         return errors_ret
 
-    def save_networks(self, epoch):
+    def save_networkworks(self, epoch):
         """Save all the networks to the disk.
 
         Parameters:
