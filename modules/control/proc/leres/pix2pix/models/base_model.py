@@ -5,7 +5,7 @@ from collections import OrderedDict
 
 import torch
 
-from modules.control.util import torch_gc
+from modules.control.util import torch_gc, torch_gc
 from . import networks
 
 
@@ -67,17 +67,17 @@ class BaseModel(ABC):
         Parameters:
             input (dict): includes the data itself and its metadata information.
         """
-        pass
+        raise NotImplementedError('Abstract method must be implemented')
 
     @abstractmethod
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
-        pass
+        raise NotImplementedError('Abstract method must be implemented')
 
     @abstractmethod
     def optimize_parameters(self):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
-        pass
+        raise NotImplementedError('Abstract method must be implemented')
 
     def setup(self, opt):
         """Load and print networks; create schedulers
@@ -155,7 +155,7 @@ class BaseModel(ABC):
                 save_path = os.path.join(self.save_dir, save_filename)
                 net = getattr(self, 'net' + name)
 
-                if len(self.gpu_ids) > 0 and torch.cuda.is_available():
+                if len(self.gpu_ids) > 0 and torch.cuda.is_available() and self.gpu_ids:
                     torch.save(net.module.cpu().state_dict(), save_path)
                     net.cuda(self.gpu_ids[0])
                 else:
