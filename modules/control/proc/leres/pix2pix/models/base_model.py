@@ -60,26 +60,39 @@ class BaseModel(ABC):
         """
         return parser
 
-    @abstractmethod
     def set_input(self, input):
         """Unpack input data from the dataloader and perform necessary pre-processing steps.
 
         Parameters:
             input (dict): includes the data itself and its metadata information.
         """
+        # Implement the necessary business logic
         pass
 
-    @abstractmethod
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
+        # Implement the necessary business logic
         pass
 
-    @abstractmethod
     def optimize_parameters(self):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
+        # Implement the necessary business logic
         pass
 
-    def setup(self, opt):
+    def setup(self, opt): 
+        pass 
+        """Load and print networks; create schedulers
+
+
+        Parameters:
+            opt (Option class) -- stores all the experiment flags; needs to be a subclass of BaseOptions
+        """ 
+        if self.isTrain:
+            self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
+        if not self.isTrain or opt.continue_train:
+            load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
+            self.load_networks(load_suffix)
+        self.print_networks(opt.verbose)
         """Load and print networks; create schedulers
 
         Parameters:
@@ -94,6 +107,16 @@ class BaseModel(ABC):
 
     def eval(self):
         """Make models eval mode during test time"""
+        self.forward()
+        self.set_eval_mode()
+
+    def set_eval_mode(self): # noqa
+        """Set models to evaluation mode"""
+        for name in self.model_names:
+            if isinstance(name, str):
+                net = getattr(self, 'net' + name)
+                net.eval()
+        """Make models eval mode during test time"""
         for name in self.model_names:
             if isinstance(name, str):
                 net = getattr(self, 'net' + name)
@@ -107,8 +130,9 @@ class BaseModel(ABC):
         self.forward()
         self.compute_visuals()
 
-    def compute_visuals(self): # noqa
+    def compute_visuals(self):
         """Calculate additional output images for visdom and HTML visualization"""
+        # Implement the necessary business logic
         pass
 
     def get_image_paths(self):
@@ -117,19 +141,20 @@ class BaseModel(ABC):
 
     def update_learning_rate(self):
         """Update learning rates for all the networks; called at the end of every epoch"""
-        old_lr = self.optimizers[0].param_groups[0]['lr']
-        for scheduler in self.schedulers:
-            if self.opt.lr_policy == 'plateau':
-                scheduler.step(self.metric)
-            else:
-                scheduler.step()
+        for optimizer in self.optimizers:
+            for param_group in optimizer.param_groups:
+                old_lr = param_group['lr']
+                if self.opt.lr_policy == 'plateau':
+                    param_group['lr'] = scheduler.step(self.metric)
+                else:
+                    param_group['lr'] = scheduler.step()
 
-        lr = self.optimizers[0].param_groups[0]['lr']
-        print('learning rate %.7f -> %.7f' % (old_lr, lr))
+                lr = param_group['lr']
+                print('learning rate %.7f -> %.7f' % (old_lr, lr))
 
     def get_current_visuals(self):
         """Return visualization images. train.py will display these images with visdom, and save the images to a HTML"""
-        visual_ret = OrderedDict()
+        visual_ret = {}
         for name in self.visual_names:
             if isinstance(name, str):
                 visual_ret[name] = getattr(self, name)
@@ -144,6 +169,18 @@ class BaseModel(ABC):
         return errors_ret
 
     def save_networks(self, epoch):
+        # Save all the networks to the disk.
+        for name in self.model_names:
+            if isinstance(name, str):
+                save_filename = '%s_net_%s.pth' % (epoch, name)
+                save_path = os.path.join(self.save_dir, save_filename)
+                net = getattr(self, 'net' + name)
+
+                if len(self.gpu_ids) > 0 and torch.cuda.is_available():
+                    torch.save(net.module.cpu().state_dict(), save_path)
+                    net.cuda(self.gpu_ids[0])
+                else:
+                    torch.save(net.cpu().state_dict(), save_path)
         """Save all the networks to the disk.
 
         Parameters:
