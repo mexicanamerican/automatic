@@ -10,7 +10,7 @@ from modules import timer, errors
 
 
 initialized = False
-errors.install()
+errors.install(log_errors=True)
 logging.getLogger("DeepSpeed").disabled = True
 
 
