@@ -16,7 +16,7 @@ class BaseModel(ABC):
         -- <set_input>:                     unpack data from dataset and apply preprocessing.
         -- <forward>:                       produce intermediate results.
         -- <optimize_parameters>:           calculate losses, gradients, and update network weights.
-        -- <modify_commandline_options>:    (optionally) add model-specific options and set default options.
+        -- <setup>:                      load and print networks; create schedulers
     """
 
     def __init__(self, opt):
@@ -60,7 +60,6 @@ class BaseModel(ABC):
         """
         return parser
 
-    @abstractmethod
     def set_input(self, input):
         """Unpack input data from the dataloader and perform necessary pre-processing steps.
 
@@ -69,12 +68,12 @@ class BaseModel(ABC):
         """
         pass
 
-    @abstractmethod
+    
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
         pass
 
-    @abstractmethod
+    
     def optimize_parameters(self):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
         pass
@@ -93,6 +92,13 @@ class BaseModel(ABC):
         self.print_networks(opt.verbose)
 
     def eval(self):
+        """Forward function used in test time.
+
+        It also calls <compute_visuals> to produce additional visualization results"""
+        for name in self.model_names:
+            if isinstance(name, str):
+                net = getattr(self, 'net' + name)
+                net.eval()
         """Make models eval mode during test time"""
         for name in self.model_names:
             if isinstance(name, str):
@@ -170,6 +176,14 @@ class BaseModel(ABC):
             gc.collect()
             torch_gc()
             return None
+        """Unload network and gc.
+        """
+        if isinstance(name, str):
+            net = getattr(self, 'net' + name)
+            del net
+            gc.collect()
+            torch_gc()
+            return None
 
     def __patch_instance_norm_state_dict(self, state_dict, module, keys, i=0):
         """Fix InstanceNorm checkpoints incompatibility (prior to 0.4)"""
@@ -208,8 +222,10 @@ class BaseModel(ABC):
                 # patch InstanceNorm checkpoints prior to 0.4
                 for key in list(state_dict.keys()):  # need to copy keys here because we mutate in loop
                     self.__patch_instance_norm_state_dict(state_dict, net, key.split('.'))
+
                 net.load_state_dict(state_dict)
 
+<snippet index="0" reason="Implement the print_networks method">
     def print_networks(self, verbose):
         """Print the total number of parameters in the network and (if verbose) network architecture
 
@@ -226,6 +242,8 @@ class BaseModel(ABC):
                 if verbose:
                     print(net)
                 print('[Network %s] Total number of parameters : %.3f M' % (name, num_params / 1e6))
+    
+    
         print('-----------------------------------------------')
 
     def set_requires_grad(self, nets, requires_grad=False):
@@ -239,4 +257,4 @@ class BaseModel(ABC):
         for net in nets:
             if net is not None:
                 for param in net.parameters():
-                    param.requires_grad = requires_grad
+                    param.requires_grad = False
