@@ -201,7 +201,14 @@ class BaseModel(ABC):
                 # print('Loading depth boost model from %s' % load_path)
                 # if you are using PyTorch newer than 0.4 (e.g., built from
                 # GitHub source), you can remove str() on self.device
-                state_dict = torch.load(load_path, map_location=str(self.device))
+                try:
+                    state_dict = torch.load(load_path, map_location=str(self.device))
+                except FileNotFoundError as fe:
+                    print(f'The file {load_path} was not found: {str(fe)}')
+                    state_dict = None
+                except Exception as e:
+                    print(f'An error occurred while loading the network {name} from {load_path}: {str(e)}')
+                    state_dict = None
                 if hasattr(state_dict, '_metadata'):
                     del state_dict._metadata
 
