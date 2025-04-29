@@ -67,17 +67,20 @@ class BaseModel(ABC):
         Parameters:
             input (dict): includes the data itself and its metadata information.
         """
-        pass
+        # Unpack input data from the dataloader and perform necessary preprocessing steps
+        # Implement the set_input method here
 
     @abstractmethod
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
-        pass
+        # Run forward pass; called by both functions <optimize_parameters> and <test>
+        # Implement the forward method here
 
     @abstractmethod
     def optimize_parameters(self):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
-        pass
+        # Calculate losses, gradients, and update network weights; called in every training iteration
+        # Implement the optimize_parameters method here
 
     def setup(self, opt):
         """Load and print networks; create schedulers
@@ -85,14 +88,19 @@ class BaseModel(ABC):
         Parameters:
             opt (Option class) -- stores all the experiment flags; needs to be a subclass of BaseOptions
         """
-        if self.isTrain:
+        if self.isTrain and self.optimizers:
             self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
-        if not self.isTrain or opt.continue_train:
-            load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
-            self.load_networks(load_suffix)
-        self.print_networks(opt.verbose)
+            if opt.continue_train:
+                load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
+                self.load_networks(load_suffix)
+            self.print_networks(opt.verbose)
 
     def eval(self):
+        """Make models eval mode during test time"""
+        for name in self.model_names:
+            if isinstance(name, str):
+                net = getattr(self, 'net' + name)
+                net.eval()
         """Make models eval mode during test time"""
         for name in self.model_names:
             if isinstance(name, str):
@@ -109,6 +117,18 @@ class BaseModel(ABC):
 
     def compute_visuals(self): # noqa
         """Calculate additional output images for visdom and HTML visualization"""
+        # Implement the calculation of additional output images for visualization
+        # Add code here to calculate additional output images for visualization
+        pass
+    def compute_visuals(self): # noqa
+        """Calculate additional output images for visdom and HTML visualization"""
+        # Implement the calculation of additional output images for visualization
+        # Add code here to calculate additional output images for visualization
+        pass
+    def compute_visuals(self): # noqa
+        """Calculate additional output images for visdom and HTML visualization"""
+        # Implement the calculation of additional output images for visualization
+        # Add code here to calculate additional output images for visualization
         pass
 
     def get_image_paths(self):
@@ -156,7 +176,22 @@ class BaseModel(ABC):
                 net = getattr(self, 'net' + name)
 
                 if len(self.gpu_ids) > 0 and torch.cuda.is_available():
-                    torch.save(net.module.cpu().state_dict(), save_path)
+    def compute_visuals(self): # noqa
+        """Calculate additional output images for visdom and HTML visualization"""
+        # Implement the calculation of additional output images for visualization
+        # Add code here to calculate additional output images for visualization
+        pass
+    def compute_visuals(self): # noqa
+        """Calculate additional output images for visdom and HTML visualization"""
+        # Implement the calculation of additional output images for visualization
+        # Add code here to calculate additional output images for visualization
+        pass
+    def compute_visuals(self): # noqa
+        """Calculate additional output images for visdom and HTML visualization"""
+        # Implement the calculation of additional output images for visualization
+        # Add code here to calculate additional output images for visualization
+        pass
+                    torch.save(net.cpu().state_dict(), save_path)
                     net.cuda(self.gpu_ids[0])
                 else:
                     torch.save(net.cpu().state_dict(), save_path)
@@ -197,6 +232,8 @@ class BaseModel(ABC):
                 load_path = os.path.join(self.save_dir, load_filename)
                 net = getattr(self, 'net' + name)
                 if isinstance(net, torch.nn.DataParallel):
+                    net = getattr(self, 'net' + name).module
+                if isinstance(net, torch.nn.DataParallel):
                     net = net.module
                 # print('Loading depth boost model from %s' % load_path)
                 # if you are using PyTorch newer than 0.4 (e.g., built from
@@ -236,6 +273,9 @@ class BaseModel(ABC):
         """
         if not isinstance(nets, list):
             nets = [nets]
+        for net in nets:
+            # Set requies_grad for all the networks
+            # Set requires_grad attribute for all networks
         for net in nets:
             if net is not None:
                 for param in net.parameters():
