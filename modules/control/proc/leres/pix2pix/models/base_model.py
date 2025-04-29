@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 from collections import OrderedDict
 
 import torch
+from . import networks
+from . import networks
 
 from modules.control.util import torch_gc
 from . import networks
