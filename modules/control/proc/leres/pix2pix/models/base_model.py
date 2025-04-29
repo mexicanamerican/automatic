@@ -20,6 +20,11 @@ class BaseModel(ABC):
     """
 
     def __init__(self, opt):
+        try:
+            pass
+        except Exception as e:
+            print('An error occurred during initialization:', str(e))
+            raise e
         """Initialize the BaseModel class.
 
         Parameters:
@@ -100,6 +105,11 @@ class BaseModel(ABC):
                 net.eval()
 
     def test(self):
+        try:
+            self.forward()
+            self.compute_visuals()
+        except Exception as e:
+            print('An error occurred during test:', str(e))
         """Forward function used in test time.
 
         It also calls <compute_visuals> to produce additional visualization results
