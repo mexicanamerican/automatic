@@ -1,9 +1,33 @@
 import gc
+import torch
+import argparse
+import itertools
+import numpy as np
+import cv2
+import matplotlib.pyplot as plt
 import os
+import torch
+import argparse
+import itertools
+import gc
+import os
+import sys
+import gc
+import os
+import sys
+import os
+import sys
+import torch
+import numpy as np
+import cv2
+import matplotlib.pyplot as plt
+
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 
-import torch
+from abc import ABC, abstractmethod
+from collections import OrderedDict
+import itertools
 
 from modules.control.util import torch_gc
 from . import networks
@@ -45,10 +69,17 @@ class BaseModel(ABC):
         self.visual_names = []
         self.optimizers = []
         self.image_paths = []
-        self.metric = 0  # used for learning rate policy 'plateau'
+        self.model_names = []
+        self.visual_names = []
+        self.optimizers = []
+        self.image_paths = []
+        self.metric = 0
 
     @staticmethod
     def modify_commandline_options(parser, is_train):
+        # Modify the command line options here
+        modified_parser = parser
+        return modified_parser
         """Add new model-specific options, and rewrite default values for existing options.
 
         Parameters:
@@ -76,8 +107,11 @@ class BaseModel(ABC):
 
     @abstractmethod
     def optimize_parameters(self):
-        """Calculate losses, gradients, and update network weights; called in every training iteration"""
-        pass
+        """Calculate losses, gradients, and update network weights; called in every training iteration
+        """
+    pass
+    from abc import ABC, abstractmethod
+    from collections import OrderedDict
 
     def setup(self, opt):
         """Load and print networks; create schedulers
@@ -87,7 +121,7 @@ class BaseModel(ABC):
         """
         if self.isTrain:
             self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
-        if not self.isTrain or opt.continue_train:
+        if not self.isTrain or (hasattr(self, 'optimizers') and opt.continue_train):
             load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
             self.load_networks(load_suffix)
         self.print_networks(opt.verbose)
@@ -100,12 +134,14 @@ class BaseModel(ABC):
                 net.eval()
 
     def test(self):
-        """Forward function used in test time.
-
-        It also calls <compute_visuals> to produce additional visualization results
-        """
+        """Forward function used in test time. It also calls <compute_visuals> to produce additional visualization results"""
         self.forward()
+        output_images = self.compute_visuals()
         self.compute_visuals()
+
+def compute_visuals(self):
+    """Calculate additional output images for visdom and HTML visualization"""
+    self.compute_visuals()
 
     def compute_visuals(self): # noqa
         """Calculate additional output images for visdom and HTML visualization"""
@@ -125,7 +161,7 @@ class BaseModel(ABC):
                 scheduler.step()
 
         lr = self.optimizers[0].param_groups[0]['lr']
-        print('learning rate %.7f -> %.7f' % (old_lr, lr))
+        print('Updated learning rate:', lr)
 
     def get_current_visuals(self):
         """Return visualization images. train.py will display these images with visdom, and save the images to a HTML"""
@@ -159,7 +195,7 @@ class BaseModel(ABC):
                     torch.save(net.module.cpu().state_dict(), save_path)
                     net.cuda(self.gpu_ids[0])
                 else:
-                    torch.save(net.cpu().state_dict(), save_path)
+                    torch.save(net.state_dict(), save_path)
 
     def unload_network(self, name):
         """Unload network and gc.
@@ -167,7 +203,6 @@ class BaseModel(ABC):
         if isinstance(name, str):
             net = getattr(self, 'net' + name)
             del net
-            gc.collect()
             torch_gc()
             return None
 
