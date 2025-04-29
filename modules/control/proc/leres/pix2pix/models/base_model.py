@@ -194,14 +194,14 @@ class BaseModel(ABC):
         for name in self.model_names:
             if isinstance(name, str):
                 load_filename = '%s_net_%s.pth' % (epoch, name)
-                load_path = os.path.join(self.save_dir, load_filename)
                 net = getattr(self, 'net' + name)
                 if isinstance(net, torch.nn.DataParallel):
                     net = net.module
-                # print('Loading depth boost model from %s' % load_path)
-                # if you are using PyTorch newer than 0.4 (e.g., built from
-                # GitHub source), you can remove str() on self.device
-                state_dict = torch.load(load_path, map_location=str(self.device))
+                load_path = os.path.join(self.save_dir, load_filename)
+                try:
+                    state_dict = torch.load(load_path, map_location=self.device)
+                except Exception as e:
+                    print(f'Failed to load the model from {load_path}: {e}')
                 if hasattr(state_dict, '_metadata'):
                     del state_dict._metadata
 
@@ -225,7 +225,7 @@ class BaseModel(ABC):
                     num_params += param.numel()
                 if verbose:
                     print(net)
-                print('[Network %s] Total number of parameters : %.3f M' % (name, num_params / 1e6))
+                print(f'[Network {name}] Total number of parameters: {num_params / 1e6:.3f} M')
         print('-----------------------------------------------')
 
     def set_requires_grad(self, nets, requires_grad=False):
