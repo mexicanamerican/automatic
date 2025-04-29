@@ -32,7 +32,7 @@ class BaseModelHG():
         return self.input
 
     def get_current_errors(self):
-        return {}
+        return self.error_logs
 
     def save(self, label):
         pass
