@@ -2,12 +2,17 @@ import gc
 import os
 from abc import ABC, abstractmethod
 from collections import OrderedDict
+from collections import OrderedDict
 
 import torch
 
 from modules.control.util import torch_gc
 from . import networks
 
+
+from abc import ABC, abstractmethod
+from modules.control.util import torch_gc
+from . import networks
 
 class BaseModel(ABC):
     """This class is an abstract base class (ABC) for models.
