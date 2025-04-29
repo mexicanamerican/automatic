@@ -29,6 +29,7 @@ class AutoencoderKL(pl.LightningModule):
         self.encoder = Encoder(**ddconfig)
         self.decoder = Decoder(**ddconfig)
         self.loss = instantiate_from_config(lossconfig)
+        self.learning_rate = 0.0002
         assert ddconfig["double_z"]
         self.quant_conv = torch.nn.Conv2d(2*ddconfig["z_channels"], 2*embed_dim, 1)
         self.post_quant_conv = torch.nn.Conv2d(embed_dim, ddconfig["z_channels"], 1)
@@ -77,13 +78,16 @@ class AutoencoderKL(pl.LightningModule):
 
     def on_train_batch_end(self, *args, **kwargs):
         if self.use_ema:
-            self.model_ema(self)
+            self.model_ema.update(self)
 
-    def encode(self, x):
+    def encode(self, x, return_prior=False):
         h = self.encoder(x)
         moments = self.quant_conv(h)
         posterior = DiagonalGaussianDistribution(moments)
-        return posterior
+        if return_prior:
+            return posterior
+        else:
+            return posterior.sample()
 
     def decode(self, z):
         z = self.post_quant_conv(z)
@@ -164,7 +168,7 @@ class AutoencoderKL(pl.LightningModule):
         return self.decoder.conv_out.weight
 
     @torch.no_grad()
-    def log_images(self, batch, only_inputs=False, log_ema=False, **kwargs):
+    def image_degradation_modules_compatible_with_diffusion_models(self, batch, only_inputs=False, log_ema=False, **kwargs):
         log = dict()
         x = self.get_input(batch, self.image_key)
         x = x.to(self.device)
@@ -173,7 +177,7 @@ class AutoencoderKL(pl.LightningModule):
             if x.shape[1] > 3:
                 # colorize with random projection
                 assert xrec.shape[1] > 3
-                x = self.to_rgb(x)
+                x = self.bsrgan(x)
                 xrec = self.to_rgb(xrec)
             log["samples"] = self.decode(torch.randn_like(posterior.sample()))
             log["reconstructions"] = xrec
@@ -183,7 +187,7 @@ class AutoencoderKL(pl.LightningModule):
                     if x.shape[1] > 3:
                         # colorize with random projection
                         assert xrec_ema.shape[1] > 3
-                        xrec_ema = self.to_rgb(xrec_ema)
+                        xrec_ema = self.bsrgan_light(xrec_ema)
                     log["samples_ema"] = self.decode(torch.randn_like(posterior_ema.sample()))
                     log["reconstructions_ema"] = xrec_ema
         log["inputs"] = x
