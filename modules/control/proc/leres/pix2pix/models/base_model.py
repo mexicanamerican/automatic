@@ -1,11 +1,14 @@
 import gc
 import os
 from abc import ABC, abstractmethod
+import argparse
 from collections import OrderedDict
 
 import torch
 
 from modules.control.util import torch_gc
+import torch.optim as optim
+from collections import OrderedDict
 from . import networks
 
 
@@ -47,8 +50,9 @@ class BaseModel(ABC):
         self.image_paths = []
         self.metric = 0  # used for learning rate policy 'plateau'
 
-    @staticmethod
-    def modify_commandline_options(parser, is_train):
+    @classmethod
+    @classmethod
+    def modify_commandline_options(cls, parser, is_train):
         """Add new model-specific options, and rewrite default values for existing options.
 
         Parameters:
@@ -58,6 +62,9 @@ class BaseModel(ABC):
         Returns:
             the modified parser.
         """
+            # Add new model-specific options and default values
+        parser.add_argument('--model_specific_option', type=int, default=1, help='Model specific option')
+        parser.set_defaults(some_option=True)
         return parser
 
     @abstractmethod
@@ -100,32 +107,46 @@ class BaseModel(ABC):
                 net.eval()
 
     def test(self):
+    """Forward function used in test time."""
+    self.forward()
+    self.compute_visuals()
+        """Forward function used in test time. It also calls <compute_visuals> to produce additional visualization results."""
+        self.forward()
+        self.compute_visuals()
         """Forward function used in test time.
 
         It also calls <compute_visuals> to produce additional visualization results
         """
         self.forward()
         self.compute_visuals()
+        pass
+        """Calculate additional output images for visdom and HTML visualization"""
 
-    def compute_visuals(self): # noqa
+    def compute_visuals(self):
+        pass
         """Calculate additional output images for visdom and HTML visualization"""
         pass
 
     def get_image_paths(self):
         """ Return image paths that are used to load current data"""
+        if self.isTrain:
+            self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
+        if not self.isTrain or opt.continue_train:
+            load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
+            self.load_networks(load_suffix)
+        self.print_networks(opt.verbose)
         return self.image_paths
 
-    def update_learning_rate(self):
+    def update_learning_rate(self, epoch):
         """Update learning rates for all the networks; called at the end of every epoch"""
-        old_lr = self.optimizers[0].param_groups[0]['lr']
-        for scheduler in self.schedulers:
-            if self.opt.lr_policy == 'plateau':
-                scheduler.step(self.metric)
-            else:
-                scheduler.step()
-
-        lr = self.optimizers[0].param_groups[0]['lr']
-        print('learning rate %.7f -> %.7f' % (old_lr, lr))
+        for optimizer in self.optimizers:
+            for scheduler in self.schedulers:
+                if self.opt.lr_policy == 'plateau':
+                    scheduler.step(self.metric)
+                else:
+                    scheduler.step()
+            lr = optimizer.param_groups[0]['lr']
+            print(f'learning rate {lr}')
 
     def get_current_visuals(self):
         """Return visualization images. train.py will display these images with visdom, and save the images to a HTML"""
@@ -134,6 +155,8 @@ class BaseModel(ABC):
             if isinstance(name, str):
                 visual_ret[name] = getattr(self, name)
         return visual_ret
+        pass
+        """Calculate additional output images for visdom and HTML visualization"""
 
     def get_current_losses(self):
         """Return traning losses / errors. train.py will print out these errors on console, and save them to a file"""
@@ -148,6 +171,57 @@ class BaseModel(ABC):
 
         Parameters:
             epoch (int) -- current epoch; used in the file name '%s_net_%s.pth' % (epoch, name)
+    def compute_visuals(self):
+        pass
+        """Calculate additional output images for visdom and HTML visualization"""
+        pass
+
+    def get_image_paths(self):
+        """ Return image paths that are used to load current data"""
+        if self.isTrain:
+            self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
+        if not self.isTrain or opt.continue_train:
+            load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
+            self.load_networks(load_suffix)
+        self.print_networks(opt.verbose)
+        return self.image_paths
+
+    def update_learning_rate(self, epoch):
+        """Update learning rates for all the networks; called at the end of every epoch"""
+        for optimizer in self.optimizers:
+            for scheduler in self.schedulers:
+                if self.opt.lr_policy == 'plateau':
+                    scheduler.step(self.metric)
+                else:
+                    scheduler.step()
+            lr = optimizer.param_groups[0]['lr']
+            print(f'learning rate {lr}')
+
+    def get_current_losses(self):
+        """Return traning losses / errors. train.py will print out these errors on console, and save them to a file"""
+        errors_ret = OrderedDict()
+        for name in self.loss_names:
+            if isinstance(name, str):
+                errors_ret[name] = float(getattr(self, 'loss_' + name))  # float(...) works for both scalar tensor and float number
+        return errors_ret
+
+    def save_networks(self, epoch):
+        """Save all the networks to the disk.
+
+        Parameters:
+            epoch (int) -- current epoch; used in the file name '%s_net_%s.pth' % (epoch, name)
+        """
+        for name in self.model_names:
+            if isinstance(name, str):
+                save_filename = '%s_net_%s.pth' % (epoch, name)
+                save_path = os.path.join(self.save_dir, save_filename)
+                net = getattr(self, 'net' + name)
+
+                if len(self.gpu_ids) > 0 and torch.cuda.is_available():
+                    torch.save(net.module.cpu().state_dict(), save_path)
+                    net.cuda(self.gpu_ids[0])
+                else:
+                    torch.save(net.cpu().state_dict(), save_path)
         """
         for name in self.model_names:
             if isinstance(name, str):
@@ -210,7 +284,21 @@ class BaseModel(ABC):
                     self.__patch_instance_norm_state_dict(state_dict, net, key.split('.'))
                 net.load_state_dict(state_dict)
 
-    def print_networks(self, verbose):
+    def print_networks(self, verbose:bool=True):
+        """Print the total number of parameters in the network and (if verbose) network architecture
+
+        Parameters:
+            verbose (bool) -- if verbose: print the network architecture
+        """
+        print('---------- Networks initialized -------------')
+        for name in self.model_names:
+            if isinstance(name, str):
+                net = getattr(self, 'net' + name)
+                num_params = 0
+                for name, param in net.named_parameters():
+                    if param.requires_grad:
+                        num_params += param.numel()
+                        print(f'[Network {name}] {name}: {num_params}')
         """Print the total number of parameters in the network and (if verbose) network architecture
 
         Parameters:
