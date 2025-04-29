@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        run: pytest
+
+      - name: Build and deploy
+        run: |
+          if [ ${{ github.event_name }} == 'push' ]; then
+            # Build and deploy steps for push events
+            echo "Building and deploying..."
+          else
+            # Additional steps for pull request events
+            echo "Running additional steps for pull requests..."
+          fi
+```
+
+In this modified file:
+- The workflow is triggered on push events to the `main` branch and pull request events targeting the `main` branch.
+- The workflow runs on the latest version of Ubuntu.
+- The steps include checking out the repository, setting up Python, installing dependencies, running tests, and building/deploying based on the event type.
+
+Please note that the above example is a simplified version, and you may need to customize it based on your specific requirements.
+
+When writing unit tests, ensure to cover all the steps and edge cases. Create mocks for any external dependencies. Here is an example of a unit test for the workflow:
+
+```python
+import unittest
+
+class TestWorkflow(unittest.TestCase):
+    def test_workflow(self):
+        # Test the workflow steps and assertions
+        pass
+
+if __name__ == '__main__':
+    unittest.main()
