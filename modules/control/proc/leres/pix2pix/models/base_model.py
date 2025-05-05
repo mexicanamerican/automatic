@@ -164,6 +164,7 @@ class BaseModel(ABC):
     def unload_network(self, name):
         """Unload network and gc.
         """
+        # Unload network and gc
         if isinstance(name, str):
             net = getattr(self, 'net' + name)
             del net
@@ -201,9 +202,13 @@ class BaseModel(ABC):
                 # print('Loading depth boost model from %s' % load_path)
                 # if you are using PyTorch newer than 0.4 (e.g., built from
                 # GitHub source), you can remove str() on self.device
-                state_dict = torch.load(load_path, map_location=str(self.device))
-                if hasattr(state_dict, '_metadata'):
-                    del state_dict._metadata
+                try:
+                    state_dict = torch.load(load_path, map_location=str(self.device))
+                    if hasattr(state_dict, '_metadata'):
+                        del state_dict._metadata
+                except Exception as e:
+                    print(f'Error loading state dict from {load_path}: {e}')
+                    return
 
                 # patch InstanceNorm checkpoints prior to 0.4
                 for key in list(state_dict.keys()):  # need to copy keys here because we mutate in loop
