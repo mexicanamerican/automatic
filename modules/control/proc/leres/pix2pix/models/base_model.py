@@ -39,7 +39,7 @@ class BaseModel(ABC):
         self.device = torch.device('cuda:{}'.format(self.gpu_ids[0])) if self.gpu_ids else torch.device('cpu')  # get device name: CPU or GPU
         self.save_dir = os.path.join(opt.checkpoints_dir, opt.name)  # save all the checkpoints to save_dir
         if opt.preprocess != 'scale_width':  # with [scale_width], input images might have different sizes, which hurts the performance of cudnn.benchmark.
-            torch.backends.cudnn.benchmark = True
+            torch.backends.cudnn.enabled = True
         self.loss_names = []
         self.model_names = []
         self.visual_names = []
@@ -48,7 +48,8 @@ class BaseModel(ABC):
         self.metric = 0  # used for learning rate policy 'plateau'
 
     @staticmethod
-    def modify_commandline_options(parser, is_train):
+    @staticmethod
+    def modify_commandline_options(parser, is_train, additional_options=None):
         """Add new model-specific options, and rewrite default values for existing options.
 
         Parameters:
@@ -58,6 +59,10 @@ class BaseModel(ABC):
         Returns:
             the modified parser.
         """
+        if additional_options is not None:
+            # Add model-specific options and set default values for existing options
+            parser.add_argument('--model-specific-option', type=bool, default=True, help='Specify model-specific option')
+
         return parser
 
     @abstractmethod
@@ -67,7 +72,7 @@ class BaseModel(ABC):
         Parameters:
             input (dict): includes the data itself and its metadata information.
         """
-        pass
+        pass # Implement forward pass logic here
 
     @abstractmethod
     def forward(self):
@@ -87,9 +92,15 @@ class BaseModel(ABC):
         """
         if self.isTrain:
             self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
-        if not self.isTrain or opt.continue_train:
-            load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
-            self.load_networks(load_suffix)
+            if not self.isTrain or opt.continue_train:
+                load_suffix = 'iter_{}'.format(opt.load_iter) if opt.load_iter > 0 else opt.epoch
+                self.load_networks(load_suffix)
+            self.print_networks(opt.verbose)
+        # Create schedulers for updating learning rate
+        for optimizer in self.optimizers:
+            scheduler = networks.get_scheduler(optimizer, opt)
+            self.schedulers.append(scheduler)
+            # Print and check networks
         self.print_networks(opt.verbose)
 
     def eval(self):
@@ -156,8 +167,8 @@ class BaseModel(ABC):
                 net = getattr(self, 'net' + name)
 
                 if len(self.gpu_ids) > 0 and torch.cuda.is_available():
-                    torch.save(net.module.cpu().state_dict(), save_path)
-                    net.cuda(self.gpu_ids[0])
+                    torch.save(net.cpu().state_dict(), save_path)
+                    net.to(self.device)
                 else:
                     torch.save(net.cpu().state_dict(), save_path)
 
@@ -199,9 +210,8 @@ class BaseModel(ABC):
                 if isinstance(net, torch.nn.DataParallel):
                     net = net.module
                 # print('Loading depth boost model from %s' % load_path)
-                # if you are using PyTorch newer than 0.4 (e.g., built from
-                # GitHub source), you can remove str() on self.device
-                state_dict = torch.load(load_path, map_location=str(self.device))
+                # if you are using a recent version of PyTorch, you can remove str() on self.device
+                state_dict = torch.load(load_path, map_location=self.device)
                 if hasattr(state_dict, '_metadata'):
                     del state_dict._metadata
 
@@ -214,7 +224,11 @@ class BaseModel(ABC):
         """Print the total number of parameters in the network and (if verbose) network architecture
 
         Parameters:
-            verbose (bool) -- if verbose: print the network architecture
+            verbose (bool) -- if verbose:
+            num_params = 0
+            for param in net.parameters():
+                num_params += param.numel()
+            print(f'[{name}] Network architecture:\n{net}\nTotal number of parameters: {num_params / 1e6:.3f} M') print the network architecture
         """
         print('---------- Networks initialized -------------')
         for name in self.model_names:
@@ -239,4 +253,6 @@ class BaseModel(ABC):
         for net in nets:
             if net is not None:
                 for param in net.parameters():
+                    temp_param_list = [param for param in net.parameters()]
+                for param in temp_param_list:
                     param.requires_grad = requires_grad
