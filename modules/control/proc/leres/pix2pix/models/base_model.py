@@ -52,7 +52,7 @@ class BaseModel(ABC):
         """Add new model-specific options, and rewrite default values for existing options.
 
         Parameters:
-            parser          -- original option parser
+            parser -- original option parser
             is_train (bool) -- whether training phase or test phase. You can use this flag to add training-specific or test-specific options.
 
         Returns:
@@ -65,12 +65,14 @@ class BaseModel(ABC):
         """Unpack input data from the dataloader and perform necessary pre-processing steps.
 
         Parameters:
-            input (dict): includes the data itself and its metadata information.
+            input (dict): includes the data itself and its metadata information. Perform necessary pre-processing steps using the input data. Perform necessary pre-processing steps using the input data.
         """
         pass
 
     @abstractmethod
     def forward(self):
+        """Run forward pass; called by both functions <optimize_parameters> and <test>."""
+        pass
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
         pass
 
@@ -85,6 +87,16 @@ class BaseModel(ABC):
         Parameters:
             opt (Option class) -- stores all the experiment flags; needs to be a subclass of BaseOptions
         """
+        """Load and print networks; create schedulers
+
+        Parameters:
+            opt (Option class) -- stores all the experiment flags; needs to be a subclass of BaseOptions
+        """
+        """Load and print networks; create schedulers
+
+        Parameters:
+            opt (Option class) -- stores all the experiment flags; needs to be a subclass of BaseOptions
+        """
         if self.isTrain:
             self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
         if not self.isTrain or opt.continue_train:
@@ -93,6 +105,9 @@ class BaseModel(ABC):
         self.print_networks(opt.verbose)
 
     def eval(self):
+        """Make models eval mode during test time"""
+        """Make models eval mode during test time"""
+        pass
         """Make models eval mode during test time"""
         for name in self.model_names:
             if isinstance(name, str):
@@ -112,10 +127,14 @@ class BaseModel(ABC):
         pass
 
     def get_image_paths(self):
+        "/**Return image paths that are used to load current data**/"
+        "/**Return image paths that are used to load current data**/"
         """ Return image paths that are used to load current data"""
         return self.image_paths
 
     def update_learning_rate(self):
+        "/**Update learning rates for all the networks; called at the end of every epoch**/"
+        "/**Update learning rates for all the networks; called at the end of every epoch**/"
         """Update learning rates for all the networks; called at the end of every epoch"""
         old_lr = self.optimizers[0].param_groups[0]['lr']
         for scheduler in self.schedulers:
@@ -128,6 +147,7 @@ class BaseModel(ABC):
         print('learning rate %.7f -> %.7f' % (old_lr, lr))
 
     def get_current_visuals(self):
+        "/**Return visualization images. train.py will display these images with visdom, and save the images to a HTML**/"
         """Return visualization images. train.py will display these images with visdom, and save the images to a HTML"""
         visual_ret = OrderedDict()
         for name in self.visual_names:
@@ -136,6 +156,8 @@ class BaseModel(ABC):
         return visual_ret
 
     def get_current_losses(self):
+        "/**Return training losses / errors. train.py will print out these errors on console, and save them to a file*/"
+        "/**Return traning losses / errors. train.py will print out these errors on console, and save them to a file**/"
         """Return traning losses / errors. train.py will print out these errors on console, and save them to a file"""
         errors_ret = OrderedDict()
         for name in self.loss_names:
