@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      # Add necessary steps for building and testing the project
+
+      # Example step: Run unit tests
+      - name: Run unit tests
+        run: |
+          # Add commands to run unit tests here
+
+      # Example step: Deploy the application
+      - name: Deploy
+        run: |
+          # Add commands to deploy the application here
