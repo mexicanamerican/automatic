@@ -15,7 +15,7 @@ class RelDepthModel(nn.Module):
         self.depth_model = DepthModel(encoder)
 
     def inference(self, rgb):
-        input = rgb.to(self.depth_model.device)
+        input = rgb.to(self.depth_model.device) if self.depth_model.device else rgb
         depth = self.depth_model(input)
         #pred_depth_out = depth - depth.min() + 0.01
         return depth #pred_depth_out
