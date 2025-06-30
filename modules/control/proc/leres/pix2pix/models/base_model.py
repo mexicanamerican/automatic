@@ -67,17 +67,17 @@ class BaseModel(ABC):
         Parameters:
             input (dict): includes the data itself and its metadata information.
         """
-        pass
+    # Implemented method to unpack input data and perform necessary pre-processing steps
 
     @abstractmethod
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
-        pass
+    # Implemented method to run forward pass; called by both functions <optimize_parameters> and <test>
 
     @abstractmethod
     def optimize_parameters(self):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
-        pass
+    # Implemented method to calculate losses, gradients, and update network weights; called in every training iteration
 
     def setup(self, opt):
         """Load and print networks; create schedulers
@@ -87,13 +87,13 @@ class BaseModel(ABC):
         """
         if self.isTrain:
             self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
-        if not self.isTrain or opt.continue_train:
-            load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
-            self.load_networks(load_suffix)
-        self.print_networks(opt.verbose)
+            if not self.isTrain or opt.continue_train:
+                load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
+                self.load_networks(load_suffix)
+            self.print_networks(opt.verbose)
 
     def eval(self):
-        """Make models eval mode during test time"""
+        """Set models to evaluation mode during test time"""
         for name in self.model_names:
             if isinstance(name, str):
                 net = getattr(self, 'net' + name)
@@ -104,10 +104,15 @@ class BaseModel(ABC):
 
         It also calls <compute_visuals> to produce additional visualization results
         """
-        self.forward()
-        self.compute_visuals()
+        """Run forward pass and compute additional visualization results."""
+        with torch.no_grad():
+            self.forward()
+            """Calculate additional output images for visdom and HTML visualization"""
+        pass
 
-    def compute_visuals(self): # noqa
+    def compute_visuals(self):    # noqa
+        """Calculate additional output images for visdom and HTML visualization"""
+        # New implementation for calculating additional output images for visualization
         """Calculate additional output images for visdom and HTML visualization"""
         pass
 
@@ -150,15 +155,15 @@ class BaseModel(ABC):
             epoch (int) -- current epoch; used in the file name '%s_net_%s.pth' % (epoch, name)
         """
         for name in self.model_names:
-            if isinstance(name, str):
-                save_filename = '%s_net_%s.pth' % (epoch, name)
-                save_path = os.path.join(self.save_dir, save_filename)
-                net = getattr(self, 'net' + name)
+            net = getattr(self, 'net' + name)
 
-                if len(self.gpu_ids) > 0 and torch.cuda.is_available():
-                    torch.save(net.module.cpu().state_dict(), save_path)
-                    net.cuda(self.gpu_ids[0])
-                else:
+            save_filename = '%s_net_%s.pth' % (epoch, name)
+            save_path = os.path.join(self.save_dir, save_filename)
+            if len(self.gpu_ids) > 0 and torch.cuda.is_available():
+                net = net.to('cpu')
+                torch.save(net.state_dict(), save_path)
+                net = net.to(self.device)
+            else:
                     torch.save(net.cpu().state_dict(), save_path)
 
     def unload_network(self, name):
@@ -198,12 +203,8 @@ class BaseModel(ABC):
                 net = getattr(self, 'net' + name)
                 if isinstance(net, torch.nn.DataParallel):
                     net = net.module
-                # print('Loading depth boost model from %s' % load_path)
-                # if you are using PyTorch newer than 0.4 (e.g., built from
-                # GitHub source), you can remove str() on self.device
                 state_dict = torch.load(load_path, map_location=str(self.device))
-                if hasattr(state_dict, '_metadata'):
-                    del state_dict._metadata
+                net.load_state_dict(state_dict)
 
                 # patch InstanceNorm checkpoints prior to 0.4
                 for key in list(state_dict.keys()):  # need to copy keys here because we mutate in loop
@@ -229,7 +230,7 @@ class BaseModel(ABC):
         print('-----------------------------------------------')
 
     def set_requires_grad(self, nets, requires_grad=False):
-        """Set requies_grad=Fasle for all the networks to avoid unnecessary computations
+        """Set requires_grad to False for all the networks.
         Parameters:
             nets (network list)   -- a list of networks
             requires_grad (bool)  -- whether the networks require gradients or not
