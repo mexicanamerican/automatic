@@ -39,7 +39,7 @@ class BaseModel(ABC):
         self.device = torch.device('cuda:{}'.format(self.gpu_ids[0])) if self.gpu_ids else torch.device('cpu')  # get device name: CPU or GPU
         self.save_dir = os.path.join(opt.checkpoints_dir, opt.name)  # save all the checkpoints to save_dir
         if opt.preprocess != 'scale_width':  # with [scale_width], input images might have different sizes, which hurts the performance of cudnn.benchmark.
-            torch.backends.cudnn.benchmark = True
+            torch.backends.cudnn.enabled = True
         self.loss_names = []
         self.model_names = []
         self.visual_names = []
@@ -88,7 +88,7 @@ class BaseModel(ABC):
         if self.isTrain:
             self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
         if not self.isTrain or opt.continue_train:
-            load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
+            load_suffix = 'iter_{}'.format(opt.load_iter) if opt.load_iter > 0 else opt.epoch
             self.load_networks(load_suffix)
         self.print_networks(opt.verbose)
 
@@ -134,8 +134,21 @@ class BaseModel(ABC):
             if isinstance(name, str):
                 visual_ret[name] = getattr(self, name)
         return visual_ret
+        """Return visualization images. train.py will display these images with visdom, and save the images to a HTML"""
+        visual_ret = OrderedDict()
+        for name in self.visual_names:
+            if isinstance(name, str):
+                visual_ret[name] = getattr(self, name)
+        return visual_ret
 
     def get_current_losses(self):
+        """Return traning losses / errors. train.py will print out these errors on console, and save them to a file"""
+        errors_ret = OrderedDict()
+        for name in self.loss_names:
+            if isinstance(name, str):
+                errors_ret[name] = float(getattr(self, 'loss_' + name))  # float(...) works for both scalar tensor and float number
+        return errors_ret
+
         """Return traning losses / errors. train.py will print out these errors on console, and save them to a file"""
         errors_ret = OrderedDict()
         for name in self.loss_names:
@@ -156,8 +169,8 @@ class BaseModel(ABC):
                 net = getattr(self, 'net' + name)
 
                 if len(self.gpu_ids) > 0 and torch.cuda.is_available():
-                    torch.save(net.module.cpu().state_dict(), save_path)
-                    net.cuda(self.gpu_ids[0])
+                    torch.save(net.state_dict(), save_path)
+                    net.to(self.device)
                 else:
                     torch.save(net.cpu().state_dict(), save_path)
 
@@ -201,7 +214,18 @@ class BaseModel(ABC):
                 # print('Loading depth boost model from %s' % load_path)
                 # if you are using PyTorch newer than 0.4 (e.g., built from
                 # GitHub source), you can remove str() on self.device
-                state_dict = torch.load(load_path, map_location=str(self.device))
+                state_dict = torch.load(load_path, map_location=self.device)
+                for name in self.model_names:
+                    if isinstance(name, str):
+                        load_filename = '%s_net_%s.pth' % (epoch, name)
+                        load_path = os.path.join(self.save_dir, load_filename)
+                        net = getattr(self, 'net' + name)
+                        if isinstance(net, torch.nn.DataParallel):
+                            net = net.module
+                        state_dict = torch.load(load_path, map_location=self.device)
+                        if hasattr(state_dict, '_metadata'):
+                            del state_dict._metadata
+                        net.load_state_dict(state_dict)
                 if hasattr(state_dict, '_metadata'):
                     del state_dict._metadata
 
@@ -214,7 +238,10 @@ class BaseModel(ABC):
         """Print the total number of parameters in the network and (if verbose) network architecture
 
         Parameters:
-            verbose (bool) -- if verbose: print the network architecture
+            verbose (bool) -- if verbose:
+                    print(net)
+                print('[Network %s] Total number of parameters : %.3f M' % (name, num_params / 1e6)
+                print('-----------------------------------------------') print the network architecture
         """
         print('---------- Networks initialized -------------')
         for name in self.model_names:
@@ -239,4 +266,4 @@ class BaseModel(ABC):
         for net in nets:
             if net is not None:
                 for param in net.parameters():
-                    param.requires_grad = requires_grad
+                    net.requires_grad_(requires_grad)
