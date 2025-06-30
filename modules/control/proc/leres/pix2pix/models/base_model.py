@@ -1,12 +1,21 @@
 import gc
-import os
+from torch.utils.data import DataLoader
 from abc import ABC, abstractmethod
+import torch.nn.functional as F
+import torch.optim
+import torch.nn.functional as F
+import torch.optim as optim
+import torch.nn.functional as F
+import itertools
 from collections import OrderedDict
 
 import torch
 
 from modules.control.util import torch_gc
 from . import networks
+import os
+import torch
+import itertools
 
 
 class BaseModel(ABC):
@@ -19,7 +28,7 @@ class BaseModel(ABC):
         -- <modify_commandline_options>:    (optionally) add model-specific options and set default options.
     """
 
-    def __init__(self, opt):
+    def __init__(self, opt, gpu_ids=[], isTrain=False):
         """Initialize the BaseModel class.
 
         Parameters:
@@ -34,9 +43,17 @@ class BaseModel(ABC):
             -- self.optimizers (optimizer list):    define and initialize optimizers. You can define one optimizer for each network. If two networks are updated at the same time, you can use itertools.chain to group them. See cycle_gan_model.py for an example.
         """
         self.opt = opt
-        self.gpu_ids = opt.gpu_ids
-        self.isTrain = opt.isTrain
+        self.opt = opt
+        self.gpu_ids = gpu_ids
+        self.isTrain = isTrain
         self.device = torch.device('cuda:{}'.format(self.gpu_ids[0])) if self.gpu_ids else torch.device('cpu')  # get device name: CPU or GPU
+        self.save_dir = ''
+        self.loss_names = []
+        self.model_names = []
+        self.visual_names = []
+        self.optimizers = []
+        self.image_paths = []
+        self.metric = 0
         self.save_dir = os.path.join(opt.checkpoints_dir, opt.name)  # save all the checkpoints to save_dir
         if opt.preprocess != 'scale_width':  # with [scale_width], input images might have different sizes, which hurts the performance of cudnn.benchmark.
             torch.backends.cudnn.benchmark = True
@@ -52,7 +69,8 @@ class BaseModel(ABC):
         """Add new model-specific options, and rewrite default values for existing options.
 
         Parameters:
-            parser          -- original option parser
+            parser          -- original option parser, properly initialized
+            is_train (bool) -- whether training phase or test phase. You can use this flag to add training-specific or test-specific options.
             is_train (bool) -- whether training phase or test phase. You can use this flag to add training-specific or test-specific options.
 
         Returns:
@@ -61,7 +79,8 @@ class BaseModel(ABC):
         return parser
 
     @abstractmethod
-    def set_input(self, input):
+    def set_input(self, input_data):
+        pass
         """Unpack input data from the dataloader and perform necessary pre-processing steps.
 
         Parameters:
@@ -72,14 +91,14 @@ class BaseModel(ABC):
     @abstractmethod
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
-        pass
+        raise NotImplementedError("You need to implement the forward method in your subclass.")
 
     @abstractmethod
-    def optimize_parameters(self):
+    def optimize_parameters(self, *args, **kwargs):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
         pass
 
-    def setup(self, opt):
+    def setup(self, opt=None):
         """Load and print networks; create schedulers
 
         Parameters:
@@ -104,6 +123,8 @@ class BaseModel(ABC):
 
         It also calls <compute_visuals> to produce additional visualization results
         """
+        input_data = {}
+        self.set_input(input_data)
         self.forward()
         self.compute_visuals()
 
