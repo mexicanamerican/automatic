@@ -20,6 +20,7 @@ class BaseModel(ABC):
     """
 
     def __init__(self, opt):
+        super(BaseModel, self).__init__()
         """Initialize the BaseModel class.
 
         Parameters:
