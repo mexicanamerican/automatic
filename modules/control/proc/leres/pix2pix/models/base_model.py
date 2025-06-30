@@ -1,11 +1,17 @@
+import logging, subprocess, pkg_resources, sys
 import gc
 import os
 from abc import ABC, abstractmethod
+import sys
 from collections import OrderedDict
 
 import torch
 
 from modules.control.util import torch_gc
+import modules
+import logging, subprocess, pkg_resources, sys, torch
+import modules.other_dependency
+import subprocess
 from . import networks
 
 
@@ -40,7 +46,10 @@ class BaseModel(ABC):
         self.save_dir = os.path.join(opt.checkpoints_dir, opt.name)  # save all the checkpoints to save_dir
         if opt.preprocess != 'scale_width':  # with [scale_width], input images might have different sizes, which hurts the performance of cudnn.benchmark.
             torch.backends.cudnn.benchmark = True
-        self.loss_names = []
+        if not hasattr(self, 'opt') or self.opt is None:
+            print('Error: Option class not found or not initialized')
+        else:
+            self.loss_names = []
         self.model_names = []
         self.visual_names = []
         self.optimizers = []
@@ -80,6 +89,18 @@ class BaseModel(ABC):
         pass
 
     def setup(self, opt):
+        logger = logging.getLogger(__name__)
+        try:
+            if self.isTrain:
+                self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
+            if not self.isTrain or opt.continue_train:
+                load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
+                self.load_networks(load_suffix)
+                self.print_networks(opt.verbose)
+        except Exception as e:
+            logger.exception('Exception occurred during setting up the model')
+            raise e
+        
         """Load and print networks; create schedulers
 
         Parameters:
@@ -186,12 +207,34 @@ class BaseModel(ABC):
             self.__patch_instance_norm_state_dict(state_dict, getattr(module, key), keys, i + 1)
 
     def load_networks(self, epoch):
+        logger = logging.getLogger(__name__)
         """Load all the networks from the disk.
 
         Parameters:
             epoch (int) -- current epoch; used in the file name '%s_net_%s.pth' % (epoch, name)
         """
         for name in self.model_names:
+            try:
+                load_filename = '%s_net_%s.pth' % (epoch, name)
+                load_path = os.path.join(self.save_dir, load_filename)
+                net = getattr(self, 'net' + name)
+                if isinstance(net, torch.nn.DataParallel):
+                    net = net.module
+
+                state_dict = torch.load(load_path, map_location=str(self.device))
+                if hasattr(state_dict, '_metadata'):
+                    del state_dict._metadata
+
+                for key in list(state_dict.keys()):  # need to copy keys here because we mutate in loop
+                    self.__patch_instance_norm_state_dict(state_dict, net, key.split('.'))
+                if len(state_dict.keys()) == 0:
+                    logger.error('Error: Failed to load state dict')
+                    return
+
+                net.load_state_dict(state_dict)
+            except Exception as e:
+                logger.exception('Exception occurred during loading the network')
+                raise e
             if isinstance(name, str):
                 load_filename = '%s_net_%s.pth' % (epoch, name)
                 load_path = os.path.join(self.save_dir, load_filename)
@@ -216,7 +259,12 @@ class BaseModel(ABC):
         Parameters:
             verbose (bool) -- if verbose: print the network architecture
         """
-        print('---------- Networks initialized -------------')
+        logger = logging.getLogger(__name__)
+        try:
+            print('---------- Networks initialized -------------')
+        except Exception as e:
+            logger.exception('An error occurred during network initialization')
+            raise e
         for name in self.model_names:
             if isinstance(name, str):
                 net = getattr(self, 'net' + name)
