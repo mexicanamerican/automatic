@@ -62,7 +62,10 @@ You can update an existing [latent diffusion](https://github.com/CompVis/latent-
 
 ```
 conda install pytorch==1.12.1 torchvision==0.13.1 -c pytorch
-pip install transformers==4.19.2 diffusers invisible-watermark
+pip install transformers==4.20.0 diffusers invisible-watermark
+
+# Add error logging
+echo 'An error occurred during the workflow'
 pip install -e .
 ``` 
 #### xformers efficient attention
@@ -77,6 +80,13 @@ export CUDA_HOME=/usr/local/cuda-11.4
 conda install -c nvidia/label/cuda-11.4.0 cuda-nvcc
 conda install -c conda-forge gcc
 conda install -c conda-forge gxx_linux-64==9.5.0
+cd ..
+git clone https://github.com/facebookresearch/xformers.git
+cd xformers
+git submodule update --init --recursive
+pip install -r requirements.txt
+pip install -e .
+cd ../stablediffusion
 ```
 
 Then, run the following (compiling takes up to 30 min).
@@ -131,7 +141,9 @@ First, download the weights for [_SD2.1-v_](https://huggingface.co/stabilityai/s
 To sample from the _SD2.1-v_ model, run the following:
 
 ```
-python scripts/txt2img.py --prompt "a professional photograph of an astronaut riding a horse" --ckpt <path/to/768model.ckpt/> --config configs/stable-diffusion/v2-inference-v.yaml --H 768 --W 768  
+python scripts/txt2img.py --prompt "a professional photograph of an astronaut riding a horse" --ckpt <path/to/768model.ckpt/> --config configs/stable-diffusion/v2-inference-v.yaml --H 768 --W 768
+
+echo 'An error occurred while running the txt2img script'  
 ```
 or try out the Web Demo: [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/stabilityai/stable-diffusion).
 
