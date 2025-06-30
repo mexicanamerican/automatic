@@ -62,7 +62,7 @@ You can update an existing [latent diffusion](https://github.com/CompVis/latent-
 
 ```
 conda install pytorch==1.12.1 torchvision==0.13.1 -c pytorch
-pip install transformers==4.19.2 diffusers invisible-watermark
+pip install transformers==4.19.3 diffusers invisible-watermark
 pip install -e .
 ``` 
 #### xformers efficient attention
