@@ -5,7 +5,7 @@ from collections import OrderedDict
 
 import torch
 
-from modules.control.util import torch_gc
+from .util import torch_gc
 from . import networks
 
 
@@ -32,6 +32,7 @@ class BaseModel(ABC):
             -- self.model_names (str list):         define networks used in our training.
             -- self.visual_names (str list):        specify the images that you want to display and save.
             -- self.optimizers (optimizer list):    define and initialize optimizers. You can define one optimizer for each network. If two networks are updated at the same time, you can use itertools.chain to group them. See cycle_gan_model.py for an example.
+        self.metric = 0  # used for learning rate policy 'plateau'
         """
         self.opt = opt
         self.gpu_ids = opt.gpu_ids
@@ -107,7 +108,7 @@ class BaseModel(ABC):
         self.forward()
         self.compute_visuals()
 
-    def compute_visuals(self): # noqa
+    def compute_visuals(self):
         """Calculate additional output images for visdom and HTML visualization"""
         pass
 
@@ -122,7 +123,7 @@ class BaseModel(ABC):
             if self.opt.lr_policy == 'plateau':
                 scheduler.step(self.metric)
             else:
-                scheduler.step()
+                scheduler.step(epoch=self.metric)
 
         lr = self.optimizers[0].param_groups[0]['lr']
         print('learning rate %.7f -> %.7f' % (old_lr, lr))
