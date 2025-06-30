@@ -20,6 +20,7 @@ class BaseModel(ABC):
     """
 
     def __init__(self, opt):
+        print('BaseModel __init__ called') # DEBUG: Added print statement
         """Initialize the BaseModel class.
 
         Parameters:
@@ -118,11 +119,14 @@ class BaseModel(ABC):
     def update_learning_rate(self):
         """Update learning rates for all the networks; called at the end of every epoch"""
         old_lr = self.optimizers[0].param_groups[0]['lr']
-        for scheduler in self.schedulers:
-            if self.opt.lr_policy == 'plateau':
-                scheduler.step(self.metric)
-            else:
-                scheduler.step()
+        try:
+            for scheduler in self.schedulers:
+                if self.opt.lr_policy == 'plateau':
+                    scheduler.step(self.metric)
+                else:
+                    scheduler.step()
+        except Exception as e:
+            print('Exception occurred: {}'.format(e))
 
         lr = self.optimizers[0].param_groups[0]['lr']
         print('learning rate %.7f -> %.7f' % (old_lr, lr))
@@ -195,6 +199,7 @@ class BaseModel(ABC):
             if isinstance(name, str):
                 load_filename = '%s_net_%s.pth' % (epoch, name)
                 load_path = os.path.join(self.save_dir, load_filename)
+                try:
                 net = getattr(self, 'net' + name)
                 if isinstance(net, torch.nn.DataParallel):
                     net = net.module
@@ -204,6 +209,8 @@ class BaseModel(ABC):
                 state_dict = torch.load(load_path, map_location=str(self.device))
                 if hasattr(state_dict, '_metadata'):
                     del state_dict._metadata
+            except Exception as e:
+                print('Exception occurred while loading network {}: {}'.format(name, e))
 
                 # patch InstanceNorm checkpoints prior to 0.4
                 for key in list(state_dict.keys()):  # need to copy keys here because we mutate in loop
@@ -229,6 +236,26 @@ class BaseModel(ABC):
         print('-----------------------------------------------')
 
     def set_requires_grad(self, nets, requires_grad=False):
+    def save_networks(self, epoch):
+        """Save all the networks to the disk.
+
+        Parameters:
+            epoch (int) -- current epoch; used in the file name '%s_net_%s.pth' % (epoch, name)
+        """
+        for name in self.model_names:
+            if isinstance(name, str):
+                save_filename = '%s_net_%s.pth' % (epoch, name)
+                save_path = os.path.join(self.save_dir, save_filename)
+                net = getattr(self, 'net' + name)
+
+                try:
+                    if len(self.gpu_ids) > 0 and torch.cuda.is_available():
+                        torch.save(net.module.cpu().state_dict(), save_path)
+                        net.cuda(self.gpu_ids[0])
+                    else:
+                        torch.save(net.cpu().state_dict(), save_path)
+                except Exception as e:
+                    print('Exception occurred: {}'.format(e))
         """Set requies_grad=Fasle for all the networks to avoid unnecessary computations
         Parameters:
             nets (network list)   -- a list of networks
