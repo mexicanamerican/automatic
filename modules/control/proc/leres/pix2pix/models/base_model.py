@@ -7,6 +7,7 @@ import torch
 
 from modules.control.util import torch_gc
 from . import networks
+from modules.control.util import torch_gc
 
 
 class BaseModel(ABC):
@@ -92,6 +93,18 @@ class BaseModel(ABC):
             self.load_networks(load_suffix)
         self.print_networks(opt.verbose)
 
+        print('---------- Networks initialized -------------')
+        for name in self.model_names:
+            if isinstance(name, str):
+                net = getattr(self, 'net' + name)
+                num_params = 0
+                for param in net.parameters():
+                    num_params += param.numel()
+                if opt.verbose:
+                    print(net)
+                print('[Network %s] Total number of parameters : %.3f M' % (name, num_params / 1e6))
+        print('-----------------------------------------------')
+
     def eval(self):
         """Make models eval mode during test time"""
         for name in self.model_names:
@@ -112,6 +125,24 @@ class BaseModel(ABC):
         pass
 
     def get_image_paths(self):
+        """ Return image paths that are used to load current data"""
+        return self.image_paths
+
+    def set_input(self, input):
+        """Unpack input data from the dataloader and perform necessary pre-processing steps.
+
+        Parameters:
+            input (dict): includes the data itself and its metadata information.
+        """
+        pass
+
+    def forward(self):
+        """Run forward pass; called by both functions <optimize_parameters> and <test>."""
+        pass
+
+    def optimize_parameters(self):
+        """Calculate losses, gradients, and update network weights; called in every training iteration"""
+        pass
         """ Return image paths that are used to load current data"""
         return self.image_paths
 
@@ -156,7 +187,7 @@ class BaseModel(ABC):
                 net = getattr(self, 'net' + name)
 
                 if len(self.gpu_ids) > 0 and torch.cuda.is_available():
-                    torch.save(net.module.cpu().state_dict(), save_path)
+                    torch.save(net.cpu().state_dict(), save_path)
                     net.cuda(self.gpu_ids[0])
                 else:
                     torch.save(net.cpu().state_dict(), save_path)
@@ -195,6 +226,9 @@ class BaseModel(ABC):
             if isinstance(name, str):
                 load_filename = '%s_net_%s.pth' % (epoch, name)
                 load_path = os.path.join(self.save_dir, load_filename)
+            net = getattr(self, 'net' + name)
+            if isinstance(net, torch.nn.DataParallel):
+                net = net.module
                 net = getattr(self, 'net' + name)
                 if isinstance(net, torch.nn.DataParallel):
                     net = net.module
@@ -214,7 +248,7 @@ class BaseModel(ABC):
         """Print the total number of parameters in the network and (if verbose) network architecture
 
         Parameters:
-            verbose (bool) -- if verbose: print the network architecture
+            verbose (bool) -- if opt.verbose: print the network architecture
         """
         print('---------- Networks initialized -------------')
         for name in self.model_names:
