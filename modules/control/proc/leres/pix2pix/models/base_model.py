@@ -17,6 +17,7 @@ class BaseModel(ABC):
         -- <forward>:                       produce intermediate results.
         -- <optimize_parameters>:           calculate losses, gradients, and update network weights.
         -- <modify_commandline_options>:    (optionally) add model-specific options and set default options.
+        -- <save_networks>:                 save all the networks to the disk.
     """
 
     def __init__(self, opt):
@@ -67,19 +68,28 @@ class BaseModel(ABC):
         Parameters:
             input (dict): includes the data itself and its metadata information.
         """
+        # Add business logic here
         pass
 
     @abstractmethod
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
+        # Add business logic here
         pass
 
     @abstractmethod
     def optimize_parameters(self):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
+        # Add business logic here
         pass
 
     def setup(self, opt):
+        if self.isTrain:
+            self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
+        if not self.isTrain or opt.continue_train:
+            load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
+            self.load_networks(load_suffix)
+        self.print_networks(opt.verbose)
         """Load and print networks; create schedulers
 
         Parameters:
@@ -98,8 +108,19 @@ class BaseModel(ABC):
             if isinstance(name, str):
                 net = getattr(self, 'net' + name)
                 net.eval()
+        """Make models eval mode during test time"""
+        for name in self.model_names:
+            if isinstance(name, str):
+                net = getattr(self, 'net' + name)
+                net.eval()
 
     def test(self):
+        """Forward function used in test time.
+
+        It also calls <compute_visuals> to produce additional visualization results
+        """
+        self.forward()
+        self.compute_visuals()
         """Forward function used in test time.
 
         It also calls <compute_visuals> to produce additional visualization results
@@ -198,6 +219,21 @@ class BaseModel(ABC):
                 net = getattr(self, 'net' + name)
                 if isinstance(net, torch.nn.DataParallel):
                     net = net.module
+                state_dict = torch.load(load_path, map_location=str(self.device))
+                if hasattr(state_dict, '_metadata'):
+                    del state_dict._metadata
+        """Load all the networks from the disk.
+
+        Parameters:
+            epoch (int) -- current epoch; used in the file name '%s_net_%s.pth' % (epoch, name)
+        """
+        for name in self.model_names:
+            if isinstance(name, str):
+                load_filename = '%s_net_%s.pth' % (epoch, name)
+                load_path = os.path.join(self.save_dir, load_filename)
+                net = getattr(self, 'net' + name)
+                if isinstance(net, torch.nn.DataParallel):
+                    net = net.module
                 # print('Loading depth boost model from %s' % load_path)
                 # if you are using PyTorch newer than 0.4 (e.g., built from
                 # GitHub source), you can remove str() on self.device
@@ -225,10 +261,21 @@ class BaseModel(ABC):
                     num_params += param.numel()
                 if verbose:
                     print(net)
-                print('[Network %s] Total number of parameters : %.3f M' % (name, num_params / 1e6))
+        print('[Network %s] Total number of parameters : %.3f M' % (name, num_params / 1e6))
         print('-----------------------------------------------')
 
     def set_requires_grad(self, nets, requires_grad=False):
+        """Set requies_grad=Fasle for all the networks to avoid unnecessary computations
+        Parameters:
+            nets (network list)   -- a list of networks
+            requires_grad (bool)  -- whether the networks require gradients or not
+        """
+        if not isinstance(nets, list):
+            nets = [nets]
+        for net in nets:
+            if net is not None:
+                for param in net.parameters():
+                    param.requires_grad = requires_grad
         """Set requies_grad=Fasle for all the networks to avoid unnecessary computations
         Parameters:
             nets (network list)   -- a list of networks
