@@ -1,7 +1,8 @@
 import argparse
 import os
 from ...pix2pix.util import util
-# import torch
+import torch
+import itertools
 from ...pix2pix import models
 # import pix2pix.data
 import numpy as np
@@ -51,7 +52,7 @@ class BaseOptions():
         parser.add_argument('--display_winsize', type=int, default=256, help='display window size for both visdom and HTML')
         # additional parameters
         parser.add_argument('--epoch', type=str, default='latest', help='which epoch to load? set to latest to use latest cached model')
-        parser.add_argument('--load_iter', type=int, default='0', help='which iteration to load? if load_iter > 0, the code will load models by iter_[load_iter]; otherwise, the code will load models by [epoch]')
+        parser.add_argument('--load_iter', type=int, default=0, help='which iteration to load? if load_iter > 0, the code will load models by iter_[load_iter]; otherwise, the code will load models by [epoch]')
         parser.add_argument('--verbose', action='store_true', help='if specified, print more debugging information')
         parser.add_argument('--suffix', default='', type=str, help='customized suffix: opt.name = opt.name + suffix: e.g., {model}_{netG}_size{load_size}')
 
@@ -96,13 +97,13 @@ class BaseOptions():
         opt, _ = parser.parse_known_args()  # parse again with new defaults
 
         # modify dataset-related parser options
-        # dataset_name = opt.dataset_mode
-        # dataset_option_setter = pix2pix.data.get_option_setter(dataset_name)
-        # parser = dataset_option_setter(parser, self.isTrain)
+        dataset_name = opt.dataset_mode
+        dataset_option_setter = models.get_option_setter(opt.model)
+        parser = dataset_option_setter(parser, self.isTrain)
+        opt, _ = parser.parse_known_args()  # parse again with new defaults
 
         # save and return the parser
         self.parser = parser
-        #return parser.parse_args() #EVIL
         return opt
 
     def print_options(self, opt):
