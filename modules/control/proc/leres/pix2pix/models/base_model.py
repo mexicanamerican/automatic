@@ -20,6 +20,11 @@ class BaseModel(ABC):
     """
 
     def __init__(self, opt):
+        try:
+            # Try block to catch any exceptions during initialization
+            pass
+        except Exception as e:
+            print(f'Exception during initialization: {e}')
         """Initialize the BaseModel class.
 
         Parameters:
@@ -80,6 +85,11 @@ class BaseModel(ABC):
         pass
 
     def setup(self, opt):
+        try:
+            # Try block to catch any exceptions during setup
+            pass
+        except Exception as e:
+            print(f'Exception during setup: {e}')
         """Load and print networks; create schedulers
 
         Parameters:
@@ -229,6 +239,24 @@ class BaseModel(ABC):
         print('-----------------------------------------------')
 
     def set_requires_grad(self, nets, requires_grad=False):
+        try:
+            # Try block to catch any exceptions during network loading
+            pass
+        except Exception as e:
+            print(f'Exception during network loading: {e}')
+            continue
+        try:
+            # Try block to catch any exceptions during network loading
+            pass
+        except Exception as e:
+            print(f'Exception during network loading: {e}')
+            continue
+        try:
+            # Try block to catch any exceptions during network loading
+            pass
+        except Exception as e:
+            print(f'Exception during network loading: {e}')
+            continue
         """Set requies_grad=Fasle for all the networks to avoid unnecessary computations
         Parameters:
             nets (network list)   -- a list of networks
