@@ -87,12 +87,16 @@ class BaseModel(ABC):
         """
         if self.isTrain:
             self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
-        if not self.isTrain or opt.continue_train:
+        elif not self.isTrain or opt.continue_train:
             load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
             self.load_networks(load_suffix)
-        self.print_networks(opt.verbose)
+            self.print_networks(opt.verbose)
 
     def eval(self):
+        for name in self.model_names:
+            if isinstance(name, str):
+                net = getattr(self, 'net' + name)
+                net.eval()
         """Make models eval mode during test time"""
         for name in self.model_names:
             if isinstance(name, str):
@@ -106,8 +110,17 @@ class BaseModel(ABC):
         """
         self.forward()
         self.compute_visuals()
+        """Forward function used in test time.
+
+        It also calls <compute_visuals> to produce additional visualization results
+        """
+        self.forward()
+        self.compute_visuals()
 
     def compute_visuals(self): # noqa
+        """Calculate additional output images for visualization"""
+        # Add your code here to calculate additional output images
+        pass
         """Calculate additional output images for visdom and HTML visualization"""
         pass
 
@@ -115,7 +128,7 @@ class BaseModel(ABC):
         """ Return image paths that are used to load current data"""
         return self.image_paths
 
-    def update_learning_rate(self):
+    def update_learning_rate(self): # Update learning rates for all the networks
         """Update learning rates for all the networks; called at the end of every epoch"""
         old_lr = self.optimizers[0].param_groups[0]['lr']
         for scheduler in self.schedulers:
@@ -127,7 +140,7 @@ class BaseModel(ABC):
         lr = self.optimizers[0].param_groups[0]['lr']
         print('learning rate %.7f -> %.7f' % (old_lr, lr))
 
-    def get_current_visuals(self):
+    def get_current_visuals(self)-> OrderedDict[str, torch.Tensor]:
         """Return visualization images. train.py will display these images with visdom, and save the images to a HTML"""
         visual_ret = OrderedDict()
         for name in self.visual_names:
@@ -157,11 +170,18 @@ class BaseModel(ABC):
 
                 if len(self.gpu_ids) > 0 and torch.cuda.is_available():
                     torch.save(net.module.cpu().state_dict(), save_path)
-                    net.cuda(self.gpu_ids[0])
+                    net.cuda(self.device.index)
                 else:
                     torch.save(net.cpu().state_dict(), save_path)
 
     def unload_network(self, name):
+        """Unload network and perform garbage collection."""
+        if isinstance(name, str):
+            net = getattr(self, 'net' + name)
+            del net
+            gc.collect()
+            torch_gc()
+            return None
         """Unload network and gc.
         """
         if isinstance(name, str):
@@ -201,9 +221,7 @@ class BaseModel(ABC):
                 # print('Loading depth boost model from %s' % load_path)
                 # if you are using PyTorch newer than 0.4 (e.g., built from
                 # GitHub source), you can remove str() on self.device
-                state_dict = torch.load(load_path, map_location=str(self.device))
-                if hasattr(state_dict, '_metadata'):
-                    del state_dict._metadata
+                state_dict = torch.load(load_path, map_location=self.device)
 
                 # patch InstanceNorm checkpoints prior to 0.4
                 for key in list(state_dict.keys()):  # need to copy keys here because we mutate in loop
