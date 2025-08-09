@@ -48,6 +48,7 @@ class BaseModel(ABC):
         self.metric = 0  # used for learning rate policy 'plateau'
 
     @staticmethod
+    @staticmethod
     def modify_commandline_options(parser, is_train):
         """Add new model-specific options, and rewrite default values for existing options.
 
@@ -61,17 +62,19 @@ class BaseModel(ABC):
         return parser
 
     @abstractmethod
-    def set_input(self, input):
+    @abstractmethod
+    def set_input(self, input_data):
         """Unpack input data from the dataloader and perform necessary pre-processing steps.
 
         Parameters:
-            input (dict): includes the data itself and its metadata information.
+            input_data (dict): includes the data and its metadata information.
         """
         pass
 
     @abstractmethod
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
+        # TODO: Implement the forward pass of the model
         pass
 
     @abstractmethod
@@ -240,3 +243,15 @@ class BaseModel(ABC):
             if net is not None:
                 for param in net.parameters():
                     param.requires_grad = requires_grad
+        for optimizer in self.optimizers:
+            optimizer.zero_grad()
+        self.forward()
+        self.backward()
+        for optimizer in self.optimizers:
+            optimizer.step()
+        for optimizer in self.optimizers:
+            optimizer.zero_grad()
+        self.forward()
+        self.backward()
+        for optimizer in self.optimizers:
+            optimizer.step()

@@ -51,7 +51,7 @@ def estimateleres(img, model, w, h):
 def generatemask(size):
     # Generates a Guassian mask
     mask = np.zeros(size, dtype=np.float32)
-    sigma = int(size[0]/16)
+    sigma = max(int(size[0]/16), 1)
     k_size = int(2 * np.ceil(2 * int(size[0]/16)) + 1)
     mask[int(0.15*size[0]):size[0] - int(0.15*size[0]), int(0.15*size[1]): size[1] - int(0.15*size[1])] = 1
     mask = cv2.GaussianBlur(mask, (int(k_size), int(k_size)), sigma)
@@ -63,10 +63,16 @@ def resizewithpool(img, size):
     i_size = img.shape[0]
     n = int(np.floor(i_size/size))
 
-    out = skimage.measure.block_reduce(img, (n, n), np.max)
+    out = skimage.measure.block_reduce(img, (n, n, 1), np.max)
     return out
 
 def rgb2gray(rgb):
+    # Converting RGB image to grayscale properly
+    if len(rgb.shape) > 2 and rgb.shape[2] == 3:
+        gray = np.dot(rgb[..., :3], [0.2989, 0.5870, 0.1140])
+        return gray
+    else:
+        raise ValueError('Input is not a valid RGB image')
     # Converts rgb to gray
     return np.dot(rgb[..., :3], [0.2989, 0.5870, 0.1140])
 
@@ -131,12 +137,10 @@ def calculateprocessingres(img, basesize, confidence=0.1, scale_threshold=3, who
 def doubleestimate(img, size1, size2, pix2pixsize, model, net_type, pix2pixmodel):
     # Generate the low resolution estimation
     estimate1 = singleestimate(img, size1, model, net_type)
-    # Resize to the inference size of merge network.
     estimate1 = cv2.resize(estimate1, (pix2pixsize, pix2pixsize), interpolation=cv2.INTER_CUBIC)
 
     # Generate the high resolution estimation
     estimate2 = singleestimate(img, size2, model, net_type)
-    # Resize to the inference size of merge network.
     estimate2 = cv2.resize(estimate2, (pix2pixsize, pix2pixsize), interpolation=cv2.INTER_CUBIC)
 
     # Inference on the merge model
@@ -144,6 +148,9 @@ def doubleestimate(img, size1, size2, pix2pixsize, model, net_type, pix2pixmodel
     pix2pixmodel.test()
     visuals = pix2pixmodel.get_current_visuals()
     prediction_mapped = visuals['fake_B']
+    prediction_mapped = (prediction_mapped+1)/2
+    prediction_mapped = (prediction_mapped - torch.min(prediction_mapped)) / (torch.max(prediction_mapped) - torch.min(prediction_mapped))
+    prediction_mapped = prediction_mapped.squeeze().cpu().numpy()
     prediction_mapped = (prediction_mapped+1)/2
     prediction_mapped = (prediction_mapped - torch.min(prediction_mapped)) / (
                 torch.max(prediction_mapped) - torch.min(prediction_mapped))
@@ -532,7 +539,7 @@ def estimateboost(img, model, model_type, pix2pixmodel, max_res=512, depthmap_sc
         # To speed up the implementation, we only generate the Gaussian mask once with a sufficiently large size
         # and resize it to our needed size while merging the patches.
         if mask.shape != org_size:
-            mask = cv2.resize(mask_org, (org_size[1],org_size[0]), interpolation=cv2.INTER_LINEAR)
+            mask = cv2.resize(mask, (org_size[1],org_size[0]), interpolation=cv2.INTER_LINEAR)
 
         tobemergedto = imageandpatchs.estimation_updated_image
 
