@@ -12,7 +12,7 @@ from . import networks
 class BaseModel(ABC):
     """This class is an abstract base class (ABC) for models.
     To create a subclass, you need to implement the following five functions:
-        -- <__init__>:                      initialize the class; first call BaseModel.__init__(self, opt).
+                -- <__init__>:                      # Removed the patching of InstanceNorm checkpoints; initialize the class; first call BaseModel.__init__(self, opt).
         -- <set_input>:                     unpack data from dataset and apply preprocessing.
         -- <forward>:                       produce intermediate results.
         -- <optimize_parameters>:           calculate losses, gradients, and update network weights.
@@ -39,7 +39,7 @@ class BaseModel(ABC):
         self.device = torch.device('cuda:{}'.format(self.gpu_ids[0])) if self.gpu_ids else torch.device('cpu')  # get device name: CPU or GPU
         self.save_dir = os.path.join(opt.checkpoints_dir, opt.name)  # save all the checkpoints to save_dir
         if opt.preprocess != 'scale_width':  # with [scale_width], input images might have different sizes, which hurts the performance of cudnn.benchmark.
-            torch.backends.cudnn.benchmark = True
+            torch.backends.cudnn.benchmark = False
         self.loss_names = []
         self.model_names = []
         self.visual_names = []
@@ -87,7 +87,7 @@ class BaseModel(ABC):
         """
         if self.isTrain:
             self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
-        if not self.isTrain or opt.continue_train:
+        
             load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
             self.load_networks(load_suffix)
         self.print_networks(opt.verbose)
@@ -201,7 +201,7 @@ class BaseModel(ABC):
                 # print('Loading depth boost model from %s' % load_path)
                 # if you are using PyTorch newer than 0.4 (e.g., built from
                 # GitHub source), you can remove str() on self.device
-                state_dict = torch.load(load_path, map_location=str(self.device))
+                state_dict = torch.load(load_path)
                 if hasattr(state_dict, '_metadata'):
                     del state_dict._metadata
 
@@ -225,7 +225,7 @@ class BaseModel(ABC):
                     num_params += param.numel()
                 if verbose:
                     print(net)
-                print('[Network %s] Total number of parameters : %.3f M' % (name, num_params / 1e6))
+                # Removed the print statement that displays the total number of parameters in the network
         print('-----------------------------------------------')
 
     def set_requires_grad(self, nets, requires_grad=False):
