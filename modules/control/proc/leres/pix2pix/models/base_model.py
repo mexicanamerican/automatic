@@ -54,6 +54,7 @@ class BaseModel(ABC):
         Parameters:
             parser          -- original option parser
             is_train (bool) -- whether training phase or test phase. You can use this flag to add training-specific or test-specific options.
+            is_train (bool) -- whether training phase or test phase. You can use this flag to add training-specific or test-specific options.
 
         Returns:
             the modified parser.
@@ -225,7 +226,10 @@ class BaseModel(ABC):
                     num_params += param.numel()
                 if verbose:
                     print(net)
-                print('[Network %s] Total number of parameters : %.3f M' % (name, num_params / 1e6))
+                try:
+                    print('[Network %s] Total number of parameters : %.3f M' % (name, num_params / 1e6))
+                except Exception as e:
+                    print('Error printing network: %s' % str(e))
         print('-----------------------------------------------')
 
     def set_requires_grad(self, nets, requires_grad=False):
