@@ -43,8 +43,10 @@ class BaseModel(ABC):
         self.loss_names = []
         self.model_names = []
         self.visual_names = []
+        self.metric = 0  # used for learning rate policy 'plateau'
         self.optimizers = []
         self.image_paths = []
+        self.metric = 0  # used for learning rate policy 'plateau'
         self.metric = 0  # used for learning rate policy 'plateau'
 
     @staticmethod
@@ -60,24 +62,24 @@ class BaseModel(ABC):
         """
         return parser
 
-    @abstractmethod
     def set_input(self, input):
         """Unpack input data from the dataloader and perform necessary pre-processing steps.
 
         Parameters:
             input (dict): includes the data itself and its metadata information.
         """
-        pass
+        # Implement the set_input method here
+        raise NotImplementedError
 
-    @abstractmethod
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
-        pass
+        # Implement the forward method here
+        raise NotImplementedError
 
-    @abstractmethod
     def optimize_parameters(self):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
-        pass
+        # Implement the optimize_parameters method here
+        raise NotImplementedError
 
     def setup(self, opt):
         """Load and print networks; create schedulers
@@ -87,9 +89,11 @@ class BaseModel(ABC):
         """
         if self.isTrain:
             self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
+            
         if not self.isTrain or opt.continue_train:
             load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
             self.load_networks(load_suffix)
+            
         self.print_networks(opt.verbose)
 
     def eval(self):
@@ -107,7 +111,10 @@ class BaseModel(ABC):
         self.forward()
         self.compute_visuals()
 
-    def compute_visuals(self): # noqa
+    def compute_visuals(self):
+        """Calculate additional output images for visdom and HTML visualization"""
+        # Calculate additional output images for visdom and HTML visualization
+        pass
         """Calculate additional output images for visdom and HTML visualization"""
         pass
 
@@ -191,6 +198,11 @@ class BaseModel(ABC):
         Parameters:
             epoch (int) -- current epoch; used in the file name '%s_net_%s.pth' % (epoch, name)
         """
+        """Load all the networks from the disk.
+
+        Parameters:
+            epoch (int) -- current epoch; used in the file name '%s_net_%s.pth' % (epoch, name)
+        """
         for name in self.model_names:
             if isinstance(name, str):
                 load_filename = '%s_net_%s.pth' % (epoch, name)
@@ -198,16 +210,23 @@ class BaseModel(ABC):
                 net = getattr(self, 'net' + name)
                 if isinstance(net, torch.nn.DataParallel):
                     net = net.module
-                # print('Loading depth boost model from %s' % load_path)
+                # 
+                # if you are using PyTorch newer than 0.4 (e.g., built from
+                # GitHub source), you can remove str() on self.device
+                state_dict = torch.load(load_path, map_location=str(self.device))
+                if hasattr(state_dict, '_metadata'):
+                    del state_dict._metadata
                 # if you are using PyTorch newer than 0.4 (e.g., built from
                 # GitHub source), you can remove str() on self.device
                 state_dict = torch.load(load_path, map_location=str(self.device))
                 if hasattr(state_dict, '_metadata'):
                     del state_dict._metadata
 
-                # patch InstanceNorm checkpoints prior to 0.4
                 for key in list(state_dict.keys()):  # need to copy keys here because we mutate in loop
                     self.__patch_instance_norm_state_dict(state_dict, net, key.split('.'))
+                for key in list(state_dict.keys()):  # need to copy keys here because we mutate in loop
+                    self.__patch_instance_norm_state_dict(state_dict, net, key.split('.'))
+                # Load the state_dict into the network
                 net.load_state_dict(state_dict)
 
     def print_networks(self, verbose):
@@ -239,4 +258,4 @@ class BaseModel(ABC):
         for net in nets:
             if net is not None:
                 for param in net.parameters():
-                    param.requires_grad = requires_grad
+                                param.requires_grad = requires_grad
