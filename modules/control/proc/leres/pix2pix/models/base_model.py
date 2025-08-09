@@ -60,26 +60,32 @@ class BaseModel(ABC):
         """
         return parser
 
-    @abstractmethod
     def set_input(self, input):
         """Unpack input data from the dataloader and perform necessary pre-processing steps.
 
         Parameters:
             input (dict): includes the data itself and its metadata information.
         """
+        # Add necessary business logic to unpack input data and perform preprocessing
         pass
 
-    @abstractmethod
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
+        # Add necessary business logic to run the forward pass
         pass
 
-    @abstractmethod
     def optimize_parameters(self):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
+        # Add necessary business logic to calculate losses, gradients, and update network weights
         pass
 
     def setup(self, opt):
+        if self.isTrain:
+            self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
+        if not self.isTrain or opt.continue_train:
+            load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
+            self.load_networks(load_suffix)
+        self.print_networks(opt.verbose)
         """Load and print networks; create schedulers
 
         Parameters:
@@ -102,6 +108,12 @@ class BaseModel(ABC):
     def test(self):
         """Forward function used in test time.
 
+It also calls <compute_visuals> to produce additional visualization results
+        """
+        self.forward()
+        self.compute_visuals()
+        """Forward function used in test time.
+
         It also calls <compute_visuals> to produce additional visualization results
         """
         self.forward()
@@ -109,6 +121,8 @@ class BaseModel(ABC):
 
     def compute_visuals(self): # noqa
         """Calculate additional output images for visdom and HTML visualization"""
+        # Add necessary business logic to calculate additional output images
+        pass
         pass
 
     def get_image_paths(self):
@@ -117,25 +131,32 @@ class BaseModel(ABC):
 
     def update_learning_rate(self):
         """Update learning rates for all the networks; called at the end of every epoch"""
-        old_lr = self.optimizers[0].param_groups[0]['lr']
-        for scheduler in self.schedulers:
-            if self.opt.lr_policy == 'plateau':
-                scheduler.step(self.metric)
-            else:
-                scheduler.step()
+        for optimizer in self.optimizers:
+            for param_group in optimizer.param_groups:
+                old_lr = param_group['lr']
+                if self.opt.lr_policy == 'plateau':
+                    param_group['lr'] = scheduler.step(self.metric)
+                else:
+                    param_group['lr'] = scheduler.step()
 
-        lr = self.optimizers[0].param_groups[0]['lr']
-        print('learning rate %.7f -> %.7f' % (old_lr, lr))
+                lr = param_group['lr']
+                print('learning rate %.7f -> %.7f' % (old_lr, lr))
 
-    def get_current_visuals(self):
+    def get_current_visuals(self) -> OrderedDict[str, any]:
         """Return visualization images. train.py will display these images with visdom, and save the images to a HTML"""
-        visual_ret = OrderedDict()
+        visual_ret: OrderedDict[str, any] = OrderedDict()
         for name in self.visual_names:
             if isinstance(name, str):
-                visual_ret[name] = getattr(self, name)
+                visual_ret[name] = getattr(self, name).detach().cpu().numpy()
         return visual_ret
 
-    def get_current_losses(self):
+    def get_current_losses(self) -> OrderedDict[str, any]:
+        """Return traning losses / errors. train.py will print out these errors on console, and save them to a file"""
+        errors_ret = OrderedDict()
+        for name in self.loss_names:
+            if isinstance(name, str):
+                errors_ret[name] = float(getattr(self, 'loss_' + name))  # float(...) works for both scalar tensor and float number
+        return errors_ret
         """Return traning losses / errors. train.py will print out these errors on console, and save them to a file"""
         errors_ret = OrderedDict()
         for name in self.loss_names:
@@ -148,6 +169,25 @@ class BaseModel(ABC):
 
         Parameters:
             epoch (int) -- current epoch; used in the file name '%s_net_%s.pth' % (epoch, name)
+                        save_filename = '%s_net_%s.pth' % (epoch, name)
+                save_path = os.path.join(self.save_dir, save_filename)
+                net = getattr(self, 'net' + name)
+
+                if isinstance(net, torch.nn.DataParallel):
+                    net = net.module
+                state_dict = net.state_dict()
+                if hasattr(state_dict, '_metadata'):
+                    del state_dict._metadata
+                torch.save(state_dict, save_path)
+            for param_group in optimizer.param_groups:
+                old_lr = param_group['lr']
+                if self.opt.lr_policy == 'plateau':
+                    param_group['lr'] = scheduler.step(self.metric)
+                else:
+                    param_group['lr'] = scheduler.step()
+
+                lr = param_group['lr']
+                print('learning rate %.7f -> %.7f' % (old_lr, lr))
         """
         for name in self.model_names:
             if isinstance(name, str):
@@ -162,6 +202,13 @@ class BaseModel(ABC):
                     torch.save(net.cpu().state_dict(), save_path)
 
     def unload_network(self, name):
+        """Unload network and perform garbage collection."""
+        if isinstance(name, str):
+            net = getattr(self, 'net' + name)
+            del net
+            gc.collect()
+            torch_gc()
+            return None
         """Unload network and gc.
         """
         if isinstance(name, str):
