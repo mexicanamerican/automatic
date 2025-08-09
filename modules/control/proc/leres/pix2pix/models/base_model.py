@@ -61,7 +61,13 @@ class BaseModel(ABC):
         return parser
 
     @abstractmethod
-    def set_input(self, input):
+    def set_input(self, input_data):
+        """Unpack input data from the dataloader and perform necessary pre-processing steps.
+
+        Parameters:
+            input_data (dict): includes the data itself and its metadata information.
+        """
+        pass
         """Unpack input data from the dataloader and perform necessary pre-processing steps.
 
         Parameters:
@@ -73,9 +79,13 @@ class BaseModel(ABC):
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
         pass
+        """Run forward pass; called by both functions <optimize_parameters> and <test>."""
+        pass
 
     @abstractmethod
     def optimize_parameters(self):
+        """Calculate losses, gradients, and update network weights; called in every training iteration"""
+        pass
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
         pass
 
