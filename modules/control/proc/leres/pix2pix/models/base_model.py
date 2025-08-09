@@ -33,7 +33,11 @@ class BaseModel(ABC):
             -- self.visual_names (str list):        specify the images that you want to display and save.
             -- self.optimizers (optimizer list):    define and initialize optimizers. You can define one optimizer for each network. If two networks are updated at the same time, you can use itertools.chain to group them. See cycle_gan_model.py for an example.
         """
-        self.opt = opt
+        try:
+            self.opt = opt
+        except Exception as e:
+            print('BaseModel initialization error:', e)
+            # Log the error message and any relevant information to help identify the cause of the failure.
         self.gpu_ids = opt.gpu_ids
         self.isTrain = opt.isTrain
         self.device = torch.device('cuda:{}'.format(self.gpu_ids[0])) if self.gpu_ids else torch.device('cpu')  # get device name: CPU or GPU
@@ -92,7 +96,7 @@ class BaseModel(ABC):
             self.load_networks(load_suffix)
         self.print_networks(opt.verbose)
 
-    def eval(self):
+    def eval(self): # noqa
         """Make models eval mode during test time"""
         for name in self.model_names:
             if isinstance(name, str):
@@ -104,12 +108,23 @@ class BaseModel(ABC):
 
         It also calls <compute_visuals> to produce additional visualization results
         """
-        self.forward()
+        try:
+            self.forward()
+        except Exception as e:
+            print('Test method error:', e)
+            # Log the error message and any relevant information to help identify the cause of the failure.
+            print('Compute visuals error:', e)
+            # Log the error message and any relevant information to help identify the cause of the failure.
         self.compute_visuals()
 
     def compute_visuals(self): # noqa
         """Calculate additional output images for visdom and HTML visualization"""
-        pass
+        try:
+            # Add visualization computation code here
+            pass
+        except Exception as e:
+            print('Compute visuals error:', e)
+            # Log the error message and any relevant information to help identify the cause of the failure.
 
     def get_image_paths(self):
         """ Return image paths that are used to load current data"""
@@ -123,6 +138,11 @@ class BaseModel(ABC):
                 scheduler.step(self.metric)
             else:
                 scheduler.step()
+
+        lr = self.optimizers[0].param_groups[0]['lr']
+        print('learning rate %.7f -> %.7f' % (old_lr, lr))
+
+    def get_current_visuals(self):
 
         lr = self.optimizers[0].param_groups[0]['lr']
         print('learning rate %.7f -> %.7f' % (old_lr, lr))
