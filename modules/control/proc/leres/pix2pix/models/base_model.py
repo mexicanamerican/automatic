@@ -6,6 +6,8 @@ from collections import OrderedDict
 import torch
 
 from modules.control.util import torch_gc
+from taming.modules.vqvae.vq_model import VQModel
+from taming.modules.vqvae.vq_model_interface import VQModelInterface
 from . import networks
 
 
