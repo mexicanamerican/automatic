@@ -6,7 +6,7 @@ from collections import OrderedDict
 import torch
 
 from modules.control.util import torch_gc
-from . import networks
+from modules.control import networks
 
 
 class BaseModel(ABC):
@@ -90,7 +90,7 @@ class BaseModel(ABC):
         if not self.isTrain or opt.continue_train:
             load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
             self.load_networks(load_suffix)
-        self.print_networks(opt.verbose)
+        self._print_networks(opt.verbose)
 
     def eval(self):
         """Make models eval mode during test time"""
@@ -216,7 +216,7 @@ class BaseModel(ABC):
         Parameters:
             verbose (bool) -- if verbose: print the network architecture
         """
-        print('---------- Networks initialized -------------')
+        print('---------- Networks initialized --------------')
         for name in self.model_names:
             if isinstance(name, str):
                 net = getattr(self, 'net' + name)
