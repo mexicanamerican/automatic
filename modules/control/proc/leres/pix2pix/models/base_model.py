@@ -45,6 +45,7 @@ class BaseModel(ABC):
         self.visual_names = []
         self.optimizers = []
         self.image_paths = []
+        self.error_logs = ""
         self.metric = 0  # used for learning rate policy 'plateau'
 
     @staticmethod
