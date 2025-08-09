@@ -32,6 +32,11 @@ class BaseModel(ABC):
             -- self.model_names (str list):         define networks used in our training.
             -- self.visual_names (str list):        specify the images that you want to display and save.
             -- self.optimizers (optimizer list):    define and initialize optimizers. You can define one optimizer for each network. If two networks are updated at the same time, you can use itertools.chain to group them. See cycle_gan_model.py for an example.
+        -- self.unload_network(self, name):
+            "Unload the specified network by deleting the reference, performing garbage collection, and calling `torch_gc()`.
+
+            Parameters:
+                name (str): the name of the network to be unloaded"
         """
         self.opt = opt
         self.gpu_ids = opt.gpu_ids
@@ -60,7 +65,6 @@ class BaseModel(ABC):
         """
         return parser
 
-    @abstractmethod
     def set_input(self, input):
         """Unpack input data from the dataloader and perform necessary pre-processing steps.
 
@@ -69,12 +73,10 @@ class BaseModel(ABC):
         """
         pass
 
-    @abstractmethod
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
         pass
 
-    @abstractmethod
     def optimize_parameters(self):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
         pass
@@ -85,9 +87,8 @@ class BaseModel(ABC):
         Parameters:
             opt (Option class) -- stores all the experiment flags; needs to be a subclass of BaseOptions
         """
-        if self.isTrain:
-            self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
-        if not self.isTrain or opt.continue_train:
+        self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
+        if opt.continue_train:
             load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
             self.load_networks(load_suffix)
         self.print_networks(opt.verbose)
@@ -98,8 +99,15 @@ class BaseModel(ABC):
             if isinstance(name, str):
                 net = getattr(self, 'net' + name)
                 net.eval()
+        """Make models eval mode during test time"""
+        for name in self.model_names:
+            if isinstance(name, str):
+                net = getattr(self, 'net' + name)
+                net.eval()
 
     def test(self):
+        self.forward()
+        self.compute_visuals()
         """Forward function used in test time.
 
         It also calls <compute_visuals> to produce additional visualization results
@@ -107,9 +115,9 @@ class BaseModel(ABC):
         self.forward()
         self.compute_visuals()
 
-    def compute_visuals(self): # noqa
+    def compute_visuals(self):
         """Calculate additional output images for visdom and HTML visualization"""
-        pass
+        # Add the logic to calculate additional output images for visualization
 
     def get_image_paths(self):
         """ Return image paths that are used to load current data"""
@@ -121,13 +129,21 @@ class BaseModel(ABC):
         for scheduler in self.schedulers:
             if self.opt.lr_policy == 'plateau':
                 scheduler.step(self.metric)
-            else:
+            elif self.opt.lr_policy == 'step':
                 scheduler.step()
+            elif self.opt.lr_policy == 'constant':
+                pass
 
         lr = self.optimizers[0].param_groups[0]['lr']
         print('learning rate %.7f -> %.7f' % (old_lr, lr))
 
     def get_current_visuals(self):
+        
+        visual_ret = OrderedDict()
+        
+        # Add the logic to populate visual_ret with the desired visualization images
+
+        return visual_ret
         """Return visualization images. train.py will display these images with visdom, and save the images to a HTML"""
         visual_ret = OrderedDict()
         for name in self.visual_names:
@@ -156,20 +172,26 @@ class BaseModel(ABC):
                 net = getattr(self, 'net' + name)
 
                 if len(self.gpu_ids) > 0 and torch.cuda.is_available():
-                    torch.save(net.module.cpu().state_dict(), save_path)
+                    save_filename = '%s_net_%s.pth' % (epoch, name)
+                save_path = os.path.join(self.save_dir, save_filename)
+                if len(self.gpu_ids) > 0 and torch.cuda.is_available():
+                    net.cuda(self.gpu_ids[0])
+                    torch.save(net.cpu().state_dict(), save_path)
+                    net.cuda()
                     net.cuda(self.gpu_ids[0])
                 else:
                     torch.save(net.cpu().state_dict(), save_path)
 
     def unload_network(self, name):
-        """Unload network and gc.
-        """
+        """Unload the specified network by deleting the reference, performing garbage collection, and calling `torch_gc()`.
+
+        Parameters:
+            name (str): the name of the network to be unloaded"""
         if isinstance(name, str):
             net = getattr(self, 'net' + name)
             del net
             gc.collect()
             torch_gc()
-            return None
 
     def __patch_instance_norm_state_dict(self, state_dict, module, keys, i=0):
         """Fix InstanceNorm checkpoints incompatibility (prior to 0.4)"""
@@ -198,12 +220,12 @@ class BaseModel(ABC):
                 net = getattr(self, 'net' + name)
                 if isinstance(net, torch.nn.DataParallel):
                     net = net.module
-                # print('Loading depth boost model from %s' % load_path)
                 # if you are using PyTorch newer than 0.4 (e.g., built from
                 # GitHub source), you can remove str() on self.device
                 state_dict = torch.load(load_path, map_location=str(self.device))
                 if hasattr(state_dict, '_metadata'):
                     del state_dict._metadata
+                net.load_state_dict(state_dict)
 
                 # patch InstanceNorm checkpoints prior to 0.4
                 for key in list(state_dict.keys()):  # need to copy keys here because we mutate in loop
