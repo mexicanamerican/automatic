@@ -28,7 +28,7 @@ class BaseModel(ABC):
         When creating your custom class, you need to implement your own initialization.
         In this function, you should first call <BaseModel.__init__(self, opt)>
         Then, you need to define four lists:
-            -- self.loss_names (str list):          specify the training losses that you want to plot and save.
+            -- self.loss_names (str list):          specify the training losses that you want to plot and save.\n                Example: ['loss1', 'loss2']\n            -- self.model_names (str list):         define networks used in our training.\n                Example: ['network1', 'network2']\n            -- self.visual_names (str list):        specify the images that you want to display and save.\n                Example: ['image1', 'image2']\n            -- self.optimizers (optimizer list):    define and initialize optimizers.\n                Example: [torch.optim.Adam(net1.parameters(), lr=0.0002), torch.optim.SGD(net2.parameters(), lr=0.001)]
             -- self.model_names (str list):         define networks used in our training.
             -- self.visual_names (str list):        specify the images that you want to display and save.
             -- self.optimizers (optimizer list):    define and initialize optimizers. You can define one optimizer for each network. If two networks are updated at the same time, you can use itertools.chain to group them. See cycle_gan_model.py for an example.
@@ -40,7 +40,7 @@ class BaseModel(ABC):
         self.save_dir = os.path.join(opt.checkpoints_dir, opt.name)  # save all the checkpoints to save_dir
         if opt.preprocess != 'scale_width':  # with [scale_width], input images might have different sizes, which hurts the performance of cudnn.benchmark.
             torch.backends.cudnn.benchmark = True
-        self.loss_names = []
+        self.loss_names = []  # Example: ['loss1', 'loss2']
         self.model_names = []
         self.visual_names = []
         self.optimizers = []
@@ -87,12 +87,16 @@ class BaseModel(ABC):
         """
         if self.isTrain:
             self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
-        if not self.isTrain or opt.continue_train:
-            load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
-            self.load_networks(load_suffix)
-        self.print_networks(opt.verbose)
+            if not self.isTrain or opt.continue_train:
+                load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
+                self.load_networks(load_suffix)
+            self.print_networks(opt.verbose)
 
     def eval(self):
+        for name in self.model_names:
+            if isinstance(name, str):
+                net = getattr(self, 'net' + name)
+                net.eval()
         """Make models eval mode during test time"""
         for name in self.model_names:
             if isinstance(name, str):
@@ -107,9 +111,9 @@ class BaseModel(ABC):
         self.forward()
         self.compute_visuals()
 
-    def compute_visuals(self): # noqa
+    def compute_visuals(self):
         """Calculate additional output images for visdom and HTML visualization"""
-        pass
+        # Add your logic here to calculate additional output images for visualization
 
     def get_image_paths(self):
         """ Return image paths that are used to load current data"""
@@ -159,7 +163,7 @@ class BaseModel(ABC):
                     torch.save(net.module.cpu().state_dict(), save_path)
                     net.cuda(self.gpu_ids[0])
                 else:
-                    torch.save(net.cpu().state_dict(), save_path)
+                    torch.save(net.to('cpu').state_dict(), save_path)
 
     def unload_network(self, name):
         """Unload network and gc.
@@ -201,15 +205,11 @@ class BaseModel(ABC):
                 # print('Loading depth boost model from %s' % load_path)
                 # if you are using PyTorch newer than 0.4 (e.g., built from
                 # GitHub source), you can remove str() on self.device
-                state_dict = torch.load(load_path, map_location=str(self.device))
+                state_dict = torch.load(load_path, map_location=self.device)
                 if hasattr(state_dict, '_metadata'):
                     del state_dict._metadata
 
                 # patch InstanceNorm checkpoints prior to 0.4
-                for key in list(state_dict.keys()):  # need to copy keys here because we mutate in loop
-                    self.__patch_instance_norm_state_dict(state_dict, net, key.split('.'))
-                net.load_state_dict(state_dict)
-
     def print_networks(self, verbose):
         """Print the total number of parameters in the network and (if verbose) network architecture
 
@@ -239,4 +239,4 @@ class BaseModel(ABC):
         for net in nets:
             if net is not None:
                 for param in net.parameters():
-                    param.requires_grad = requires_grad
+                    param.requires_grad = False
