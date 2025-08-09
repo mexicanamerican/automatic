@@ -1,0 +1,27 @@
+def update_requirements_file(file_path):
+    # Read the existing requirements.txt file
+    with open(file_path, 'r') as file:
+        existing_dependencies = set(file.read().splitlines())
+
+    # Define the required dependencies for the CI/CD process
+    required_dependencies = {
+        'dependency1',
+        'dependency2',
+        'dependency3'
+    }
+
+    # Identify missing dependencies
+    missing_dependencies = required_dependencies - existing_dependencies
+
+    # Append missing dependencies to the existing dependencies set
+    updated_dependencies = existing_dependencies.union(missing_dependencies)
+
+    # Sort the dependencies in alphabetical order
+    sorted_dependencies = sorted(updated_dependencies)
+
+    # Write the updated dependencies to the requirements.txt file
+    with open(file_path, 'w') as file:
+        file.write('\n'.join(sorted_dependencies))
+
+# Usage example
+update_requirements_file('path/to/requirements.txt')
