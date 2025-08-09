@@ -5,7 +5,7 @@ from collections import OrderedDict
 
 import torch
 
-from modules.control.util import torch_gc
+from modules.control.util.torch_gc import torch_gc
 from . import networks
 
 
@@ -168,7 +168,7 @@ class BaseModel(ABC):
             net = getattr(self, 'net' + name)
             del net
             gc.collect()
-            torch_gc()
+            torch_gc.torch_gc()
             return None
 
     def __patch_instance_norm_state_dict(self, state_dict, module, keys, i=0):
