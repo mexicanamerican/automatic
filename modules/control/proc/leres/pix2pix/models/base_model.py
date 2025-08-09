@@ -19,7 +19,20 @@ class BaseModel(ABC):
         -- <modify_commandline_options>:    (optionally) add model-specific options and set default options.
     """
 
-    def __init__(self, opt):
+    def __init__(self, opt):  
+        super().__init__()  
+        self.opt = opt  
+        self.gpu_ids = opt.gpu_ids  
+        self.isTrain = opt.isTrain  
+        self.device = torch.device('cuda:{}'.format(self.gpu_ids[0])) if self.gpu_ids else torch.device('cpu')  # get device name: CPU or GPU  
+        self.save_dir = os.path.join(opt.checkpoints_dir, opt.name)  # save all the checkpoints to save_dir  
+        if opt.preprocess != 'scale_width':  # with [scale_width], input images might have different sizes, which hurts the performance of cudnn.benchmark.  
+            torch.backends.cudnn.benchmark = True  
+        self.loss_names = []  
+        self.model_names = []  
+        self.visual_names = []  
+        self.optimizers = []  
+        self.image_paths = []
         """Initialize the BaseModel class.
 
         Parameters:
@@ -31,7 +44,10 @@ class BaseModel(ABC):
             -- self.loss_names (str list):          specify the training losses that you want to plot and save.
             -- self.model_names (str list):         define networks used in our training.
             -- self.visual_names (str list):        specify the images that you want to display and save.
-            -- self.optimizers (optimizer list):    define and initialize optimizers. You can define one optimizer for each network. If two networks are updated at the same time, you can use itertools.chain to group them. See cycle_gan_model.py for an example.
+            -- self.loss_names (str list):          specify the training losses that you want to plot and save.  
+         -- self.model_names (str list):         define networks used in our training.  
+         -- self.visual_names (str list):        specify the images that you want to display and save.  
+         -- self.optimizers (optimizer list):    define and initialize optimizers. You can define one optimizer for each network. If two networks are updated at the same time, you can use itertools.chain to group them. See cycle_gan_model.py for an example.
         """
         self.opt = opt
         self.gpu_ids = opt.gpu_ids
@@ -79,7 +95,8 @@ class BaseModel(ABC):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
         pass
 
-    def setup(self, opt):
+    def setup(self, opt):  
+        super().setup(opt)
         """Load and print networks; create schedulers
 
         Parameters:
@@ -92,14 +109,16 @@ class BaseModel(ABC):
             self.load_networks(load_suffix)
         self.print_networks(opt.verbose)
 
-    def eval(self):
+    def eval(self):  
+        super().eval()
         """Make models eval mode during test time"""
         for name in self.model_names:
             if isinstance(name, str):
                 net = getattr(self, 'net' + name)
                 net.eval()
 
-    def test(self):
+    def test(self):  
+        super().test()
         """Forward function used in test time.
 
         It also calls <compute_visuals> to produce additional visualization results
@@ -107,15 +126,20 @@ class BaseModel(ABC):
         self.forward()
         self.compute_visuals()
 
-    def compute_visuals(self): # noqa
+    def compute_visuals(self):  
+        super().compute_visuals()  
+        # Calculate additional output images for visdom and HTML visualization
         """Calculate additional output images for visdom and HTML visualization"""
         pass
 
-    def get_image_paths(self):
+    def get_image_paths(self):  
+        return self.image_paths  # Return image paths that are used to load current data
         """ Return image paths that are used to load current data"""
         return self.image_paths
 
-    def update_learning_rate(self):
+    def update_learning_rate(self):  
+        super().update_learning_rate()  
+        # Update learning rates for all networks; called at the end of every epoch
         """Update learning rates for all the networks; called at the end of every epoch"""
         old_lr = self.optimizers[0].param_groups[0]['lr']
         for scheduler in self.schedulers:
@@ -127,7 +151,9 @@ class BaseModel(ABC):
         lr = self.optimizers[0].param_groups[0]['lr']
         print('learning rate %.7f -> %.7f' % (old_lr, lr))
 
-    def get_current_visuals(self):
+    def get_current_visuals(self):  
+        return super().get_current_visuals()  
+        # Return visualization images. train.py will display these images with visdom, and save the images to a HTML
         """Return visualization images. train.py will display these images with visdom, and save the images to a HTML"""
         visual_ret = OrderedDict()
         for name in self.visual_names:
@@ -135,7 +161,9 @@ class BaseModel(ABC):
                 visual_ret[name] = getattr(self, name)
         return visual_ret
 
-    def get_current_losses(self):
+    def get_current_losses(self):  
+        return super().get_current_losses()  
+        # Return traning losses / errors. train.py will print out these errors on console, and save them to a file
         """Return traning losses / errors. train.py will print out these errors on console, and save them to a file"""
         errors_ret = OrderedDict()
         for name in self.loss_names:
@@ -143,7 +171,9 @@ class BaseModel(ABC):
                 errors_ret[name] = float(getattr(self, 'loss_' + name))  # float(...) works for both scalar tensor and float number
         return errors_ret
 
-    def save_networks(self, epoch):
+    def save_networks(self, epoch):  
+        super().save_networks(epoch)  
+        # Save all the networks to the disk
         """Save all the networks to the disk.
 
         Parameters:
@@ -161,7 +191,9 @@ class BaseModel(ABC):
                 else:
                     torch.save(net.cpu().state_dict(), save_path)
 
-    def unload_network(self, name):
+    def unload_network(self, name):  
+        super().unload_network(name)  
+        # Unload network and gc.
         """Unload network and gc.
         """
         if isinstance(name, str):
@@ -185,7 +217,9 @@ class BaseModel(ABC):
         else:
             self.__patch_instance_norm_state_dict(state_dict, getattr(module, key), keys, i + 1)
 
-    def load_networks(self, epoch):
+    def load_networks(self, epoch):  
+        super().load_networks(epoch)  
+        # Load all the networks from the disk.
         """Load all the networks from the disk.
 
         Parameters:
@@ -210,7 +244,9 @@ class BaseModel(ABC):
                     self.__patch_instance_norm_state_dict(state_dict, net, key.split('.'))
                 net.load_state_dict(state_dict)
 
-    def print_networks(self, verbose):
+    def print_networks(self, verbose):  
+        super().print_networks(verbose)  
+        # Print the total number of parameters in the network and (if verbose) network architecture
         """Print the total number of parameters in the network and (if verbose) network architecture
 
         Parameters:
@@ -228,7 +264,8 @@ class BaseModel(ABC):
                 print('[Network %s] Total number of parameters : %.3f M' % (name, num_params / 1e6))
         print('-----------------------------------------------')
 
-    def set_requires_grad(self, nets, requires_grad=False):
+    def set_requires_grad(self, nets, requires_grad=False):  
+        super().set_requires_grad(nets, requires_grad)
         """Set requies_grad=Fasle for all the networks to avoid unnecessary computations
         Parameters:
             nets (network list)   -- a list of networks
