@@ -1,6 +1,7 @@
 import gc
 import os
 from abc import ABC, abstractmethod
+from . import networks
 from collections import OrderedDict
 
 import torch
@@ -10,6 +11,15 @@ from . import networks
 
 
 class BaseModel(ABC):
+    """This class is an abstract base class (ABC) for models.
+    To create a subclass, you need to implement the following five functions:
+        -- <__init__>:                      initialize the class; first call BaseModel.__init__(self, opt).
+        -- <set_input>:                     unpack data from dataset and apply preprocessing.
+        -- <forward>:                       produce intermediate results.
+        -- <optimize_parameters>:           calculate losses, gradients, and update network weights.
+        -- <modify_commandline_options>:    (optionally) add model-specific options and set default options.
+        -- <test>:                          forward function used in test time. It also calls <compute_visuals> to produce additional visualization results.
+    """
     """This class is an abstract base class (ABC) for models.
     To create a subclass, you need to implement the following five functions:
         -- <__init__>:                      initialize the class; first call BaseModel.__init__(self, opt).
@@ -67,17 +77,17 @@ class BaseModel(ABC):
         Parameters:
             input (dict): includes the data itself and its metadata information.
         """
-        pass
+        raise NotImplementedError("set_input method must be implemented in the subclass.")
 
     @abstractmethod
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
-        pass
+        raise NotImplementedError("forward method must be implemented in the subclass.")
 
     @abstractmethod
     def optimize_parameters(self):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
-        pass
+        raise NotImplementedError("optimize_parameters method must be implemented in the subclass.")
 
     def setup(self, opt):
         """Load and print networks; create schedulers
@@ -87,13 +97,18 @@ class BaseModel(ABC):
         """
         if self.isTrain:
             self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
+            if not self.isTrain or opt.continue_train:
+                load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
+                self.load_networks(load_suffix)
+            self.print_networks(opt.verbose)
+            self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
         if not self.isTrain or opt.continue_train:
             load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
             self.load_networks(load_suffix)
         self.print_networks(opt.verbose)
 
     def eval(self):
-        """Make models eval mode during test time"""
+        """Set models to evaluation mode during test time."""
         for name in self.model_names:
             if isinstance(name, str):
                 net = getattr(self, 'net' + name)
@@ -109,7 +124,7 @@ class BaseModel(ABC):
 
     def compute_visuals(self): # noqa
         """Calculate additional output images for visdom and HTML visualization"""
-        pass
+        # Add logic to calculate additional output images
 
     def get_image_paths(self):
         """ Return image paths that are used to load current data"""
@@ -160,6 +175,7 @@ class BaseModel(ABC):
                     net.cuda(self.gpu_ids[0])
                 else:
                     torch.save(net.cpu().state_dict(), save_path)
+
 
     def unload_network(self, name):
         """Unload network and gc.
@@ -216,7 +232,8 @@ class BaseModel(ABC):
         Parameters:
             verbose (bool) -- if verbose: print the network architecture
         """
-        print('---------- Networks initialized -------------')
+        if verbose:
+            print('---------- Networks initialized -------------')
         for name in self.model_names:
             if isinstance(name, str):
                 net = getattr(self, 'net' + name)
@@ -229,10 +246,11 @@ class BaseModel(ABC):
         print('-----------------------------------------------')
 
     def set_requires_grad(self, nets, requires_grad=False):
-        """Set requies_grad=Fasle for all the networks to avoid unnecessary computations
+        """Set requires_grad=False for all the networks to avoid unnecessary computations
+
         Parameters:
-            nets (network list)   -- a list of networks
-            requires_grad (bool)  -- whether the networks require gradients or not
+            nets (network list): a list of networks.
+            requires_grad (bool): whether the networks require gradients or not.
         """
         if not isinstance(nets, list):
             nets = [nets]
