@@ -80,6 +80,18 @@ class BaseModel(ABC):
         pass
 
     def setup(self, opt):
+        if self.isTrain:
+            self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
+        if not self.isTrain or opt.continue_train:
+            load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
+            self.load_networks(load_suffix)
+        self.print_networks(opt.verbose)
+        if self.isTrain:
+            self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
+        if not self.isTrain or opt.continue_train:
+            load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
+            self.load_networks(load_suffix)
+        self.print_networks(opt.verbose)
         """Load and print networks; create schedulers
 
         Parameters:
@@ -98,8 +110,26 @@ class BaseModel(ABC):
             if isinstance(name, str):
                 net = getattr(self, 'net' + name)
                 net.eval()
+        self.forward()
+        """Make models eval mode during test time"""
+        for name in self.model_names:
+            if isinstance(name, str):
+                net = getattr(self, 'net' + name)
+                net.eval()
+        """Make models eval mode during test time"""
+        for name in self.model_names:
+            if isinstance(name, str):
+                net = getattr(self, 'net' + name)
+                net.eval()
 
     def test(self):
+        self.compute_visuals()
+        """Forward function used in test time.
+
+        It also calls <compute_visuals> to produce additional visualization results
+        """
+        self.forward()
+        self.compute_visuals()
         """Forward function used in test time.
 
         It also calls <compute_visuals> to produce additional visualization results
@@ -115,7 +145,22 @@ class BaseModel(ABC):
         """ Return image paths that are used to load current data"""
         return self.image_paths
 
-    def update_learning_rate(self):
+    def update_learning_rate(self): 
+        old_lrs = []
+        for optimizer in self.optimizers:
+            old_lrs.append(optimizer.param_groups[0]['lr'])
+            
+        for scheduler in self.schedulers:
+            if self.opt.lr_policy == 'plateau':
+                scheduler.step(self.metric)
+            else:
+                scheduler.step()
+        
+        new_lrs = []
+        for optimizer in self.optimizers:
+            new_lrs.append(optimizer.param_groups[0]['lr'])
+        
+        print('learning rates {} -> {}'.format(old_lrs, new_lrs))
         """Update learning rates for all the networks; called at the end of every epoch"""
         old_lr = self.optimizers[0].param_groups[0]['lr']
         for scheduler in self.schedulers:
@@ -132,10 +177,20 @@ class BaseModel(ABC):
         visual_ret = OrderedDict()
         for name in self.visual_names:
             if isinstance(name, str):
+        # Calculate additional output images
+        # ...
+        # Calculate additional output images
+        # ...
                 visual_ret[name] = getattr(self, name)
         return visual_ret
 
     def get_current_losses(self):
+        
+        errors_ret = OrderedDict()
+        for name in self.loss_names:
+            if isinstance(name, str):
+                errors_ret[name] = float(getattr(self, 'loss_' + name))  # float(...) works for both scalar tensor and float number
+        return errors_ret
         """Return traning losses / errors. train.py will print out these errors on console, and save them to a file"""
         errors_ret = OrderedDict()
         for name in self.loss_names:
@@ -151,11 +206,11 @@ class BaseModel(ABC):
         """
         for name in self.model_names:
             if isinstance(name, str):
-                save_filename = '%s_net_%s.pth' % (epoch, name)
+                save_filename = 'net_%s_%s.pth' % (name, epoch)
                 save_path = os.path.join(self.save_dir, save_filename)
                 net = getattr(self, 'net' + name)
-
                 if len(self.gpu_ids) > 0 and torch.cuda.is_available():
+                    save_path = os.path.join(self.save_dir, save_filename)
                     torch.save(net.module.cpu().state_dict(), save_path)
                     net.cuda(self.gpu_ids[0])
                 else:
@@ -163,13 +218,16 @@ class BaseModel(ABC):
 
     def unload_network(self, name):
         """Unload network and gc.
+
+        Parameters:
+            name (str)   -- name of the network to unload
+
+        Performs garbage collection to free memory after unloading the network.
         """
         if isinstance(name, str):
             net = getattr(self, 'net' + name)
             del net
             gc.collect()
-            torch_gc()
-            return None
 
     def __patch_instance_norm_state_dict(self, state_dict, module, keys, i=0):
         """Fix InstanceNorm checkpoints incompatibility (prior to 0.4)"""
