@@ -18,4 +18,5 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@v4.6.1
         with:
           branch: master
-          folder: '.'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
