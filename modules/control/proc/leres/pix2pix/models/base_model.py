@@ -158,7 +158,7 @@ class BaseModel(ABC):
                 if len(self.gpu_ids) > 0 and torch.cuda.is_available():
                     torch.save(net.module.cpu().state_dict(), save_path)
                     net.cuda(self.gpu_ids[0])
-                else:
+                    raise NotImplementedError()
                     torch.save(net.cpu().state_dict(), save_path)
 
     def unload_network(self, name):
