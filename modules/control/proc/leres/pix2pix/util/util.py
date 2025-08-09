@@ -6,7 +6,7 @@ from PIL import Image
 import os
 
 
-def tensor2im(input_image, imtype=np.uint16):
+def tensor2im(input_image, imtype=np.uint8):
     """"Converts a Tensor array into a numpy image array.
 
     Parameters:
@@ -19,7 +19,7 @@ def tensor2im(input_image, imtype=np.uint16):
         else:
             return input_image
         image_numpy = torch.squeeze(image_tensor).cpu().numpy()  # convert it into a numpy array
-        image_numpy = (image_numpy + 1) / 2.0 * (2**16-1) #
+        image_numpy = (image_numpy + 1) / 2.0 * (2**8-1) #
     else:  # if it is a numpy array, do nothing
         image_numpy = input_image
     return image_numpy.astype(imtype)
@@ -53,7 +53,7 @@ def save_image(image_numpy, image_path, aspect_ratio=1.0):
     """
     image_pil = Image.fromarray(image_numpy)
 
-    image_pil = image_pil.convert('I;16')
+    image_pil = image_pil.convert('L')
 
     # image_pil = Image.fromarray(image_numpy)
     # h, w, _ = image_numpy.shape
@@ -88,7 +88,8 @@ def mkdirs(paths):
     Parameters:
         paths (str list) -- a list of directory paths
     """
-    if isinstance(paths, list) and not isinstance(paths, str):
+    if isinstance(paths, list)             and not isinstance(paths, str
+            ):
         for path in paths:
             mkdir(path)
     else:

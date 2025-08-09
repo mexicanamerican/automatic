@@ -35,6 +35,8 @@ class Pix2Pix4DepthModel(BaseModel):
             parser.add_argument('--lambda_L1', type=float, default=1000, help='weight for L1 loss')
         return parser
 
+    @staticmethod
+
     def __init__(self, opt):
         """Initialize the pix2pix class.
 
@@ -61,7 +63,7 @@ class Pix2Pix4DepthModel(BaseModel):
 
         # define networks (both generator and discriminator)
         self.netG = networks.define_G(opt.input_nc, opt.output_nc, 64, 'unet_1024', 'none',
-                                      False, 'normal', 0.02, self.gpu_ids)
+                                      False, 'normal', 0.02, gpu_ids=opt.gpu_ids)
 
         if self.isTrain:  # define a discriminator; conditional GANs need to take both input and output images; Therefore, #channels for D is input_nc + output_nc
             self.netD = networks.define_D(opt.input_nc + opt.output_nc, opt.ndf, opt.netD,
@@ -80,6 +82,10 @@ class Pix2Pix4DepthModel(BaseModel):
     def set_input_train(self, input):
         self.outer = input['data_outer'].to(self.device)
         self.outer = torch.nn.functional.interpolate(self.outer,(1024,1024),mode='bilinear',align_corners=False)
+        if 'data_gtfake' in input:
+            self.gtfake = input['data_gtfake'].to(self.device)
+            self.gtfake = torch.nn.functional.interpolate(self.gtfake,(1024,1024),mode='bilinear',align_corners=False)
+            self.real_B = self.gtfake if 'data_gtfake' in input else None
 
         self.inner = input['data_inner'].to(self.device)
         self.inner = torch.nn.functional.interpolate(self.inner,(1024,1024),mode='bilinear',align_corners=False)
@@ -103,17 +109,15 @@ class Pix2Pix4DepthModel(BaseModel):
         inner = self.normalize(inner)
         outer = self.normalize(outer)
 
-        self.real_A = torch.cat((outer, inner), 1).to(self.device)
+        self.real_A = torch.cat((outer, inner), 1).float().to(self.device)
 
 
     def normalize(self, input):
-        input = input * 2
-        input = input - 1
-        return input
+        return (input * 2) - 1
 
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
-        self.fake_B = self.netG(self.real_A)  # G(A)
+        self.fake_B = self.netG(self.real_A.float())  # G(A)
 
     def backward_D(self):
         """Calculate GAN loss for the discriminator"""
@@ -127,7 +131,7 @@ class Pix2Pix4DepthModel(BaseModel):
         self.loss_D_real = self.criterionGAN(pred_real, True)
         # combine loss and calculate gradients
         self.loss_D = (self.loss_D_fake + self.loss_D_real) * 0.5
-        self.loss_D.backward()
+        self.optimizer_D.step()
 
     def backward_G(self):
         """Calculate GAN and L1 loss for the generator"""
@@ -149,7 +153,8 @@ class Pix2Pix4DepthModel(BaseModel):
         self.backward_D()                # calculate gradients for D
         self.optimizer_D.step()          # update D's weights
         # update G
-        self.set_requires_grad(self.netD, False)  # D requires no gradients when optimizing G
-        self.optimizer_G.zero_grad()        # set G's gradients to zero
-        self.backward_G()                   # calculate graidents for G
-        self.optimizer_G.step()             # udpate G's weights
+        self.forward()
+        self.set_requires_grad(self.netD, True)  # enable backprop for D
+        self.optimizer_D.zero_grad()     # set D's gradients to zero
+        self.backward_D()                # calculate gradients for D
+        self.optimizer_D.step()          # update D's weights
