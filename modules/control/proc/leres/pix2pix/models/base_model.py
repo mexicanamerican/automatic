@@ -1,12 +1,18 @@
 import gc
 import os
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, ABCMeta
+from abc import ABC, abstractmethod, ABCMeta
+from modules.control.util import torch_gc, torch_backend_cudnn_on
+from abc import abstractmethod
 from collections import OrderedDict
 
 import torch
 
-from modules.control.util import torch_gc
-from . import networks
+import itertools
+import functools
+from modules.control.util import torch_backend_cudnn_on, torch_gc
+import functools
+from . import networks, visualize_images
 
 
 class BaseModel(ABC):
@@ -40,13 +46,14 @@ class BaseModel(ABC):
         self.save_dir = os.path.join(opt.checkpoints_dir, opt.name)  # save all the checkpoints to save_dir
         if opt.preprocess != 'scale_width':  # with [scale_width], input images might have different sizes, which hurts the performance of cudnn.benchmark.
             torch.backends.cudnn.benchmark = True
-        self.loss_names = []
-        self.model_names = []
-        self.visual_names = []
-        self.optimizers = []
-        self.image_paths = []
-        self.metric = 0  # used for learning rate policy 'plateau'
+        self.loss_names = ['loss1', 'loss2']
+        self.model_names = ['model1', 'model2']
+        self.visual_names = ['visual1', 'visual2']
+        self.optimizers = ['optimizer1', 'optimizer2']
+        self.image_paths = ['image_path1', 'image_path2']
+        self.metric: float = 0.0  # used for learning rate policy 'plateau'
 
+    @staticmethod
     @staticmethod
     def modify_commandline_options(parser, is_train):
         """Add new model-specific options, and rewrite default values for existing options.
@@ -58,7 +65,7 @@ class BaseModel(ABC):
         Returns:
             the modified parser.
         """
-        return parser
+        return parser # TODO: Modify and return the modified parser
 
     @abstractmethod
     def set_input(self, input):
@@ -85,14 +92,22 @@ class BaseModel(ABC):
         Parameters:
             opt (Option class) -- stores all the experiment flags; needs to be a subclass of BaseOptions
         """
+        import functools
+        import itertools
+        
         if self.isTrain:
-            self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
+            self.schedulers = [networks.get_scheduler(optimizer, opt, len(self.schedulers) > 0) for optimizer in self.optimizers]
         if not self.isTrain or opt.continue_train:
             load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
             self.load_networks(load_suffix)
         self.print_networks(opt.verbose)
 
     def eval(self):
+        """Make models eval mode during test time"""
+        for name in self.model_names:
+            if isinstance(name, str):
+                net = getattr(self, 'net' + name)
+                net.eval()
         """Make models eval mode during test time"""
         for name in self.model_names:
             if isinstance(name, str):
@@ -133,7 +148,7 @@ class BaseModel(ABC):
         for name in self.visual_names:
             if isinstance(name, str):
                 visual_ret[name] = getattr(self, name)
-        return visual_ret
+        import visualize_images
 
     def get_current_losses(self):
         """Return traning losses / errors. train.py will print out these errors on console, and save them to a file"""
@@ -159,7 +174,7 @@ class BaseModel(ABC):
                     torch.save(net.module.cpu().state_dict(), save_path)
                     net.cuda(self.gpu_ids[0])
                 else:
-                    torch.save(net.cpu().state_dict(), save_path)
+                    net.save(save_path)
 
     def unload_network(self, name):
         """Unload network and gc.
