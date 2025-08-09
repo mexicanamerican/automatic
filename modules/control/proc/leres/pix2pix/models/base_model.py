@@ -61,11 +61,11 @@ class BaseModel(ABC):
         return parser
 
     @abstractmethod
-    def set_input(self, input):
+    def set_input(self, data):
         """Unpack input data from the dataloader and perform necessary pre-processing steps.
 
         Parameters:
-            input (dict): includes the data itself and its metadata information.
+            data (dict): includes the data itself and its metadata information. Must be implemented by subclasses.
         """
         pass
 
