@@ -19,7 +19,7 @@ def tensor2im(input_image, imtype=np.uint16):
         else:
             return input_image
         image_numpy = torch.squeeze(image_tensor).cpu().numpy()  # convert it into a numpy array
-        image_numpy = (image_numpy + 1) / 2.0 * (2**16-1) #
+        image_numpy = (image_numpy + 1) / 2.0 * (2**16-1) .astype(imtype) #
     else:  # if it is a numpy array, do nothing
         image_numpy = input_image
     return image_numpy.astype(imtype)
