@@ -22,6 +22,8 @@ class BaseModel(ABC):
     def __init__(self, opt):
         """Initialize the BaseModel class.
 
+        This method initializes the BaseModel class.
+
         Parameters:
             opt (Option class)-- stores all the experiment flags; needs to be a subclass of BaseOptions
 
@@ -92,23 +94,28 @@ class BaseModel(ABC):
             self.load_networks(load_suffix)
         self.print_networks(opt.verbose)
 
-    def eval(self):
+    def eval_mode(self):
         """Make models eval mode during test time"""
+        """Make the models evaluation mode during test time."""
         for name in self.model_names:
             if isinstance(name, str):
                 net = getattr(self, 'net' + name)
                 net.eval()
 
     def test(self):
+        """Run forward function used in test time.
+
+        Calls the forward function to produce results and then computes the visuals."""
         """Forward function used in test time.
 
         It also calls <compute_visuals> to produce additional visualization results
         """
         self.forward()
         self.compute_visuals()
+        self.compute_visuals()
 
     def compute_visuals(self): # noqa
-        """Calculate additional output images for visdom and HTML visualization"""
+        """Calculate additional output images for visualization."""
         pass
 
     def get_image_paths(self):
@@ -116,6 +123,7 @@ class BaseModel(ABC):
         return self.image_paths
 
     def update_learning_rate(self):
+        """Update learning rates for all the networks and print the learning rate after the update. Called at the end of every epoch."""
         """Update learning rates for all the networks; called at the end of every epoch"""
         old_lr = self.optimizers[0].param_groups[0]['lr']
         for scheduler in self.schedulers:
@@ -127,8 +135,8 @@ class BaseModel(ABC):
         lr = self.optimizers[0].param_groups[0]['lr']
         print('learning rate %.7f -> %.7f' % (old_lr, lr))
 
-    def get_current_visuals(self):
-        """Return visualization images. train.py will display these images with visdom, and save the images to a HTML"""
+    def get_current_visuals(self) -> OrderedDict:
+        """Return visualization images in the form of an ordered dictionary. This method returns the visualization images used for display and saving in train.py."""
         visual_ret = OrderedDict()
         for name in self.visual_names:
             if isinstance(name, str):
@@ -143,12 +151,14 @@ class BaseModel(ABC):
                 errors_ret[name] = float(getattr(self, 'loss_' + name))  # float(...) works for both scalar tensor and float number
         return errors_ret
 
-    def save_networks(self, epoch):
+    def save_networks(self, epoch, save_dir):
         """Save all the networks to the disk.
 
         Parameters:
             epoch (int) -- current epoch; used in the file name '%s_net_%s.pth' % (epoch, name)
-        """
+            save_dir (str) -- directory where the networks will be saved
+
+        This method saves all the networks to the disk at the end of each epoch. The networks are saved with the file name '{epoch}_net_{name}.pth' and in the specified save directory."""
         for name in self.model_names:
             if isinstance(name, str):
                 save_filename = '%s_net_%s.pth' % (epoch, name)
@@ -172,7 +182,7 @@ class BaseModel(ABC):
             return None
 
     def __patch_instance_norm_state_dict(self, state_dict, module, keys, i=0):
-        """Fix InstanceNorm checkpoints incompatibility (prior to 0.4)"""
+        """Fixes the InstanceNorm checkpoints incompatibility (prior to 0.4) by handling variations in the state dictionary related to InstanceNorm layers."""
         key = keys[i]
         if i + 1 == len(keys):  # at the end, pointing to a parameter/buffer
             if module.__class__.__name__.startswith('InstanceNorm') and \
@@ -183,7 +193,7 @@ class BaseModel(ABC):
                (key == 'num_batches_tracked'):
                 state_dict.pop('.'.join(keys))
         else:
-            self.__patch_instance_norm_state_dict(state_dict, getattr(module, key), keys, i + 1)
+            self.__recursive_patch_instance_norm_state_dict(state_dict, getattr(module, key), keys, i + 1)
 
     def load_networks(self, epoch):
         """Load all the networks from the disk.
