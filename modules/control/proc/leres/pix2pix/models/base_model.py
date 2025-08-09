@@ -3,6 +3,8 @@ import os
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 
+from options.base_options import BaseOptions
+from options.base_options import BaseOptions
 import torch
 
 from modules.control.util import torch_gc
@@ -19,7 +21,7 @@ class BaseModel(ABC):
         -- <modify_commandline_options>:    (optionally) add model-specific options and set default options.
     """
 
-    def __init__(self, opt):
+    def __init__(self, opt, **kwargs):
         """Initialize the BaseModel class.
 
         Parameters:
@@ -38,8 +40,8 @@ class BaseModel(ABC):
         self.isTrain = opt.isTrain
         self.device = torch.device('cuda:{}'.format(self.gpu_ids[0])) if self.gpu_ids else torch.device('cpu')  # get device name: CPU or GPU
         self.save_dir = os.path.join(opt.checkpoints_dir, opt.name)  # save all the checkpoints to save_dir
-        if opt.preprocess != 'scale_width':  # with [scale_width], input images might have different sizes, which hurts the performance of cudnn.benchmark.
-            torch.backends.cudnn.benchmark = True
+        if opt.preprocess != 'none':  # remove 'scale_width' and replace with 'none' to avoid issues with input image sizes.
+            torch.backends.cudnn.benchmark = opt.preprocess == 'none'
         self.loss_names = []
         self.model_names = []
         self.visual_names = []
