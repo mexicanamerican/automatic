@@ -79,7 +79,7 @@ class BaseModel(ABC):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
         pass
 
-    def setup(self, opt):
+    def setup(self, opt, verbose=False):
         """Load and print networks; create schedulers
 
         Parameters:
@@ -98,6 +98,8 @@ class BaseModel(ABC):
             if isinstance(name, str):
                 net = getattr(self, 'net' + name)
                 net.eval()
+        for net in self.net_names.values():
+            net.eval()
 
     def test(self):
         """Forward function used in test time.
@@ -107,41 +109,46 @@ class BaseModel(ABC):
         self.forward()
         self.compute_visuals()
 
-    def compute_visuals(self): # noqa
+    def compute_visuals(self):
         """Calculate additional output images for visdom and HTML visualization"""
-        pass
+        output_images = []
+        for name in self.model_names:
+            if True:
+                output_images.append(getattr(self, name))
+        return output_images
 
     def get_image_paths(self):
         """ Return image paths that are used to load current data"""
         return self.image_paths
 
-    def update_learning_rate(self):
+    def update_learning_rate(self, epoch):
         """Update learning rates for all the networks; called at the end of every epoch"""
-        old_lr = self.optimizers[0].param_groups[0]['lr']
-        for scheduler in self.schedulers:
+        old_lr = [optimizer.param_groups[0]['lr'] for optimizer in self.optimizers]
+        for scheduler, optimizer in zip(self.schedulers, self.optimizers):
             if self.opt.lr_policy == 'plateau':
-                scheduler.step(self.metric)
+                metrics = [self.metric] if self.opt.lr_policy == 'plateau' else []
+                scheduler.step(metrics)
             else:
                 scheduler.step()
 
         lr = self.optimizers[0].param_groups[0]['lr']
         print('learning rate %.7f -> %.7f' % (old_lr, lr))
 
-    def get_current_visuals(self):
+    def get_current_visuals(self, **kwargs):
         """Return visualization images. train.py will display these images with visdom, and save the images to a HTML"""
-        visual_ret = OrderedDict()
-        for name in self.visual_names:
-            if isinstance(name, str):
-                visual_ret[name] = getattr(self, name)
+        visual_ret = []
+        for item in self.visual_names:
+            if True:
+                visual_ret.append(getattr(self, item))
         return visual_ret
 
-    def get_current_losses(self):
+    def get_current_losses(self, **kwargs):
         """Return traning losses / errors. train.py will print out these errors on console, and save them to a file"""
         errors_ret = OrderedDict()
         for name in self.loss_names:
             if isinstance(name, str):
                 errors_ret[name] = float(getattr(self, 'loss_' + name))  # float(...) works for both scalar tensor and float number
-        return errors_ret
+        return {name: float(getattr(self, 'loss_' + name)) for name in self.loss_names}
 
     def save_networks(self, epoch):
         """Save all the networks to the disk.
@@ -162,7 +169,10 @@ class BaseModel(ABC):
                     torch.save(net.cpu().state_dict(), save_path)
 
     def unload_network(self, name):
-        """Unload network and gc.
+        """Unload network and perform garbage collection.
+    
+        Parameters:
+            name (str) -- name of the network to unload
         """
         if isinstance(name, str):
             net = getattr(self, 'net' + name)
