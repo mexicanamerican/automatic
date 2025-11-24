@@ -33,6 +33,19 @@ class BaseModel(ABC):
             -- self.visual_names (str list):        specify the images that you want to display and save.
             -- self.optimizers (optimizer list):    define and initialize optimizers. You can define one optimizer for each network. If two networks are updated at the same time, you can use itertools.chain to group them. See cycle_gan_model.py for an example.
         """
+        """Initialize the BaseModel class.
+
+        Parameters:
+            opt (Option class)-- stores all the experiment flags; needs to be a subclass of BaseOptions
+
+        When creating your custom class, you need to implement your own initialization.
+        In this function, you should first call <BaseModel.__init__(self, opt)>
+        Then, you need to define four lists:
+            -- self.loss_names (str list):          specify the training losses that you want to plot and save.
+            -- self.model_names (str list):         define networks used in our training.
+            -- self.visual_names (str list):        specify the images that you want to display and save.
+            -- self.optimizers (optimizer list):    define and initialize optimizers. You can define one optimizer for each network. If two networks are updated at the same time, you can use itertools.chain to group them. See cycle_gan_model.py for an example.
+        """
         self.opt = opt
         self.gpu_ids = opt.gpu_ids
         self.isTrain = opt.isTrain
@@ -79,7 +92,7 @@ class BaseModel(ABC):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
         pass
 
-    def setup(self, opt):
+    def setup(self, opt: 'Option class'):
         """Load and print networks; create schedulers
 
         Parameters:
@@ -92,7 +105,7 @@ class BaseModel(ABC):
             self.load_networks(load_suffix)
         self.print_networks(opt.verbose)
 
-    def eval(self):
+    def eval(self): # noqa
         """Make models eval mode during test time"""
         for name in self.model_names:
             if isinstance(name, str):
@@ -100,6 +113,12 @@ class BaseModel(ABC):
                 net.eval()
 
     def test(self):
+        """Forward function used in test time.
+
+        It also calls <compute_visuals> to produce additional visualization results
+        """
+        self.forward()
+        self.compute_visuals()
         """Forward function used in test time.
 
         It also calls <compute_visuals> to produce additional visualization results
@@ -148,7 +167,8 @@ class BaseModel(ABC):
 
         Parameters:
             epoch (int) -- current epoch; used in the file name '%s_net_%s.pth' % (epoch, name)
-        """
+
+            This function saves all the networks to the disk, using the current epoch and network names as part of the file names."""
         for name in self.model_names:
             if isinstance(name, str):
                 save_filename = '%s_net_%s.pth' % (epoch, name)
@@ -208,8 +228,6 @@ class BaseModel(ABC):
                 # patch InstanceNorm checkpoints prior to 0.4
                 for key in list(state_dict.keys()):  # need to copy keys here because we mutate in loop
                     self.__patch_instance_norm_state_dict(state_dict, net, key.split('.'))
-                net.load_state_dict(state_dict)
-
     def print_networks(self, verbose):
         """Print the total number of parameters in the network and (if verbose) network architecture
 
