@@ -1,9 +1,9 @@
 import gc
 import os
+import torch
+
 from abc import ABC, abstractmethod
 from collections import OrderedDict
-
-import torch
 
 from modules.control.util import torch_gc
 from . import networks
@@ -19,7 +19,7 @@ class BaseModel(ABC):
         -- <modify_commandline_options>:    (optionally) add model-specific options and set default options.
     """
 
-    def __init__(self, opt):
+    def __init__(self, opt=None):
         """Initialize the BaseModel class.
 
         Parameters:
@@ -33,6 +33,8 @@ class BaseModel(ABC):
             -- self.visual_names (str list):        specify the images that you want to display and save.
             -- self.optimizers (optimizer list):    define and initialize optimizers. You can define one optimizer for each network. If two networks are updated at the same time, you can use itertools.chain to group them. See cycle_gan_model.py for an example.
         """
+        if opt is None:
+            raise ValueError('The opt parameter cannot be None')
         self.opt = opt
         self.gpu_ids = opt.gpu_ids
         self.isTrain = opt.isTrain
@@ -85,7 +87,7 @@ class BaseModel(ABC):
         Parameters:
             opt (Option class) -- stores all the experiment flags; needs to be a subclass of BaseOptions
         """
-        if self.isTrain:
+        if self.isTrain and hasattr(self, 'optimizers'):
             self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
         if not self.isTrain or opt.continue_train:
             load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
@@ -196,7 +198,7 @@ class BaseModel(ABC):
                 load_filename = '%s_net_%s.pth' % (epoch, name)
                 load_path = os.path.join(self.save_dir, load_filename)
                 net = getattr(self, 'net' + name)
-                if isinstance(net, torch.nn.DataParallel):
+                if isinstance(getattr(self, 'net' + name), torch.nn.DataParallel):
                     net = net.module
                 # print('Loading depth boost model from %s' % load_path)
                 # if you are using PyTorch newer than 0.4 (e.g., built from
@@ -206,10 +208,6 @@ class BaseModel(ABC):
                     del state_dict._metadata
 
                 # patch InstanceNorm checkpoints prior to 0.4
-                for key in list(state_dict.keys()):  # need to copy keys here because we mutate in loop
-                    self.__patch_instance_norm_state_dict(state_dict, net, key.split('.'))
-                net.load_state_dict(state_dict)
-
     def print_networks(self, verbose):
         """Print the total number of parameters in the network and (if verbose) network architecture
 
@@ -220,23 +218,8 @@ class BaseModel(ABC):
         for name in self.model_names:
             if isinstance(name, str):
                 net = getattr(self, 'net' + name)
-                num_params = 0
-                for param in net.parameters():
-                    num_params += param.numel()
+                num_params = sum(p.numel() for p in net.parameters() if p.requires_grad)
                 if verbose:
                     print(net)
                 print('[Network %s] Total number of parameters : %.3f M' % (name, num_params / 1e6))
         print('-----------------------------------------------')
-
-    def set_requires_grad(self, nets, requires_grad=False):
-        """Set requies_grad=Fasle for all the networks to avoid unnecessary computations
-        Parameters:
-            nets (network list)   -- a list of networks
-            requires_grad (bool)  -- whether the networks require gradients or not
-        """
-        if not isinstance(nets, list):
-            nets = [nets]
-        for net in nets:
-            if net is not None:
-                for param in net.parameters():
-                    param.requires_grad = requires_grad
