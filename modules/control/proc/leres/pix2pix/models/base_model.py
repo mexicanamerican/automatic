@@ -67,17 +67,20 @@ class BaseModel(ABC):
         Parameters:
             input (dict): includes the data itself and its metadata information.
         """
-        pass
+        
+        raise NotImplementedError("set_input method must be implemented")
 
     @abstractmethod
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
-        pass
+        
+        raise NotImplementedError("forward method must be implemented")
 
     @abstractmethod
     def optimize_parameters(self):
         """Calculate losses, gradients, and update network weights; called in every training iteration"""
-        pass
+        
+        raise NotImplementedError("optimize_parameters method must be implemented")
 
     def setup(self, opt):
         """Load and print networks; create schedulers
@@ -85,45 +88,26 @@ class BaseModel(ABC):
         Parameters:
             opt (Option class) -- stores all the experiment flags; needs to be a subclass of BaseOptions
         """
-        if self.isTrain:
-            self.schedulers = [networks.get_scheduler(optimizer, opt) for optimizer in self.optimizers]
-        if not self.isTrain or opt.continue_train:
-            load_suffix = 'iter_%d' % opt.load_iter if opt.load_iter > 0 else opt.epoch
-            self.load_networks(load_suffix)
-        self.print_networks(opt.verbose)
+        self.opt = opt
+        self.gpu_ids = opt.gpu_ids
+        self.isTrain = opt.isTrain
+        def print_networks(self, verbose):
+            """Print the total number of parameters in the network and (if verbose) network architecture
 
-    def eval(self):
-        """Make models eval mode during test time"""
-        for name in self.model_names:
-            if isinstance(name, str):
-                net = getattr(self, 'net' + name)
-                net.eval()
-
-    def test(self):
-        """Forward function used in test time.
-
-        It also calls <compute_visuals> to produce additional visualization results
-        """
-        self.forward()
-        self.compute_visuals()
-
-    def compute_visuals(self): # noqa
-        """Calculate additional output images for visdom and HTML visualization"""
-        pass
-
-    def get_image_paths(self):
-        """ Return image paths that are used to load current data"""
-        return self.image_paths
-
-    def update_learning_rate(self):
-        """Update learning rates for all the networks; called at the end of every epoch"""
-        old_lr = self.optimizers[0].param_groups[0]['lr']
-        for scheduler in self.schedulers:
-            if self.opt.lr_policy == 'plateau':
-                scheduler.step(self.metric)
-            else:
-                scheduler.step()
-
+            Parameters:
+                verbose (bool) -- if verbose: print the network architecture
+            """
+            print('---------- Networks initialized -------------')
+            for name in self.model_names:
+                if isinstance(name, str):
+                    net = getattr(self, 'net' + name)
+                    num_params = 0
+                    for param in net.parameters():
+                        num_params += param.numel()
+                    if verbose:
+                        print(net)
+                    print('[Network %s] Total number of parameters : %.3f M' % (name, num_params / 1e6))
+            print('-----------------------------------------------')
         lr = self.optimizers[0].param_groups[0]['lr']
         print('learning rate %.7f -> %.7f' % (old_lr, lr))
 
@@ -158,6 +142,7 @@ class BaseModel(ABC):
                 if len(self.gpu_ids) > 0 and torch.cuda.is_available():
                     torch.save(net.module.cpu().state_dict(), save_path)
                     net.cuda(self.gpu_ids[0])
+        
                 else:
                     torch.save(net.cpu().state_dict(), save_path)
 
@@ -229,6 +214,17 @@ class BaseModel(ABC):
         print('-----------------------------------------------')
 
     def set_requires_grad(self, nets, requires_grad=False):
+        """Set requies_grad=Fasle for all the networks to avoid unnecessary computations
+        Parameters:
+            nets (network list)   -- a list of networks
+            requires_grad (bool)  -- whether the networks require gradients or not
+        """
+        if not isinstance(nets, list):
+            nets = [nets]
+        for net in nets:
+            if net is not None:
+                for param in net.parameters():
+                    param.requires_grad = requires_grad
         """Set requies_grad=Fasle for all the networks to avoid unnecessary computations
         Parameters:
             nets (network list)   -- a list of networks
