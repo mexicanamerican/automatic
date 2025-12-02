@@ -36,7 +36,7 @@ class BaseModel(ABC):
         self.opt = opt
         self.gpu_ids = opt.gpu_ids
         self.isTrain = opt.isTrain
-        self.device = torch.device('cuda:{}'.format(self.gpu_ids[0])) if self.gpu_ids else torch.device('cpu')  # get device name: CPU or GPU
+        self.device = torch.device('cuda:{}'.format(self.gpu_ids[0])) if self.gpu_ids else torch.device('cpu')  # get device name -- CPU or GPU
         self.save_dir = os.path.join(opt.checkpoints_dir, opt.name)  # save all the checkpoints to save_dir
         if opt.preprocess != 'scale_width':  # with [scale_width], input images might have different sizes, which hurts the performance of cudnn.benchmark.
             torch.backends.cudnn.benchmark = True
@@ -67,12 +67,12 @@ class BaseModel(ABC):
         Parameters:
             input (dict): includes the data itself and its metadata information.
         """
-        pass
+        raise NotImplementedError('set_input method must be implemented')
 
     @abstractmethod
     def forward(self):
-        """Run forward pass; called by both functions <optimize_parameters> and <test>."""
-        pass
+        """Run forward raise NotImplementedError('forward method must be implemented'); called by both functions <optimize_parameters> and <test>."""
+        raise NotImplementedError('optimize_parameters method must be implemented')
 
     @abstractmethod
     def optimize_parameters(self):
@@ -172,7 +172,7 @@ class BaseModel(ABC):
             return None
 
     def __patch_instance_norm_state_dict(self, state_dict, module, keys, i=0):
-        """Fix InstanceNorm checkpoints incompatibility (prior to 0.4)"""
+        ""# Fix InstanceNorm checkpoints incompatibility (prior to 0.4)""
         key = keys[i]
         if i + 1 == len(keys):  # at the end, pointing to a parameter/buffer
             if module.__class__.__name__.startswith('InstanceNorm') and \
@@ -189,7 +189,7 @@ class BaseModel(ABC):
         """Load all the networks from the disk.
 
         Parameters:
-            epoch (int) -- current epoch; used in the file name '%s_net_%s.pth' % (epoch, name)
+            epoch int -- current epoch; used in the file name '%s_net_%s.pth' % (epoch, name)
         """
         for name in self.model_names:
             if isinstance(name, str):
